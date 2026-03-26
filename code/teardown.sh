@@ -19,18 +19,23 @@ project_depot_path="//depot${project_path}/..."
 #######################################
 # Find workspace
 #######################################
-ws_gdp_path=$(gdp find --type=workspace ":=${WS_NAME}" || true)
+if [[ "${DRY_RUN:-0}" -ge 1 ]]; then
+    log "[SKIP:${DRY_RUN}] gdp find --type=workspace :=${WS_NAME}"
+    ws_gdp_path=""
+else
+    ws_gdp_path=$(gdp find --type=workspace ":=${WS_NAME}" || true)
+fi
 
-if [[ -n "$ws_gdp_path" ]]; then
-    ws_local_path=$(gdp list "$ws_gdp_path" --columns=rootDir)
+if [[ -n "${ws_gdp_path}" ]]; then
+    ws_local_path=$(gdp list "${ws_gdp_path}" --columns=rootDir)
 
-    log "Workspace path: $ws_local_path"
+    log "Workspace path: ${ws_local_path}"
 
-    run_cmd "xlp4 -c \"$WS_NAME\" revert \"$project_depot_path\" || true"
+    run_cmd "xlp4 -c \"${WS_NAME}\" revert \"${project_depot_path}\" || true"
 
-    run_cmd "gdp delete workspace --leave-files --force --name \"$WS_NAME\""
+    run_cmd "gdp delete workspace --leave-files --force --name \"${WS_NAME}\""
 
-    safe_rm_rf "$ws_local_path"
+    safe_rm_rf "${ws_local_path}"
 fi
 
 #######################################
