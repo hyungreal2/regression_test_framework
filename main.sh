@@ -151,6 +151,7 @@ get_tests() {
 # Create regression directory
 #######################################
 create_regression_dir() {
+    local dir
     num="000"
 
     if [[ -f regression_num.txt ]]; then
@@ -213,6 +214,8 @@ generate_templates
 get_tests
 create_regression_dir
 prepare_tests
+mkdir -p CDS_log
+
 export libname
 export regression_dir
 run_tests

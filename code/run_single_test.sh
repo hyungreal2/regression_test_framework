@@ -8,6 +8,9 @@ test_id="$1"
 #libname="$2" ->from parent
 #regression_dir="$3" ->from parent
 
+[[ -n "${libname:-}"       ]] || error_exit "libname is not exported from caller"
+[[ -n "${regression_dir:-}" ]] || error_exit "regression_dir is not exported from caller"
+
 num=$(format_num "${test_id}")
 testdir="$(pwd)/${regression_dir}/test_${num}"
 
@@ -37,7 +40,7 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
     #######################################
     # link
     #######################################
-    run_cmd "ln -s ${CDS_LIB_MGR} ${WS_NAME}"
+    run_cmd "ln -sf ${CDS_LIB_MGR} ${WS_NAME}"
 
     #######################################
     # run
@@ -51,6 +54,8 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
         -env ${ICM_ENV} \
         -replay ../replay_${num}.il \
         -log ../../../CDS_log/CDS_${uniqueid}_${num}.log"
+
+    rm -f "/tmp/CDS_PV_REG_NO_${USER_NAME}_${uniqueid}"
 )
 
 log "[TEST ${num}] DONE"
