@@ -1,0 +1,79 @@
+#!/bin/bash
+
+#############################################################
+user_name=$(echo $USER)
+
+## Edit default value: uniqueid file ##
+uniqueid_path=/tmp/uniqueid_cico_"$user_name"
+
+## Edit default value: workspace name, proj_prefix, project_name ##
+ws_name=cadence_cico_ws_"$user_name"
+proj_prefix=cadence_cico_"$user_name"
+#############################################################
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -ws|--ws_name)
+            ws_name=$2
+            shift 2
+            ;;
+        -proj|--proj_prefix)
+            proj_prefix=$2
+            shift 2
+            ;;
+        -id|--uniqueid)
+            uniqueid_path=$2
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
+if [ -f $uniqueid_path ] ; then
+    source $uniqueid_path
+fi
+
+project_name=$proj_prefix$uniqueid
+project_path=/MEMORY/TEST/CAT/${project_name}
+project_depot_path=//depot/${project_path}/...
+
+ws_gdp_path=$(gdp find --type=workspace :=$ws_name)
+ws_local_path=$(gdp list $ws_gdp_path --columns=rootDir)
+echo -e "\nWorkspace local path: $ws_local_path"
+
+# collect original path
+pushd $(pwd)
+
+# revert all opened files
+cd $ws_local_path
+echo -e "\nReverting all opened files: $project_depot_path"
+xlp4 -c $ws_name revert $project_depot_path > /tmp/null_"$user_name"
+
+# go to one dir before the ws
+cd ..
+
+# delete client
+xlp4 -u gdpxl_manager client -d -f $ws_name
+
+# delete workspace on gdp
+echo -e "\nDeleting workspace on gdpxl: $ws_name"
+gdp delete workspace --leave-files --force --name $ws_name
+
+# delete workspace on local machine
+echo -e "\nRemoving workspace on local: $ws_local_path"
+chmod -R 777 $ws_local_path/.gdpxl
+rm -rf $ws_local_path
+
+# delete project on gdp (web gui)
+echo -e "\nDeleting the project ${project_path}"
+gdp delete ${project_path} --recursive --force --proceed
+
+# obliterate files from depot
+echo -e "\nObliterating the files from ${project_depot_path}/..."
+xlp4 -u gdpxl_manager obliterate -y ${project_depot_path}/... > /tmp/null_"$user_name"
+
+# back to original path
+popd
