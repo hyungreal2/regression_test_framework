@@ -16,6 +16,7 @@ cellname="XE_FULLCHIP_BASE"
 max_set=false
 cases_set=false
 jobs=4
+do_teardown=false
 
 #######################################
 # Help
@@ -33,6 +34,7 @@ Options:
   -c     | --cases <list>     Comma-separated tests  (e.g. 1,2,3)
   -j     | --jobs <n>         Parallel jobs          (default: ${jobs})
   -d     | --dry-run [n]      Dry-run level 0/1/2    (default: 2)
+  -t     | --teardown         Run teardown after all tests
 EOF
 }
 
@@ -79,6 +81,10 @@ while [[ $# -gt 0 ]]; do
         -j|--jobs)
             jobs="$2"
             shift 2
+            ;;
+        -t|--teardown)
+            do_teardown=true
+            shift
             ;;
         *)
             error_exit "Unknown option: $1"
@@ -191,24 +197,6 @@ run_tests() {
 }
 
 #######################################
-# Teardown all tests
-#######################################
-teardown_all() {
-    log "Starting teardown for all tests in ${regression_dir}"
-
-    for testdir in "${regression_dir}"/test_*/; do
-        [[ -f "${testdir}/uniqueid.txt" ]] || { warn "No uniqueid.txt in ${testdir}, skipping"; continue; }
-
-        export uniqueid=$(<"${testdir}/uniqueid.txt")
-        log "Tearing down ${testdir} (uniqueid=${uniqueid})"
-
-        bash "$(dirname "$0")/code/teardown.sh"
-    done
-
-    log "All teardowns completed."
-}
-
-#######################################
 # Main
 #######################################
 log "START (dry-run=${DRY_RUN})"
@@ -231,4 +219,6 @@ run_tests
 
 log "All tests finished."
 
-teardown_all
+if [[ ${do_teardown} == true ]]; then
+    bash "$(dirname "$0")/code/teardown_all.sh" "${regression_dir}"
+fi
