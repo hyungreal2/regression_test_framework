@@ -191,6 +191,24 @@ run_tests() {
 }
 
 #######################################
+# Teardown all tests
+#######################################
+teardown_all() {
+    log "Starting teardown for all tests in ${regression_dir}"
+
+    for testdir in "${regression_dir}"/test_*/; do
+        [[ -f "${testdir}/uniqueid.txt" ]] || { warn "No uniqueid.txt in ${testdir}, skipping"; continue; }
+
+        export uniqueid=$(<"${testdir}/uniqueid.txt")
+        log "Tearing down ${testdir} (uniqueid=${uniqueid})"
+
+        bash "$(dirname "$0")/code/teardown.sh"
+    done
+
+    log "All teardowns completed."
+}
+
+#######################################
 # Main
 #######################################
 log "START (dry-run=${DRY_RUN})"
@@ -212,3 +230,5 @@ export regression_dir
 run_tests
 
 log "All tests finished."
+
+teardown_all

@@ -17,6 +17,8 @@ testdir="$(pwd)/${regression_dir}/test_${num}"
 uniqueid="$(date +%Y%m%d_%H%M%S)_${test_id}_$$"
 export uniqueid
 
+echo "${uniqueid}" > "${testdir}/uniqueid.txt"
+
 log "[TEST ${num}] uniqueid=${uniqueid}"
 
 (
