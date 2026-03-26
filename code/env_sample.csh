@@ -8,7 +8,7 @@
 setenv USER_NAME   "your_username"
 
 # Naming
-setenv WS_NAME     "cico_ws_your_username"
+setenv WS_PREFIX     "cico_ws_your_username"
 setenv PROJ_PREFIX "cico_your_username"
 
 # Limits

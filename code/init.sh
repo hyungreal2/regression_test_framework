@@ -45,10 +45,10 @@ done
 #######################################
 # Workspace
 #######################################
-ws_full="${WS_NAME}_${uniqueid}"
+WS_NAME="${WS_PREFIX}_${uniqueid}"
 
-log "Building workspace: $ws_full"
+log "Building workspace: $WS_NAME"
 
-run_cmd "gdp build workspace --content \"$CONFIG\" --gdp-name \"$ws_full\""
+run_cmd "gdp build workspace --content \"$CONFIG\" --gdp-name \"$WS_NAME\""
 
 log "Init completed (uniqueid=$uniqueid)"

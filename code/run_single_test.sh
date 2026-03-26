@@ -30,17 +30,17 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
     #######################################
     # workspace path
     #######################################
-    ws_full="${WS_NAME}_${uniqueid}"
+    WS_NAME="${WS_PREFIX}_${uniqueid}"
 
     #######################################
     # link
     #######################################
-    run_cmd "ln -s ${CDS_LIB_MGR} ${ws_full}"
+    run_cmd "ln -s ${CDS_LIB_MGR} ${WS_NAME}"
 
     #######################################
     # run
     #######################################
-    cd "${ws_full}"
+    cd "${WS_NAME}"
 
     echo "${num}" > "/tmp/CDS_PV_REG_NO_${USER_NAME}_${uniqueid}"
 

@@ -26,7 +26,7 @@ Usage: $(basename "$0") [options]
 
 Options:
   -h     | --help             Print this help message
-  -ws    | --ws_name <name>   Workspace name         (default: ${WS_NAME})
+  -ws    | --ws_name <name>   Workspace name         (default: ${WS_PREFIX})
   -proj  | --proj_prefix <p>  Project prefix         (default: ${PROJ_PREFIX})
   -cell  | --cell <name>      Cell name              (default: ${cellname})
   -m     | --max <n>          Max test number 1-240  (default: ${MAX_CASES})
@@ -46,7 +46,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         -ws|--ws_name)
-            WS_NAME="$2"
+            WS_PREFIX="$2"
             shift 2
             ;;
         -proj|--proj_prefix)
@@ -86,7 +86,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-export DRY_RUN WS_NAME PROJ_PREFIX
+export DRY_RUN WS_PREFIX PROJ_PREFIX
 
 #######################################
 # Validate inputs
