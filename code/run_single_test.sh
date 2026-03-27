@@ -58,6 +58,9 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
         -replay ../replay_${num}.il \
         -log ../../../CDS_log/CDS_${uniqueid}_${num}.log")
 
+    log "[TEST ${num}] Sleep for job queueing"
+    run_cmd "sleep 30"
+
     log "[TEST ${num}] Waiting for job to finish (job_id=${job_id})"
     run_cmd "bwait -w \"ended(${job_id})\""
 )
