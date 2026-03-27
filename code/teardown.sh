@@ -19,15 +19,12 @@ project_depot_path="//depot${project_path}/..."
 #######################################
 # Find workspace
 #######################################
-if [[ "${DRY_RUN:-0}" -ge 1 ]]; then
-    log "[SKIP:${DRY_RUN}] gdp find --type=workspace :=${workspace_name}"
-    ws_gdp_path=""
-else
-    ws_gdp_path=$(gdp find --type=workspace ":=${workspace_name}" || true)
-fi
+log "Finding workspace: ${workspace_name}"
+ws_gdp_path=$(run_cmd "gdp find --type=workspace \":=${workspace_name}\"" || true)
 
 if [[ -n "${ws_gdp_path}" ]]; then
-    ws_local_path=$(gdp list "${ws_gdp_path}" --columns=rootDir)
+    log "Getting workspace local path: ${ws_gdp_path}"
+    ws_local_path=$(run_cmd "gdp list \"${ws_gdp_path}\" --columns=rootDir")
 
     log "Workspace path: ${ws_local_path}"
 

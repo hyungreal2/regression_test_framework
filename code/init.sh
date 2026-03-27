@@ -33,8 +33,8 @@ run_cmd "gdp create variant ${GDP_BASE}/${proj_name}/rev01"
 log "Creating libtype: ${proj_name}/rev01/oa"
 run_cmd "gdp create libtype ${GDP_BASE}/${proj_name}/rev01/oa --libspec oa"
 
-log "Creating config: ${CONFIG}"
-run_cmd "gdp create config ${CONFIG}"
+log "Creating CONFIG: ${CONFIG}"
+run_cmd "gdp create CONFIG ${CONFIG}"
 
 #######################################
 # Libraries
@@ -46,7 +46,7 @@ for lib in "$@"; do
 
     run_cmd "gdp create library \"${OA_LIB}\" --from \"${FROM_LIB}/${lib}\" --columns id,name,type,path,description"
 
-    log "Adding ${lib} to config"
+    log "Adding ${lib} to CONFIG"
     run_cmd "gdp update \"${CONFIG}\" --add \"${OA_LIB}\""
 done
 
