@@ -52,14 +52,12 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
     cd "${workspace_name}"
 
     log "[TEST ${num}] Running virtuoso replay (replay_${num}.il)"
-    job_id=$(run_cmd "vse_sub \
+    vse_out=$(run_cmd "vse_sub \
         -v ${VSE_VERSION} \
         -env ${ICM_ENV} \
         -replay ../replay_${num}.il \
         -log ../../../CDS_log/CDS_${uniqueid}_${num}.log")
-
-    log "[TEST ${num}] Sleep for job queueing"
-    run_cmd "sleep 30"
+    job_id=$(awk -F'[<>]' '{print $2}' <<< "${vse_out}")
 
     log "[TEST ${num}] Waiting for job to finish (job_id=${job_id})"
     run_cmd "bwait -w \"ended(${job_id})\""
