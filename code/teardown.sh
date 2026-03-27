@@ -37,7 +37,10 @@ if [[ -n "${ws_gdp_path}" ]]; then
     log "Deleting workspace: ${workspace_name}"
     run_cmd "gdp delete workspace --leave-files --force --name \"${workspace_name}\""
 
-    chmod -R u+w "${ws_local_path}/.gdpxl"
+    log "Unlocking .gdpxl permissions: ${ws_local_path}/.gdpxl"
+    run_cmd "chmod -R u+w \"${ws_local_path}/.gdpxl\""
+
+    log "Removing local workspace: ${ws_local_path}"
     safe_rm_rf "${ws_local_path}"
 fi
 
