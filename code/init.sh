@@ -16,7 +16,7 @@ source "$(dirname "$0")/common.sh"
 [[ -n "${uniqueid:-}" ]] || error_exit "uniqueid is not set (must be exported from caller)"
 
 proj_name="${PROJ_PREFIX}_${uniqueid}"
-CONFIG="${GDP_BASE}/${proj_name}/rev01/dev"
+config="${GDP_BASE}/${proj_name}/rev01/dev"
 
 #######################################
 # GDP operations
@@ -33,21 +33,21 @@ run_cmd "gdp create variant ${GDP_BASE}/${proj_name}/rev01"
 log "Creating libtype: ${proj_name}/rev01/oa"
 run_cmd "gdp create libtype ${GDP_BASE}/${proj_name}/rev01/oa --libspec oa"
 
-log "Creating CONFIG: ${CONFIG}"
-run_cmd "gdp create CONFIG ${CONFIG}"
+log "Creating config: ${config}"
+run_cmd "gdp create config ${config}"
 
 #######################################
 # Libraries
 #######################################
 for lib in "$@"; do
-    OA_LIB="${GDP_BASE}/${proj_name}/rev01/oa/${lib}"
+    oa_lib="${GDP_BASE}/${proj_name}/rev01/oa/${lib}"
 
     log "Building library: ${lib}"
 
-    run_cmd "gdp create library \"${OA_LIB}\" --from \"${FROM_LIB}/${lib}\" --columns id,name,type,path,description"
+    run_cmd "gdp create library \"${oa_lib}\" --from \"${FROM_LIB}/${lib}\" --columns id,name,type,path,description"
 
-    log "Adding ${lib} to CONFIG"
-    run_cmd "gdp update \"${CONFIG}\" --add \"${OA_LIB}\""
+    log "Adding ${lib} to config"
+    run_cmd "gdp update \"${config}\" --add \"${oa_lib}\""
 done
 
 #######################################
@@ -57,6 +57,6 @@ workspace_name="${WS_PREFIX}_${uniqueid}"
 
 log "Building workspace: ${workspace_name}"
 
-run_cmd "gdp build workspace --content \"${CONFIG}\" --gdp-name \"${workspace_name}\""
+run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${workspace_name}\""
 
 log "Init completed (uniqueid=${uniqueid})"
