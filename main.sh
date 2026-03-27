@@ -117,8 +117,10 @@ validate_inputs() {
 # Generate templates
 #######################################
 generate_templates() {
+    log "Removing date_virtuosoVer.txt"
     run_cmd "rm -f code/date_virtuosoVer.txt"
 
+    log "Generating replay templates (libname=${libname} cellname=${cellname:-none})"
     if [[ -n "${cellname}" ]]; then
         run_cmd "python3 code/generate_templates.py --libname ${libname} --cellname ${cellname}"
     else
@@ -179,7 +181,10 @@ prepare_tests() {
         num=$(format_num "${i}")
         testdir="${regression_dir}/test_${num}"
 
+        log "Preparing test ${num}: ${testdir}"
         run_cmd "mkdir -p ${testdir}"
+
+        log "Moving replay_${num}.il to ${testdir}/"
         run_cmd "mv -f ./code/replay_files/replay_${num}.il ${testdir}/"
     done
 }

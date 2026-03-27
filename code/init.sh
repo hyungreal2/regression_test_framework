@@ -22,12 +22,18 @@ CONFIG="${GDP_BASE}/${proj_name}/rev01/dev"
 # GDP operations
 #######################################
 log "Creating project: ${proj_name}"
-
 run_cmd "gdp create project --user=gdpxl_manager ${GDP_BASE}/${proj_name}"
+
+log "Assigning role projman: ${proj_name}"
 run_cmd "gdp assign role --user=gdpxl_manager ${GDP_BASE}/${proj_name} ${USER} projman"
 
+log "Creating variant: ${proj_name}/rev01"
 run_cmd "gdp create variant ${GDP_BASE}/${proj_name}/rev01"
+
+log "Creating libtype: ${proj_name}/rev01/oa"
 run_cmd "gdp create libtype ${GDP_BASE}/${proj_name}/rev01/oa --libspec oa"
+
+log "Creating config: ${CONFIG}"
 run_cmd "gdp create config ${CONFIG}"
 
 #######################################
@@ -39,6 +45,8 @@ for lib in "$@"; do
     log "Building library: ${lib}"
 
     run_cmd "gdp create library \"${OA_LIB}\" --from \"${FROM_LIB}/${lib}\" --columns id,name,type,path,description"
+
+    log "Adding ${lib} to config"
     run_cmd "gdp update \"${CONFIG}\" --add \"${OA_LIB}\""
 done
 

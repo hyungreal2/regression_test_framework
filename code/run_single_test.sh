@@ -30,6 +30,7 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
     #######################################
     # init
     #######################################
+    log "[TEST ${num}] Running init.sh (libname=${libname})"
     run_cmd "../../code/init.sh ${libname}"
 
     #######################################
@@ -40,6 +41,7 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
     #######################################
     # link
     #######################################
+    log "[TEST ${num}] Linking cdsLibMgr.il to ${workspace_name}"
     run_cmd "ln -sf ${CDS_LIB_MGR} ${workspace_name}"
 
     #######################################
@@ -49,6 +51,7 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
 
     echo "${num}" > "/tmp/CDS_PV_REG_NO_${USER_NAME}_${uniqueid}"
 
+    log "[TEST ${num}] Running virtuoso replay (replay_${num}.il)"
     run_cmd "vse_sub \
         -v ${VSE_VERSION} \
         -env ${ICM_ENV} \

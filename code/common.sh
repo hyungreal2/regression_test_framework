@@ -40,7 +40,7 @@ run_cmd() {
                         local gdp_name
                         gdp_name=$(grep -oP '(?<=--gdp-name\s)\S+' <<< "${cmd}" | tr -d "\"'" || true)
                         if [[ -n "${gdp_name}" ]]; then
-                            echo "[MOCK:1] mkdir -p ${gdp_name}"
+                            echo "[MOCK:1] mkdir -p ${gdp_name}/.gdpxl"
                             mkdir -p "${gdp_name}"
                         else
                             echo "[SKIP:1] ${cmd}"

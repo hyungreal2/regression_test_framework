@@ -31,10 +31,13 @@ if [[ -n "${ws_gdp_path}" ]]; then
 
     log "Workspace path: ${ws_local_path}"
 
+    log "Reverting opened files: ${project_depot_path}"
     run_cmd "xlp4 -c \"${workspace_name}\" revert \"${project_depot_path}\" || true"
 
+    log "Deleting workspace: ${workspace_name}"
     run_cmd "gdp delete workspace --leave-files --force --name \"${workspace_name}\""
 
+    chmod -R u+w "${ws_local_path}/.gdpxl"
     safe_rm_rf "${ws_local_path}"
 fi
 
@@ -47,11 +50,13 @@ run_cmd "xlp4 -u gdpxl_manager client -d -f \"${workspace_name}\" || true"
 #######################################
 # Delete project
 #######################################
+log "Deleting project: ${project_path}"
 run_cmd "gdp delete \"${project_path}\" --recursive --force --proceed"
 
 #######################################
 # Obliterate
 #######################################
+log "Obliterating depot: ${project_depot_path}"
 run_cmd "xlp4 -u gdpxl_manager obliterate -y \"${project_depot_path}\""
 
 log "Teardown completed"
