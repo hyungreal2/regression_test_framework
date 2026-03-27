@@ -21,7 +21,7 @@ error_exit() {
 #######################################
 # Dry-run wrapper
 # Level 0: run all
-# Level 1: skip gdp / xlp4 / rm / vse_sub / bwait
+# Level 1: skip gdp / xlp4 / rm / vse_sub / vse_run / bwait
 # Level 2: skip all
 #######################################
 run_cmd() {
@@ -35,7 +35,7 @@ run_cmd() {
             ;;
         1)
             case "${first_word}" in
-                gdp|xlp4|rm|vse_sub|bwait)
+                gdp|xlp4|rm|vse_sub|vse_run|bwait)
                     if [[ "${cmd}" == *"gdp build workspace"* ]]; then
                         local gdp_name
                         gdp_name=$(grep -oP '(?<=--gdp-name\s)\S+' <<< "${cmd}" | tr -d "\"'" || true)
