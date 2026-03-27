@@ -21,7 +21,7 @@ CONFIG="${GDP_BASE}/${proj_name}/rev01/dev"
 #######################################
 # GDP operations
 #######################################
-log "Creating project: $proj_name"
+log "Creating project: ${proj_name}"
 
 run_cmd "gdp create project --user=gdpxl_manager ${GDP_BASE}/${proj_name}"
 run_cmd "gdp assign role --user=gdpxl_manager ${GDP_BASE}/${proj_name} ${USER} projman"
@@ -36,19 +36,19 @@ run_cmd "gdp create config ${CONFIG}"
 for lib in "$@"; do
     OA_LIB="${GDP_BASE}/${proj_name}/rev01/oa/${lib}"
 
-    log "Building library: $lib"
+    log "Building library: ${lib}"
 
-    run_cmd "gdp create library \"$OA_LIB\" --from \"$FROM_LIB/$lib\" --columns id,name,type,path,description"
-    run_cmd "gdp update \"$CONFIG\" --add \"$OA_LIB\""
+    run_cmd "gdp create library \"${OA_LIB}\" --from \"${FROM_LIB}/${lib}\" --columns id,name,type,path,description"
+    run_cmd "gdp update \"${CONFIG}\" --add \"${OA_LIB}\""
 done
 
 #######################################
 # Workspace
 #######################################
-WS_NAME="${WS_PREFIX}_${uniqueid}"
+workspace_name="${WS_PREFIX}_${uniqueid}"
 
-log "Building workspace: $WS_NAME"
+log "Building workspace: ${workspace_name}"
 
-run_cmd "gdp build workspace --content \"$CONFIG\" --gdp-name \"$WS_NAME\""
+run_cmd "gdp build workspace --content \"${CONFIG}\" --gdp-name \"${workspace_name}\""
 
-log "Init completed (uniqueid=$uniqueid)"
+log "Init completed (uniqueid=${uniqueid})"

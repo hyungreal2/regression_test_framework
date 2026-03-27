@@ -137,9 +137,9 @@ get_tests() {
         tests=()
 
         for n in "${nums[@]}"; do
-            [[ -z ${seen[$n]:-} ]] && {
+            [[ -z ${seen[${n}]:-} ]] && {
                 tests+=("${n}")
-                seen[$n]=1
+                seen[${n}]=1
             }
         done
     else
