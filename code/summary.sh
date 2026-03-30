@@ -74,22 +74,27 @@ pass_count=0
 fail_count=0
 total_count=0
 
+log "Scanning log files in ${logdir}"
+
 for logfile in "${logdir}"/*.log; do
     [ -f "${logfile}" ] || continue
-    ((total_count++))
+    total_count=$(( total_count + 1 ))
 
     testname=$(basename "${logfile}" .log)
 
     if grep -q "FAIL" "${logfile}"; then
         result="FAIL"
-        ((fail_count++))
+        fail_count=$(( fail_count + 1 ))
     else
         result="PASS"
-        ((pass_count++))
+        pass_count=$(( pass_count + 1 ))
     fi
 
+    log "  [${total_count}] ${testname}: ${result}"
     printf "%-20s %-5s\n" "${testname}" "${result}" >> "${summary_file}"
 done
+
+log "Scan complete: total=${total_count} pass=${pass_count} fail=${fail_count}"
 
 #######################################
 # Footer
