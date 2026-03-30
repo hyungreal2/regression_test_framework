@@ -6,6 +6,13 @@ source "$(dirname "$0")/code/env.sh"
 source "$(dirname "$0")/code/common.sh"
 
 #######################################
+# Log file
+#######################################
+logfile="main.log.$(date +%Y%m%d_%H%M%S).txt"
+exec > >(tee "${logfile}") 2>&1
+log "Logging to ${logfile}"
+
+#######################################
 # Defaults
 #######################################
 max=${MAX_CASES}

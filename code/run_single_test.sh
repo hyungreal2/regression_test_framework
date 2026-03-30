@@ -19,7 +19,7 @@ testdir="$(pwd)/${regression_dir}/test_${num}"
 #######################################
 # uniqueid per test (핵심!)
 #######################################
-uniqueid="${test_id}_$(date +%Y%m%d_%H%M%S)_$$"
+uniqueid="${num}_$(date +%Y%m%d_%H%M%S)_$$"
 export uniqueid
 
 echo "${uniqueid}" > "${testdir}/uniqueid.txt"
