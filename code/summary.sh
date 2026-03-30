@@ -31,14 +31,17 @@ done
 export DRY_RUN
 
 #######################################
-# Check argument
+# Resolve time_version
 #######################################
 if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 [-d level] <time_version> [summary_file]"
-    exit 1
+    [ -d "result" ] || error_exit "result/ directory not found"
+    time_version=$(ls -t result/ | head -1)
+    [[ -n "${time_version}" ]] || error_exit "No directories found under result/"
+    log "No argument given. Using latest: ${time_version}"
+else
+    time_version="$1"
 fi
 
-time_version="$1"
 summary_name="${2:-summary.txt}"
 logdir="result/${time_version}"
 summary_file="${logdir}/${summary_name}"
