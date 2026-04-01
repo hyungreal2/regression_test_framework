@@ -31,6 +31,26 @@ if [[ -n "${ws_gdp_path}" ]]; then
     log "Reverting opened files: ${project_depot_path}"
     run_cmd "xlp4 -c \"${workspace_name}\" revert \"${project_depot_path}\" || true"
 
+    #######################################
+    # Delete pending changelists
+    #######################################
+    log "Checking pending changelists for: ${workspace_name}"
+    raw_cls=$(run_cmd "xlp4 changes -c \"${workspace_name}\" -s pending" || true)
+    pending_cls=$(awk '{print $2}' <<< "${raw_cls}")
+
+    for cl in ${pending_cls}; do
+        log "Deleting pending CL: ${cl}"
+
+        log "  Deleting shelved files in CL: ${cl}"
+        run_cmd "xlp4 shelve -c ${cl} -d 2>/dev/null || true"
+
+        log "  Reverting opened files in CL: ${cl}"
+        run_cmd "xlp4 revert -c ${cl} //..."
+
+        log "  Deleting CL: ${cl}"
+        run_cmd "xlp4 change -d ${cl}"
+    done
+
     log "Deleting workspace: ${workspace_name}"
     run_cmd "gdp delete workspace --leave-files --force --name \"${workspace_name}\""
 
