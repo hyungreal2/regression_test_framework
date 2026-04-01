@@ -13,8 +13,8 @@ source "$(dirname "$0")/common.sh"
 project_name="${PROJ_PREFIX}_${uniqueid}"
 workspace_name="${WS_PREFIX}_${uniqueid}"
 
-project_path="${GDP_BASE}/${project_name}"
-project_depot_path="//depot${project_path}/..."
+project_gdp_path="${GDP_BASE}/${project_name}"
+project_depot_path="//depot${project_gdp_path}/..."
 
 #######################################
 # Find workspace
@@ -28,28 +28,32 @@ if [[ -n "${ws_gdp_path}" ]]; then
 
     log "Workspace path: ${ws_local_path}"
 
-    log "Reverting opened files: ${project_depot_path}"
-    run_cmd "xlp4 -c \"${workspace_name}\" revert \"${project_depot_path}\" || true"
+    (
+        cd "${ws_local_path}" || exit 1
 
-    #######################################
-    # Delete pending changelists
-    #######################################
-    log "Checking pending changelists for: ${workspace_name}"
-    raw_cls=$(run_cmd "xlp4 changes -c \"${workspace_name}\" -s pending" || true)
-    pending_cls=$(awk '{print $2}' <<< "${raw_cls}")
+        log "Reverting opened files: ${project_depot_path}"
+        run_cmd "xlp4 -c \"${workspace_name}\" revert \"${project_depot_path}\" || true"
 
-    for cl in ${pending_cls}; do
-        log "Deleting pending CL: ${cl}"
+        #######################################
+        # Delete pending changelists
+        #######################################
+        log "Checking pending changelists for: ${workspace_name}"
+        raw_cls=$(run_cmd "xlp4 changes -c \"${workspace_name}\" -s pending" || true)
+        pending_cls=$(awk '{print $2}' <<< "${raw_cls}")
 
-        log "  Deleting shelved files in CL: ${cl}"
-        run_cmd "xlp4 shelve -c ${cl} -d 2>/dev/null || true"
+        for cl in ${pending_cls}; do
+            log "Deleting pending CL: ${cl}"
 
-        log "  Reverting opened files in CL: ${cl}"
-        run_cmd "xlp4 revert -c ${cl} //..."
+            #log "  Deleting shelved files in CL: ${cl}"
+            #run_cmd "xlp4 shelve -c ${cl} -d 2>/dev/null || true"
 
-        log "  Deleting CL: ${cl}"
-        run_cmd "xlp4 change -d ${cl}"
-    done
+            #log "  Reverting opened files in CL: ${cl}"
+            #run_cmd "xlp4 revert -c ${cl} //..."
+
+            log "  Deleting CL: ${cl}"
+            run_cmd "xlp4 change -d ${cl}"
+        done
+    )
 
     log "Deleting workspace: ${workspace_name}"
     run_cmd "gdp delete workspace --leave-files --force --name \"${workspace_name}\""
@@ -70,8 +74,8 @@ run_cmd "xlp4 --user gdpxl_manager client -d -f \"${workspace_name}\" || true"
 #######################################
 # Delete project
 #######################################
-log "Deleting project: ${project_path}"
-run_cmd "gdp delete \"${project_path}\" --recursive --force --proceed"
+log "Deleting project: ${project_gdp_path}"
+run_cmd "gdp delete \"${project_gdp_path}\" --recursive --force --proceed"
 
 #######################################
 # Obliterate
