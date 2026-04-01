@@ -64,3 +64,8 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
 )
 
 log "[TEST ${num}] DONE"
+
+if [[ -n "${teardown_queue_file:-}" ]]; then
+    log "[TEST ${num}] Queuing teardown: ${uniqueid}"
+    echo "${uniqueid}" >> "${teardown_queue_file}"
+fi

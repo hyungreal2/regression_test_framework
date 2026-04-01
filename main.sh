@@ -228,12 +228,30 @@ create_regression_dir
 prepare_tests
 mkdir -p CDS_log
 
-export libname
-export regression_dir
+#######################################
+# Start background teardown worker
+#######################################
+teardown_queue_file="${regression_dir}/teardown_queue.txt"
+main_done_flag="${regression_dir}/main_done.flag"
+
+if [[ "${do_teardown}" == true ]]; then
+    touch "${teardown_queue_file}"
+    log "Starting background teardown worker"
+    bash "$(dirname "$0")/code/teardown_worker.sh" \
+        "${teardown_queue_file}" "${main_done_flag}" &
+    teardown_worker_pid=$!
+    export teardown_queue_file
+fi
+
+export libname regression_dir
 run_tests
 
 log "All tests finished."
 
-if [[ ${do_teardown} == true ]]; then
-    bash "$(dirname "$0")/code/teardown_all.sh" "${regression_dir}"
+if [[ "${do_teardown}" == true ]]; then
+    log "Signaling teardown worker: main done"
+    touch "${main_done_flag}"
+    log "Waiting for teardown worker to finish (pid=${teardown_worker_pid})"
+    wait "${teardown_worker_pid}"
+    log "Teardown worker finished."
 fi
