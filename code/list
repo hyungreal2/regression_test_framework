@@ -1,0 +1,240 @@
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save, 6. Close Data Save 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save-triggered Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Modified, 5. Save, 6. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Modified, 5. Save, 6. Close Data Save 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Modified, 5. Save-triggered Checkin 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout on, 2. auto checkin on, 3. ddBatchCheckout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Save, 6. Close Data Save 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Save-triggered Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save, 6. Close Data Save 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save-triggered Checkin 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Close Data Save 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save-triggered Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5.Save, 6. ICM Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save, 6. Close Data Save Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Modified, 5. Save, 6. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Modified, 5. Save, 6. Close Data Save Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Not Modified, 5. Close Data Discard Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout on, 2. auto checkin off, 3. ddBatchCheckout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Save, 6. Close Data Save Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save, 6. Close Data Save Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5.Save, 6. ICM Checkin 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Close Data Save Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save, 6. Close Data Save 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save-triggered Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Fast Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. Fast Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Close Data Save Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Fast Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Close Data Save Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. ICM Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save, 6. Close Data Save 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save-triggered Checkin 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Close Data Save 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save-triggered Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save, 6. Close Data Save Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Fast Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. Fast Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Close Data Save Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ddBatchCheckout Expect Fail, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Fast Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ddBatchCheckin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Close Data Save Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Close Data Discard Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. ICM Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Fail, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save, 6. Close Data Save Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Fast Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. ddBatchCheckin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ddBatchCheckin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Close Data Save Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Save-triggered Checkin Expect Fail CO 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. ICM Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect Fail CI 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Save, 6. Hierarchical Checkin 
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect Fail CI
