@@ -53,3 +53,6 @@ for testdir in "${regression_dir}"/test_*/; do
 done
 
 log "All teardowns completed."
+
+log "Removing regression directory: ${regression_dir}"
+safe_rm_rf "${regression_dir}"

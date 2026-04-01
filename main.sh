@@ -17,8 +17,8 @@ log "Logging to ${logfile}"
 #######################################
 max=${MAX_CASES}
 cases=""
-libname="MS01"
-cellname="XE_FULLCHIP_BASE"
+libname="${LIBNAME}"
+cellname="${CELLNAME}"
 
 max_set=false
 cases_set=false
