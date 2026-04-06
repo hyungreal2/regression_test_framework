@@ -90,7 +90,8 @@ fi
 # Delete client
 #######################################
 log "Deleting p4 client: ${workspace_name}"
-run_cmd "xlp4 --user gdpxl_manager client -d -f \"${workspace_name}\" || true"
+#run_cmd "xlp4 --user gdpxl_manager client -d -f \"${workspace_name}\" || true"
+run_cmd "xlp4 client -d -f \"${workspace_name}\" || true"
 
 #######################################
 # Delete project
@@ -102,6 +103,7 @@ run_cmd "gdp delete \"${project_gdp_path}\" --recursive --force --proceed"
 # Obliterate
 #######################################
 log "Obliterating depot: ${project_depot_path}"
-run_cmd "xlp4 --user gdpxl_manager obliterate -y \"${project_depot_path}\""
+#run_cmd "xlp4 --user gdpxl_manager obliterate -y \"${project_depot_path}\""
+run_cmd "xlp4 obliterate -y \"${project_depot_path}\""
 
 log "Teardown completed"

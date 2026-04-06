@@ -22,10 +22,11 @@ config="${GDP_BASE}/${proj_name}/rev01/dev"
 # GDP operations
 #######################################
 log "Creating project: ${proj_name}"
-run_cmd "gdp create project --user=gdpxl_manager ${GDP_BASE}/${proj_name}"
+#run_cmd "gdp create project --user=gdpxl_manager ${GDP_BASE}/${proj_name}"
+run_cmd "gdp create project ${GDP_BASE}/${proj_name}"
 
-log "Assigning role projman: ${proj_name}"
-run_cmd "gdp assign role --user=gdpxl_manager ${GDP_BASE}/${proj_name} ${USER} projman"
+#log "Assigning role projman: ${proj_name}"
+#run_cmd "gdp assign role --user=gdpxl_manager ${GDP_BASE}/${proj_name} ${USER} projman"
 
 log "Creating variant: ${proj_name}/rev01"
 run_cmd "gdp create variant ${GDP_BASE}/${proj_name}/rev01"
