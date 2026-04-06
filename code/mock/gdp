@@ -1,0 +1,88 @@
+#!/bin/bash
+#######################################
+# Mock gdp command for local testing
+#
+# Usage: add code/mock/ to PATH before running scripts
+#   export PATH="$(pwd)/code/mock:${PATH}"
+#######################################
+
+subcommand="${1:-}"
+
+case "${subcommand}" in
+
+    #######################################
+    # gdp find --type=workspace :=<workspace_name>
+    # → if ./workspace_name exists, print workspace_name
+    #######################################
+    find)
+        ws_name=""
+        for arg in "$@"; do
+            if [[ "${arg}" == :=* ]]; then
+                ws_name="${arg#:=}"
+            fi
+        done
+        if [[ -n "${ws_name}" && -d "$(pwd)/${ws_name}" ]]; then
+            echo "${ws_name}"
+        fi
+        ;;
+
+    #######################################
+    # gdp list <ws_path> --columns=rootDir
+    # → print absolute path of ws_path if it exists
+    #######################################
+    list)
+        ws_path="${2:-}"
+        if [[ -z "${ws_path}" ]]; then
+            exit 0
+        fi
+        if [[ -d "$(pwd)/${ws_path}" ]]; then
+            echo "$(cd "$(pwd)/${ws_path}" && pwd)"
+        elif [[ -d "${ws_path}" ]]; then
+            echo "$(cd "${ws_path}" && pwd)"
+        fi
+        ;;
+
+    #######################################
+    # gdp build workspace --content <config> --gdp-name <name>
+    # → mkdir -p <name>
+    #######################################
+    build)
+        gdp_name=""
+        prev=""
+        for arg in "$@"; do
+            if [[ "${prev}" == "--gdp-name" ]]; then
+                gdp_name="${arg//\"/}"
+                gdp_name="${gdp_name//\'/}"
+            fi
+            prev="${arg}"
+        done
+        if [[ -n "${gdp_name}" ]]; then
+            echo "[MOCK:gdp] build workspace → mkdir -p ${gdp_name}" >&2
+            mkdir -p "${gdp_name}"
+        fi
+        ;;
+
+    #######################################
+    # gdp delete workspace / project → no-op
+    #######################################
+    delete)
+        echo "[MOCK:gdp] delete ${*:2}" >&2
+        ;;
+
+    #######################################
+    # gdp create / assign / update → no-op
+    #######################################
+    create|assign|update)
+        echo "[MOCK:gdp] ${subcommand} ${*:2}" >&2
+        ;;
+
+    #######################################
+    # fallback
+    #######################################
+    *)
+        echo "[MOCK:gdp] $*" >&2
+        ;;
+
+esac
+
+exit 0
