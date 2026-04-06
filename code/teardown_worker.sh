@@ -26,7 +26,7 @@ while true; do
 
         export uniqueid
         log "[WORKER] tearing down uniqueid=${uniqueid}"
-        bash "$(dirname "$0")/teardown.sh"
+        bash "$(dirname "$0")/teardown.sh" -d "${DRY_RUN:-1}"
 
     elif [[ -f "${done_flag}" ]]; then
         log "[WORKER] queue empty and main done. Exiting."

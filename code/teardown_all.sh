@@ -90,8 +90,7 @@ done
 printf "%s\n" "${uid_list[@]}" | \
     xargs -n1 -P"${jobs}" bash -c "
         export uniqueid=\"\$1\"
-        export DRY_RUN=\"${DRY_RUN}\"
-        bash \"${script_dir}/teardown.sh\"
+        bash \"${script_dir}/teardown.sh\" -d \"${DRY_RUN}\"
     " _
 
 log "All teardowns completed."

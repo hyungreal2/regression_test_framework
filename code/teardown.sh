@@ -2,6 +2,27 @@
 
 set -euo pipefail
 
+#######################################
+# Parse -d before sourcing env.sh
+# (env.sh sets DRY_RUN=${DRY_RUN:-1},
+#  so we must export it first)
+#######################################
+_i=1
+while [[ $_i -le $# ]]; do
+    _arg="${!_i}"
+    if [[ "${_arg}" == "-d" || "${_arg}" == "--dry-run" ]]; then
+        _j=$(( _i + 1 ))
+        _next="${!_j:-}"
+        if [[ "${_next}" =~ ^[012]$ ]]; then
+            export DRY_RUN="${_next}"
+        else
+            export DRY_RUN=2
+        fi
+        break
+    fi
+    _i=$(( _i + 1 ))
+done
+
 source "$(dirname "$0")/env.sh"
 source "$(dirname "$0")/common.sh"
 
