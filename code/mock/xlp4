@@ -1,0 +1,10 @@
+#!/bin/bash
+#######################################
+# Mock xlp4 command for local testing
+#
+# Usage: add code/mock/ to PATH before running scripts
+#   export PATH="$(pwd)/code/mock:${PATH}"
+#######################################
+
+echo "[MOCK:xlp4] $*" >&2
+exit 0

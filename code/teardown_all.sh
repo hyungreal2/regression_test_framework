@@ -29,6 +29,7 @@ EOF
 #######################################
 # Parse args
 #######################################
+positional_args=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help)
@@ -53,7 +54,8 @@ while [[ $# -gt 0 ]]; do
             error_exit "Unknown option: $1"
             ;;
         *)
-            break
+            positional_args+=("$1")
+            shift
             ;;
     esac
 done
@@ -63,7 +65,7 @@ export DRY_RUN
 #######################################
 # Args: regression_dir (arg or env)
 #######################################
-regression_dir="${1:-${regression_dir:-}}"
+regression_dir="${positional_args[0]:-${regression_dir:-}}"
 [[ -n "${regression_dir}" ]] || error_exit "regression_dir not set. Pass as argument or export."
 
 [[ -d "${regression_dir}" ]] || error_exit "Directory not found: ${regression_dir}"

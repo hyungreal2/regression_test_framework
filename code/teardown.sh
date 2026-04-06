@@ -80,7 +80,7 @@ if [[ -n "${ws_gdp_path}" ]]; then
     run_cmd "gdp delete workspace --leave-files --force --name \"${workspace_name}\""
 
     log "Unlocking .gdpxl permissions: ${ws_local_path}/.gdpxl"
-    run_cmd "chmod -R u+w \"${ws_local_path}/.gdpxl\""
+    run_cmd "chmod -R u+w \"${ws_local_path}/.gdpxl\" || true"
 
     log "Removing local workspace: ${ws_local_path}"
     safe_rm_rf "${ws_local_path}"
