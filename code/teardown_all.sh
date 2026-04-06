@@ -87,12 +87,12 @@ done
 #######################################
 # Run teardowns in parallel
 #######################################
-export script_dir
 printf "%s\n" "${uid_list[@]}" | \
-    xargs -n1 -P"${jobs}" bash -c '
-        export uniqueid="$1"
-        bash "${script_dir}/teardown.sh"
-    ' _
+    xargs -n1 -P"${jobs}" bash -c "
+        export uniqueid=\"\$1\"
+        export DRY_RUN=\"${DRY_RUN}\"
+        bash \"${script_dir}/teardown.sh\"
+    " _
 
 log "All teardowns completed."
 
