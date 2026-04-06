@@ -21,25 +21,23 @@ case "${subcommand}" in
                 ws_name="${arg#:=}"
             fi
         done
-        if [[ -n "${ws_name}" && -d "$(pwd)/${ws_name}" ]]; then
-            echo "${ws_name}"
+        if [[ -n "${ws_name}" ]]; then
+            result=$(find "$(pwd)" -type d -name "${ws_name}" 2>/dev/null | head -1)
+            [[ -n "${result}" ]] && echo "${ws_name}"
         fi
         ;;
 
     #######################################
     # gdp list <ws_path> --columns=rootDir
-    # → print absolute path of ws_path if it exists
+    # → print absolute path of ws_path (recursive search)
     #######################################
     list)
         ws_path="${2:-}"
         if [[ -z "${ws_path}" ]]; then
             exit 0
         fi
-        if [[ -d "$(pwd)/${ws_path}" ]]; then
-            echo "$(cd "$(pwd)/${ws_path}" && pwd)"
-        elif [[ -d "${ws_path}" ]]; then
-            echo "$(cd "${ws_path}" && pwd)"
-        fi
+        result=$(find "$(pwd)" -type d -name "${ws_path}" 2>/dev/null | head -1)
+        [[ -n "${result}" ]] && echo "${result}"
         ;;
 
     #######################################
