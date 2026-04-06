@@ -45,6 +45,7 @@ while [[ $# -gt 0 ]]; do
             fi
             ;;
         -j|--jobs)
+            [[ "${2:-}" =~ ^[0-9]+$ ]] || error_exit "-j/--jobs requires a positive integer"
             jobs="$2"
             shift 2
             ;;
