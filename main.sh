@@ -24,6 +24,23 @@ max_set=false
 cases_set=false
 jobs=4
 do_teardown=false
+teardown_worker_pid=""
+main_done_flag=""
+
+#######################################
+# Trap: ensure worker is always cleaned
+# up on exit (normal, error, or signal)
+#######################################
+_cleanup() {
+    if [[ -n "${main_done_flag}" && ! -f "${main_done_flag}" ]]; then
+        log "TRAP: signaling teardown worker (main_done_flag=${main_done_flag})"
+        touch "${main_done_flag}" 2>/dev/null || true
+    fi
+    if [[ -n "${teardown_worker_pid}" ]]; then
+        wait "${teardown_worker_pid}" 2>/dev/null || true
+    fi
+}
+trap '_cleanup' EXIT INT TERM
 
 #######################################
 # Help
@@ -253,5 +270,6 @@ if [[ "${do_teardown}" == true ]]; then
     touch "${main_done_flag}"
     log "Waiting for teardown worker to finish (pid=${teardown_worker_pid})"
     wait "${teardown_worker_pid}"
+    teardown_worker_pid=""  # prevent _cleanup from wait-ing again
     log "Teardown worker finished."
 fi
