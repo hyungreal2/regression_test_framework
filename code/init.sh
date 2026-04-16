@@ -11,11 +11,11 @@ source "$(dirname "$0")/common.sh"
 [[ $# -gt 0 ]] || error_exit "Usage: $0 <libname> [<libname>...]"
 
 #######################################
-# Validate uniqueid
+# Validate uniquetestid
 #######################################
-[[ -n "${uniqueid:-}" ]] || error_exit "uniqueid is not set (must be exported from caller)"
+[[ -n "${uniquetestid:-}" ]] || error_exit "uniquetestid is not set (must be exported from caller)"
 
-proj_name="${PROJ_PREFIX}_${uniqueid}"
+proj_name="${PROJ_PREFIX}_${uniquetestid}"
 config="${GDP_BASE}/${proj_name}/rev01/dev"
 
 #######################################
@@ -54,10 +54,10 @@ done
 #######################################
 # Workspace
 #######################################
-workspace_name="${WS_PREFIX}_${uniqueid}"
+workspace_name="${WS_PREFIX}_${uniquetestid}"
 
 log "Building workspace: ${workspace_name}"
 
 run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${workspace_name}\""
 
-log "Init completed (uniqueid=${uniqueid})"
+log "Init completed (uniquetestid=${uniquetestid})"

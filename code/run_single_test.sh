@@ -17,14 +17,14 @@ num=$(format_num "${test_id}")
 testdir="$(pwd)/${regression_dir}/test_${num}"
 
 #######################################
-# uniqueid per test (핵심!)
+# uniquetestid per test (핵심!)
 #######################################
-uniqueid="${num}_$(date +%Y%m%d_%H%M%S)_$$"
-export uniqueid
+uniquetestid="${num}_$(date +%Y%m%d_%H%M%S)_$$"
+export uniquetestid
 
-echo "${uniqueid}" > "${testdir}/uniqueid.txt"
+echo "${uniquetestid}" > "${testdir}/uniquetestid.txt"
 
-log "[TEST ${num}] uniqueid=${uniqueid}"
+log "[TEST ${num}] uniquetestid=${uniquetestid}"
 
 (
     cd "${testdir}" || exit 1
@@ -38,7 +38,7 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
     #######################################
     # workspace path
     #######################################
-    workspace_name="${WS_PREFIX}_${uniqueid}"
+    workspace_name="${WS_PREFIX}_${uniquetestid}"
 
     #######################################
     # link
@@ -52,12 +52,12 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
     cd "${workspace_name}"
 
     log "[TEST ${num}] Running virtuoso replay (replay_${num}.il)"
-    run_cmd "mkdir -p ../../../CDS_log/${uniqueid}"
+    run_cmd "mkdir -p ../../../CDS_log/${uniquetestid}"
     vse_out=$(run_cmd "vse_sub \
         -v ${VSE_VERSION} \
         -env ${ICM_ENV} \
         -replay ../replay_${num}.il \
-        -log ../../../CDS_log/${uniqueid}/CDS_${num}.log")
+        -log ../../../CDS_log/${uniquetestid}/CDS_${num}.log")
     job_id=$(awk -F'[<>]' '{print $2}' <<< "${vse_out}")
 
     log "[TEST ${num}] Waiting for job to finish (job_id=${job_id})"
@@ -67,6 +67,6 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
 log "[TEST ${num}] DONE"
 
 if [[ -n "${teardown_queue_file:-}" ]]; then
-    log "[TEST ${num}] Queuing teardown: ${uniqueid}"
-    echo "${uniqueid}" >> "${teardown_queue_file}"
+    log "[TEST ${num}] Queuing teardown: ${uniquetestid}"
+    echo "${uniquetestid}" >> "${teardown_queue_file}"
 fi

@@ -71,17 +71,17 @@ regression_dir="${positional_args[0]:-${regression_dir:-}}"
 [[ -d "${regression_dir}" ]] || error_exit "Directory not found: ${regression_dir}"
 
 #######################################
-# Collect uniqueids
+# Collect uniquetestids
 #######################################
 log "Starting teardown for all tests in ${regression_dir} (jobs=${jobs})"
 
 uid_list=()
 for testdir in "${regression_dir}"/test_*/; do
-    if [[ ! -f "${testdir}/uniqueid.txt" ]]; then
-        warn "No uniqueid.txt in ${testdir}, skipping"
+    if [[ ! -f "${testdir}/uniquetestid.txt" ]]; then
+        warn "No uniquetestid.txt in ${testdir}, skipping"
         continue
     fi
-    uid_list+=("$(<"${testdir}/uniqueid.txt")")
+    uid_list+=("$(<"${testdir}/uniquetestid.txt")")
 done
 
 [[ ${#uid_list[@]} -gt 0 ]] || { log "No tests to tear down."; exit 0; }
@@ -91,7 +91,7 @@ done
 #######################################
 printf "%s\n" "${uid_list[@]}" | \
     xargs -n1 -P"${jobs}" bash -c "
-        export uniqueid=\"\$1\"
+        export uniquetestid=\"\$1\"
         bash \"${script_dir}/teardown.sh\" -d \"${DRY_RUN}\"
     " _
 

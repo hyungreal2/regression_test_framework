@@ -242,7 +242,7 @@ log "START (dry-run=${DRY_RUN})"
 #######################################
 # Generate unique ID
 #######################################
-uniqueid="$(date +%Y%m%d_%H%M%S)_$$_${USER_NAME}_${libname}"
+uniqueid="$(date +%Y%m%d_%H%M%S)_${USER_NAME}_${libname}"
 [[ -n "${cellname}" ]] && uniqueid="${uniqueid}_${cellname}"
 replays_folder="replay_files_${uniqueid}"
 export uniqueid

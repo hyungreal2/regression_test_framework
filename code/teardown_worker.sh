@@ -20,12 +20,12 @@ log "[WORKER] started (queue=${queue_file})"
 while true; do
     if [[ -s "${queue_file}" ]]; then
         # Dequeue first entry
-        uniqueid=$(head -1 "${queue_file}")
+        uniquetestid=$(head -1 "${queue_file}")
         tail -n +2 "${queue_file}" > "${queue_file}.tmp"
         mv "${queue_file}.tmp" "${queue_file}"
 
-        export uniqueid
-        log "[WORKER] tearing down uniqueid=${uniqueid}"
+        export uniquetestid
+        log "[WORKER] tearing down uniquetestid=${uniquetestid}"
         bash "$(dirname "$0")/teardown.sh" -d "${DRY_RUN:-1}"
 
     elif [[ -f "${done_flag}" ]]; then

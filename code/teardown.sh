@@ -27,12 +27,12 @@ source "$(dirname "$0")/env.sh"
 source "$(dirname "$0")/common.sh"
 
 #######################################
-# Validate uniqueid
+# Validate uniquetestid
 #######################################
-[[ -n "${uniqueid:-}" ]] || error_exit "uniqueid is not set (must be exported from caller)"
+[[ -n "${uniquetestid:-}" ]] || error_exit "uniquetestid is not set (must be exported from caller)"
 
-project_name="${PROJ_PREFIX}_${uniqueid}"
-workspace_name="${WS_PREFIX}_${uniqueid}"
+project_name="${PROJ_PREFIX}_${uniquetestid}"
+workspace_name="${WS_PREFIX}_${uniquetestid}"
 
 project_gdp_path="${GDP_BASE}/${project_name}"
 project_depot_path="//depot${project_gdp_path}/..."
