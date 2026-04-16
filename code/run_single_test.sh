@@ -47,6 +47,9 @@ log "[TEST ${num}] uniquetestid=${uniquetestid}"
     log "[TEST ${num}] Linking cdsLibMgr.il to ${workspace_name}"
     run_cmd "ln -sf ${CDS_LIB_MGR} ${workspace_name}"
 
+    log "[TEST ${num}] Linking .cdsenv to ${workspace_name}"
+    run_cmd "ln -sf $(cd "$(dirname "$0")" && pwd)/.cdsenv ${workspace_name}/.cdsenv"
+
     #######################################
     # run
     #######################################

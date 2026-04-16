@@ -149,9 +149,9 @@ generate_templates() {
 
     log "Generating replay templates (libname=${libname} cellname=${cellname:-none})"
     if [[ -n "${cellname}" ]]; then
-        run_cmd "python3 code/generate_templates.py --result_folder ${uniqueid} --libname ${libname} --result ${replays_folder} --cellname ${cellname}"
+        run_cmd "python3 code/generate_templates.py --result_folder ${uniqueid} --libname ${libname} --results ${replays_folder} --cellname ${cellname}"
     else
-        run_cmd "python3 code/generate_templates.py --result_folder ${uniqueid} --libname ${libname} --result ${replays_folder}"
+        run_cmd "python3 code/generate_templates.py --result_folder ${uniqueid} --libname ${libname} --results ${replays_folder}"
     fi
 }
 
