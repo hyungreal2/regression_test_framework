@@ -53,7 +53,7 @@ if [[ -n "${ws_gdp_path}" ]]; then
         cd "${ws_local_path}" || exit 1
 
         log "Reverting opened files: ${project_depot_path}"
-        run_cmd "xlp4 -c \"${workspace_name}\" revert \"${project_depot_path}\" || true"
+        run_cmd "xlp4 -c \"${workspace_name}\" revert \"${project_depot_path}\" > /dev/null 2>&1 || true"
 
         #######################################
         # Delete pending changelists
