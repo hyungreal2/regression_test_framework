@@ -55,7 +55,7 @@ Options:
   -proj  | --proj_prefix <p>  Project prefix         (default: ${PROJ_PREFIX})
   -cell  | --cell <name>      Cell name              (default: ${cellname})
   -m     | --max <n>          Max test number 1-240  (default: ${MAX_CASES})
-  -c     | --cases <list>     Comma-separated tests  (e.g. 1,2,3)
+  -c     | --cases <list>     Tests: comma-sep or ranges (e.g. 1,3,5-9)
   -j     | --jobs <n>         Parallel jobs          (default: ${jobs})
   -d     | --dry-run [n]      Dry-run level 0/1/2    (default: 2)
   -t     | --teardown         Run teardown after all tests
@@ -132,8 +132,8 @@ validate_inputs() {
     fi
 
     if [[ ${cases_set} == true ]]; then
-        [[ ${cases} =~ ^[0-9]+(,[0-9]+)*$ ]] || \
-            error_exit "--cases format invalid (e.g. 1,2,3)"
+        [[ ${cases} =~ ^[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*$ ]] || \
+            error_exit "--cases format invalid (e.g. 1,3,5-9)"
     fi
 }
 
@@ -144,11 +144,14 @@ generate_templates() {
     log "Removing date_virtuosoVer.txt"
     run_cmd "rm -f code/date_virtuosoVer.txt"
 
+    log "Removing previous replay folder: code/${replays_folder}"
+    run_cmd "rm -rf code/${replays_folder}"
+
     log "Generating replay templates (libname=${libname} cellname=${cellname:-none})"
     if [[ -n "${cellname}" ]]; then
-        run_cmd "python3 code/generate_templates.py --libname ${libname} --cellname ${cellname}"
+        run_cmd "python3 code/generate_templates.py --result_folder ${uniqueid} --libname ${libname} --result ${replays_folder} --cellname ${cellname}"
     else
-        run_cmd "python3 code/generate_templates.py --libname ${libname}"
+        run_cmd "python3 code/generate_templates.py --result_folder ${uniqueid} --libname ${libname} --result ${replays_folder}"
     fi
 }
 
@@ -156,17 +159,22 @@ generate_templates() {
 # Determine tests
 #######################################
 get_tests() {
+    declare -A seen=()
+    tests=()
+
     if [[ ${cases_set} == true ]]; then
-        IFS=',' read -ra nums <<< "${cases}"
+        IFS=',' read -ra tokens <<< "${cases}"
 
-        declare -A seen=()
-        tests=()
-
-        for n in "${nums[@]}"; do
-            [[ -z ${seen[${n}]:-} ]] && {
-                tests+=("${n}")
-                seen[${n}]=1
-            }
+        for token in "${tokens[@]}"; do
+            if [[ "${token}" =~ ^([0-9]+)-([0-9]+)$ ]]; then
+                local start="${BASH_REMATCH[1]}" end="${BASH_REMATCH[2]}"
+                (( 10#${start} <= 10#${end} )) || error_exit "Invalid range in --cases: ${token}"
+                for (( n=10#${start}; n<=10#${end}; n++ )); do
+                    [[ -z ${seen[${n}]:-} ]] && { tests+=("${n}"); seen[${n}]=1; }
+                done
+            else
+                [[ -z ${seen[${token}]:-} ]] && { tests+=("${token}"); seen[${token}]=1; }
+            fi
         done
     else
         tests=($(seq 1 "${max}"))
@@ -209,7 +217,7 @@ prepare_tests() {
         run_cmd "mkdir -p ${testdir}"
 
         log "Moving replay_${num}.il to ${testdir}/"
-        run_cmd "mv -f ./code/replay_files/replay_${num}.il ${testdir}/"
+        run_cmd "mv -f ./code/${replays_folder}/replay_${num}.il ${testdir}/"
     done
 }
 
@@ -234,9 +242,12 @@ log "START (dry-run=${DRY_RUN})"
 #######################################
 # Generate unique ID
 #######################################
-uniqueid="$(date +%Y%m%d_%H%M%S)_$$"
+uniqueid="$(date +%Y%m%d_%H%M%S)_$$_${USER_NAME}_${libname}"
+[[ -n "${cellname}" ]] && uniqueid="${uniqueid}_${cellname}"
+replays_folder="replay_files_${uniqueid}"
 export uniqueid
 log "uniqueid: ${uniqueid}"
+log "replays_folder: ${replays_folder}"
 
 validate_inputs
 generate_templates
