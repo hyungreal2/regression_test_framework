@@ -52,11 +52,12 @@ log "[TEST ${num}] uniqueid=${uniqueid}"
     cd "${workspace_name}"
 
     log "[TEST ${num}] Running virtuoso replay (replay_${num}.il)"
+    run_cmd "mkdir -p ../../../CDS_log/${uniqueid}"
     vse_out=$(run_cmd "vse_sub \
         -v ${VSE_VERSION} \
         -env ${ICM_ENV} \
         -replay ../replay_${num}.il \
-        -log ../../../CDS_log/CDS_${uniqueid}_${num}.log")
+        -log ../../../CDS_log/${uniqueid}/CDS_${num}.log")
     job_id=$(awk -F'[<>]' '{print $2}' <<< "${vse_out}")
 
     log "[TEST ${num}] Waiting for job to finish (job_id=${job_id})"
