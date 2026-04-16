@@ -276,6 +276,12 @@ run_tests
 
 log "All tests finished."
 
+#######################################
+# Summary
+#######################################
+log "Generating summary for result/${uniqueid}"
+bash "$(dirname "$0")/code/summary.sh" -d "${DRY_RUN}" "${uniqueid}"
+
 if [[ "${do_teardown}" == true ]]; then
     log "Signaling teardown worker: main done"
     touch "${main_done_flag}"
