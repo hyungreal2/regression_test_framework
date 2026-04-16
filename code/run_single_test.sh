@@ -12,6 +12,7 @@ test_id="$1"
 [[ "${test_id}" =~ ^[0-9]+$ ]] || error_exit "test_id must be a positive integer: ${test_id}"
 [[ -n "${libname:-}"        ]] || error_exit "libname is not exported from caller"
 [[ -n "${regression_dir:-}" ]] || error_exit "regression_dir is not exported from caller"
+[[ -n "${uniqueid:-}"       ]] || error_exit "uniqueid is not exported from caller"
 
 num=$(format_num "${test_id}")
 testdir="$(pwd)/${regression_dir}/test_${num}"
@@ -52,12 +53,12 @@ log "[TEST ${num}] uniquetestid=${uniquetestid}"
     cd "${workspace_name}"
 
     log "[TEST ${num}] Running virtuoso replay (replay_${num}.il)"
-    run_cmd "mkdir -p ../../../CDS_log/${uniquetestid}"
+    run_cmd "mkdir -p ../../../CDS_log/${uniqueid}"
     vse_out=$(run_cmd "vse_sub \
         -v ${VSE_VERSION} \
         -env ${ICM_ENV} \
         -replay ../replay_${num}.il \
-        -log ../../../CDS_log/${uniquetestid}/CDS_${num}.log")
+        -log ../../../CDS_log/${uniqueid}/CDS_${num}.log")
     job_id=$(awk -F'[<>]' '{print $2}' <<< "${vse_out}")
 
     log "[TEST ${num}] Waiting for job to finish (job_id=${job_id})"
