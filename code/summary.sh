@@ -2,8 +2,9 @@
 
 set -euo pipefail
 
-source "$(dirname "$0")/env.sh"
-source "$(dirname "$0")/common.sh"
+script_dir="${script_dir:-$(cd "$(dirname "$0")/.." && pwd)}"
+source "${script_dir}/code/env.sh"
+source "${script_dir}/code/common.sh"
 
 #######################################
 # Parse args

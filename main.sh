@@ -3,6 +3,7 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
+export script_dir
 
 source "${script_dir}/code/env.sh"
 source "${script_dir}/code/common.sh"

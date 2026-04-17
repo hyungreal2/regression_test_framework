@@ -2,10 +2,9 @@
 
 set -euo pipefail
 
-source "$(dirname "$0")/env.sh"
-source "$(dirname "$0")/common.sh"
-
-script_dir="$(cd "$(dirname "$0")" && pwd)"
+script_dir="${script_dir:-$(cd "$(dirname "$0")/.." && pwd)}"
+source "${script_dir}/code/env.sh"
+source "${script_dir}/code/common.sh"
 jobs=4
 
 #######################################
@@ -92,7 +91,7 @@ done
 printf "%s\n" "${uid_list[@]}" | \
     xargs -n1 -P"${jobs}" bash -c "
         export uniquetestid=\"\$1\"
-        bash \"${script_dir}/teardown.sh\" -d \"${DRY_RUN}\"
+        bash \"${script_dir}/code/teardown.sh\" -d \"${DRY_RUN}\"
     " _
 
 log "All teardowns completed."

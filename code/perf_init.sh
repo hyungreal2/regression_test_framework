@@ -21,8 +21,9 @@ while [[ $_i -le $# ]]; do
     _i=$(( _i + 1 ))
 done
 
-source "$(dirname "$0")/env.sh"
-source "$(dirname "$0")/common.sh"
+script_dir="${script_dir:-$(cd "$(dirname "$0")/.." && pwd)}"
+source "${script_dir}/code/env.sh"
+source "${script_dir}/code/common.sh"
 
 #######################################
 # Args
@@ -32,9 +33,6 @@ testtype="$1"
 lib="$2"
 cell="$3"
 uniqueid="$4"
-
-script_dir="$(cd "$(dirname "$0")" && pwd)"
-project_root="$(cd "${script_dir}/.." && pwd)"
 
 ws_name="${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}"
 proj_path="${PERF_GDP_BASE}/${ws_name}"
@@ -92,7 +90,7 @@ done
 log "[INIT] Building MANAGED workspace: ${ws_name}"
 if [[ "${DRY_RUN}" -lt 2 ]]; then
     (
-        cd "${project_root}/WORKSPACES_MANAGED" || exit 1
+        cd "${script_dir}/WORKSPACES_MANAGED" || exit 1
         run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${ws_name}\" --location \"$(pwd)\""
     )
 else
@@ -106,8 +104,8 @@ fi
 # - gdp rebuild MANAGED to restore oa
 #######################################
 log "[INIT] Setting up UNMANAGED workspace: ${ws_name}"
-managed_ws="${project_root}/WORKSPACES_MANAGED/${ws_name}"
-unmanaged_ws="${project_root}/WORKSPACES_UNMANAGED/${ws_name}"
+managed_ws="${script_dir}/WORKSPACES_MANAGED/${ws_name}"
+unmanaged_ws="${script_dir}/WORKSPACES_UNMANAGED/${ws_name}"
 
 if [[ "${DRY_RUN}" -lt 2 ]]; then
     run_cmd "mkdir -p \"${unmanaged_ws}\""
@@ -145,7 +143,7 @@ fi
 #######################################
 # Copy replay file to both workspaces
 #######################################
-replay_src="${project_root}/GenerateReplayScript/${testtype}_${lib}.au"
+replay_src="${script_dir}/GenerateReplayScript/${testtype}_${lib}.au"
 log "[INIT] Copying replay to workspaces"
 if [[ "${DRY_RUN}" -lt 2 ]]; then
     run_cmd "cp \"${replay_src}\" \"${managed_ws}/${testtype}_${lib}.au\""

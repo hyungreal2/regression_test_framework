@@ -2,19 +2,38 @@
 
 set -euo pipefail
 
-source "$(dirname "$0")/env.sh"
-source "$(dirname "$0")/common.sh"
+#######################################
+# Parse -d before sourcing env.sh
+#######################################
+_i=1
+while [[ $_i -le $# ]]; do
+    _arg="${!_i}"
+    if [[ "${_arg}" == "-d" || "${_arg}" == "--dry-run" ]]; then
+        _j=$(( _i + 1 ))
+        _next="${!_j:-}"
+        if [[ "${_next}" =~ ^[012]$ ]]; then
+            export DRY_RUN="${_next}"
+        else
+            export DRY_RUN=2
+        fi
+        break
+    fi
+    _i=$(( _i + 1 ))
+done
+
+script_dir="${script_dir:-$(cd "$(dirname "$0")/.." && pwd)}"
+source "${script_dir}/code/env.sh"
+source "${script_dir}/code/common.sh"
 
 #######################################
 # Args
 #######################################
-[[ $# -ge 3 ]] || error_exit "Usage: $0 <testtype> <lib> <cell>"
+[[ $# -ge 3 ]] || error_exit "Usage: $0 <testtype> <lib> <cell> [-d <level>]"
 testtype="$1"
 lib="$2"
 cell="$3"
 
-script_dir="$(cd "$(dirname "$0")" && pwd)"
-replay_dir="${script_dir}/../GenerateReplayScript"
+replay_dir="${script_dir}/GenerateReplayScript"
 
 log "[REPLAY] Generating ${testtype}_${lib}.au (cell=${cell})"
 

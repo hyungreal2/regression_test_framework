@@ -21,8 +21,9 @@ while [[ $_i -le $# ]]; do
     _i=$(( _i + 1 ))
 done
 
-source "$(dirname "$0")/env.sh"
-source "$(dirname "$0")/common.sh"
+script_dir="${script_dir:-$(cd "$(dirname "$0")/.." && pwd)}"
+source "${script_dir}/code/env.sh"
+source "${script_dir}/code/common.sh"
 
 #######################################
 # Args
@@ -32,14 +33,11 @@ testtype="$1"
 lib="$2"
 uniqueid="$3"
 
-script_dir="$(cd "$(dirname "$0")" && pwd)"
-project_root="$(cd "${script_dir}/.." && pwd)"
-
 ws_name="${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}"
 proj_path="${PERF_GDP_BASE}/${ws_name}"
 proj_depot_path="//depot${proj_path}/..."
-managed_ws="${project_root}/WORKSPACES_MANAGED/${ws_name}"
-unmanaged_ws="${project_root}/WORKSPACES_UNMANAGED/${ws_name}"
+managed_ws="${script_dir}/WORKSPACES_MANAGED/${ws_name}"
+unmanaged_ws="${script_dir}/WORKSPACES_UNMANAGED/${ws_name}"
 
 log "[TEARDOWN] ${testtype}/${lib} ws=${ws_name}"
 

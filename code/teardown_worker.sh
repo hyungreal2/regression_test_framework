@@ -2,8 +2,9 @@
 
 set -euo pipefail
 
-source "$(dirname "$0")/env.sh"
-source "$(dirname "$0")/common.sh"
+script_dir="${script_dir:-$(cd "$(dirname "$0")/.." && pwd)}"
+source "${script_dir}/code/env.sh"
+source "${script_dir}/code/common.sh"
 
 #######################################
 # Args
@@ -26,7 +27,7 @@ while true; do
 
         export uniquetestid
         log "[WORKER] tearing down uniquetestid=${uniquetestid}"
-        bash "$(dirname "$0")/teardown.sh" -d "${DRY_RUN:-1}"
+        bash "${script_dir}/code/teardown.sh" -d "${DRY_RUN:-1}"
 
     elif [[ -f "${done_flag}" ]]; then
         log "[WORKER] queue empty and main done. Exiting."

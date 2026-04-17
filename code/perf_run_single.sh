@@ -21,8 +21,9 @@ while [[ $_i -le $# ]]; do
     _i=$(( _i + 1 ))
 done
 
-source "$(dirname "$0")/env.sh"
-source "$(dirname "$0")/common.sh"
+script_dir="${script_dir:-$(cd "$(dirname "$0")/.." && pwd)}"
+source "${script_dir}/code/env.sh"
+source "${script_dir}/code/common.sh"
 
 #######################################
 # Args
@@ -36,12 +37,9 @@ uniqueid="$4"
 [[ "${mode}" == "managed" || "${mode}" == "unmanaged" ]] || \
     error_exit "mode must be 'managed' or 'unmanaged', got: ${mode}"
 
-script_dir="$(cd "$(dirname "$0")" && pwd)"
-project_root="$(cd "${script_dir}/.." && pwd)"
-
 ws_name="${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}"
 mode_upper="${mode^^}"
-ws_dir="${project_root}/WORKSPACES_${mode_upper}/${ws_name}"
+ws_dir="${script_dir}/WORKSPACES_${mode_upper}/${ws_name}"
 
 log "[RUN] ${testtype}/${lib}/${mode} ws=${ws_name}"
 

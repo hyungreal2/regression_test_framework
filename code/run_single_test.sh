@@ -1,13 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-source "$(dirname "$0")/env.sh"
-source "$(dirname "$0")/common.sh"
+script_dir="${script_dir:-$(cd "$(dirname "$0")/.." && pwd)}"
+source "${script_dir}/code/env.sh"
+source "${script_dir}/code/common.sh"
 
 [[ $# -gt 0 ]] || error_exit "Usage: $0 <test_id>"
 test_id="$1"
-#libname="$2" ->from parent
-#regression_dir="$3" ->from parent
 
 [[ "${test_id}" =~ ^[0-9]+$ ]] || error_exit "test_id must be a positive integer: ${test_id}"
 [[ -n "${libname:-}"        ]] || error_exit "libname is not exported from caller"
@@ -34,7 +33,7 @@ log "[TEST ${num}] uniquetestid=${uniquetestid}"
     # init
     #######################################
     log "[TEST ${num}] Running init.sh (libname=${libname})"
-    run_cmd "../../code/init.sh ${libname}"
+    run_cmd "${script_dir}/code/init.sh ${libname}"
 
     #######################################
     # workspace path
@@ -48,7 +47,7 @@ log "[TEST ${num}] uniquetestid=${uniquetestid}"
     run_cmd "ln -sf ${CDS_LIB_MGR} ${workspace_name}"
 
     log "[TEST ${num}] Linking .cdsenv to ${workspace_name}"
-    run_cmd "ln -sf $(cd "$(dirname "$0")" && pwd)/.cdsenv ${workspace_name}/.cdsenv"
+    run_cmd "ln -sf ${script_dir}/code/.cdsenv ${workspace_name}/.cdsenv"
 
     #######################################
     # run
