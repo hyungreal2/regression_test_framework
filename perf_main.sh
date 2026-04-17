@@ -48,21 +48,58 @@ print_help() {
     cat <<EOF
 Usage: $(basename "$0") [options]
 
-Options:
-  -h         | --help          Print this help message
-  -lib         <lib[,lib...]>  Libraries to test    (default: all — ${PERF_LIBS[*]})
-  -test        <test[,test...]> Test types          (default: all — ${PERF_TESTS[*]})
-  -mode        <managed|unmanaged>  Mode            (default: both)
-  -j         | --jobs <n>      Parallel jobs        (default: ${jobs})
-  -d         | --dry-run [n]   Dry-run level 0/1/2  (default: ${DRY_RUN})
-  -no-run    | --no-run        Init only; skip test execution
-  -t         | --teardown      Run teardown after tests
-  -auto-init | --auto-init     Auto-run init if no session exists (no prompt)
+DESCRIPTION
+  Performance regression test runner with session-based workspace management.
+  By default, init is skipped and the existing session is reused. If no session
+  exists, an interactive prompt asks whether to run init first.
 
-Session:
-  Active session is stored in: ${session_file}
-  Default behavior skips init and reuses the existing session.
-  If no session exists, an interactive prompt asks whether to run init.
+OPTIONS
+  -h         | --help            Print this help message
+  -lib         <lib[,lib,...]>   Comma-separated libraries to test
+                                   default: all  (${PERF_LIBS[*]})
+  -test        <test[,test,...]> Comma-separated test types to run
+                                   default: all  (${PERF_TESTS[*]})
+  -mode        <managed|unmanaged>
+                                 Workspace mode to run
+                                   default: both managed and unmanaged
+  -j         | --jobs <n>        Number of parallel jobs          (default: ${jobs})
+  -d         | --dry-run [0|1|2] Dry-run level                    (default: ${DRY_RUN})
+                                   0 = run everything
+                                   1 = skip gdp / xlp4 / rm / vse (mock workspaces)
+                                   2 = skip all commands (print only)
+  -no-run    | --no-run          Run init phases only; skip test execution
+                                   Saves session to ${session_file}
+  -t         | --teardown        Run teardown after tests
+                                   Removes session file when done
+  -auto-init | --auto-init       If no session exists, run init automatically
+                                   without prompting (useful for scripted runs)
+
+SESSION
+  The active session ID is stored in:
+    ${session_file}
+
+  Session lifecycle:
+    init only   perf_main.sh -no-run         → creates session file
+    run         perf_main.sh                 → reads session file
+    run+cleanup perf_main.sh -t              → reads, then removes session file
+    teardown    perf_main.sh -no-run -t      → removes session file (no run)
+
+WORKFLOW EXAMPLES
+  # Step 1: Set up workspaces (do once)
+  $(basename "$0") -no-run -lib BM01 -test checkHier
+
+  # Step 2: Run tests (repeat as needed)
+  $(basename "$0")
+  $(basename "$0") -lib BM01 -test checkHier
+
+  # Step 3: Tear down workspaces when done
+  $(basename "$0") -no-run -t
+
+  # Run everything in one shot (init → run → teardown)
+  $(basename "$0") -auto-init -t
+
+  # Dry-run to preview commands without executing
+  $(basename "$0") -d 2
 EOF
 }
 
