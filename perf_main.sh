@@ -2,13 +2,16 @@
 
 set -euo pipefail
 
-source "$(dirname "$0")/code/env.sh"
-source "$(dirname "$0")/code/common.sh"
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+
+source "${script_dir}/code/env.sh"
+source "${script_dir}/code/common.sh"
 
 #######################################
 # Log file
 #######################################
-logfile="perf_main.log.$(date +%Y%m%d_%H%M%S).txt"
+mkdir -p "${script_dir}/log"
+logfile="${script_dir}/log/perf_main.log.$(date +%Y%m%d_%H%M%S).txt"
 exec > >(tee "${logfile}") 2>&1
 log "Logging to ${logfile}"
 
@@ -159,8 +162,6 @@ for testtype in "${active_tests[@]}"; do
 done
 
 log "Matrix: ${#combos_init[@]} (testtype×lib) × ${#selected_modes[@]} modes = ${#combos_run[@]} runs"
-
-script_dir="$(cd "$(dirname "$0")" && pwd)"
 
 #######################################
 # Phase 1: Generate replays (sequential)

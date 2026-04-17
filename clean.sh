@@ -22,6 +22,9 @@ rm -f  "${script_dir}/code/date_virtuosoVer.txt"
 # Workspaces created by dry-run level 1
 rm -rf "${script_dir}"/cico_ws_*/
 
+# Log directory
+rm -rf "${script_dir}/log"
+
 # Python cache
 rm -rf "${script_dir}"/__pycache__
 find   "${script_dir}" -name "*.pyc" -delete
