@@ -36,6 +36,9 @@ GenerateReplayScript/lcv.txt
 GenerateReplayScript/*.au
 
 # ----------------------------------------
+# Legacy reference files (local only, not tracked)
+legacy/
+
 # Python
 # ----------------------------------------
 __pycache__/
