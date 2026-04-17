@@ -2,13 +2,16 @@
 
 set -euo pipefail
 
-source "$(dirname "$0")/code/env.sh"
-source "$(dirname "$0")/code/common.sh"
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+
+source "${script_dir}/code/env.sh"
+source "${script_dir}/code/common.sh"
 
 #######################################
 # Log file
 #######################################
-logfile="main.log.$(date +%Y%m%d_%H%M%S).txt"
+mkdir -p "${script_dir}/log"
+logfile="${script_dir}/log/main.log.$(date +%Y%m%d_%H%M%S).txt"
 exec > >(tee "${logfile}") 2>&1
 log "Logging to ${logfile}"
 
@@ -265,7 +268,7 @@ main_done_flag="${regression_dir}/main_done.flag"
 if [[ "${do_teardown}" == true ]]; then
     touch "${teardown_queue_file}"
     log "Starting background teardown worker"
-    bash "$(dirname "$0")/code/teardown_worker.sh" \
+    bash "${script_dir}/code/teardown_worker.sh" \
         "${teardown_queue_file}" "${main_done_flag}" &
     teardown_worker_pid=$!
     export teardown_queue_file
@@ -280,7 +283,7 @@ log "All tests finished."
 # Summary
 #######################################
 log "Generating summary for result/${uniqueid}"
-bash "$(dirname "$0")/code/summary.sh" -d "${DRY_RUN}" "${uniqueid}"
+bash "${script_dir}/code/summary.sh" -d "${DRY_RUN}" "${uniqueid}"
 
 if [[ "${do_teardown}" == true ]]; then
     log "Signaling teardown worker: main done"

@@ -26,7 +26,8 @@ selected_modes=(managed unmanaged)
 teardown_worker_pid=""
 
 #######################################
-# Trap
+# Trap: ensure any background work
+# is always waited on exit
 #######################################
 _cleanup() {
     if [[ -n "${teardown_worker_pid}" ]]; then
@@ -58,58 +59,51 @@ EOF
 #######################################
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -h|--help)  print_help; exit 0 ;;
+        -h|--help)
+            print_help
+            exit 0
+            ;;
         -lib)
-            IFS=',' read -ra selected_libs <<< "$2"; shift 2 ;;
+            IFS=',' read -ra selected_libs <<< "$2"
+            shift 2
+            ;;
         -test)
-            IFS=',' read -ra selected_tests <<< "$2"; shift 2 ;;
+            IFS=',' read -ra selected_tests <<< "$2"
+            shift 2
+            ;;
         -mode)
-            selected_modes=("$2"); shift 2 ;;
+            selected_modes=("$2")
+            shift 2
+            ;;
         -d|--dry-run)
-            if [[ "${2:-}" =~ ^[012]$ ]]; then DRY_RUN="$2"; shift 2
-            else DRY_RUN=2; shift; fi ;;
+            if [[ "${2:-}" =~ ^[012]$ ]]; then
+                DRY_RUN="$2"
+                shift 2
+            else
+                DRY_RUN=2
+                shift
+            fi
+            ;;
         -j|--jobs)
             [[ "${2:-}" =~ ^[0-9]+$ ]] || error_exit "-j requires a positive integer"
-            jobs="$2"; shift 2 ;;
+            jobs="$2"
+            shift 2
+            ;;
         -t|--teardown)
-            do_teardown=true; shift ;;
-        *)  error_exit "Unknown option: $1" ;;
+            do_teardown=true
+            shift
+            ;;
+        *)
+            error_exit "Unknown option: $1"
+            ;;
     esac
 done
 
 export DRY_RUN
 
 #######################################
-# Resolve active libs / tests
+# Helper: cell lookup
 #######################################
-active_libs=()
-if [[ ${#selected_libs[@]} -eq 0 ]]; then
-    active_libs=("${PERF_LIBS[@]}")
-else
-    for sl in "${selected_libs[@]}"; do
-        found=false
-        for pl in "${PERF_LIBS[@]}"; do
-            [[ "${sl}" == "${pl}" ]] && { found=true; break; }
-        done
-        [[ "${found}" == true ]] || error_exit "Unknown lib: ${sl} (valid: ${PERF_LIBS[*]})"
-        active_libs+=("${sl}")
-    done
-fi
-
-active_tests=()
-if [[ ${#selected_tests[@]} -eq 0 ]]; then
-    active_tests=("${PERF_TESTS[@]}")
-else
-    for st in "${selected_tests[@]}"; do
-        found=false
-        for pt in "${PERF_TESTS[@]}"; do
-            [[ "${st}" == "${pt}" ]] && { found=true; break; }
-        done
-        [[ "${found}" == true ]] || error_exit "Unknown test: ${st} (valid: ${PERF_TESTS[*]})"
-        active_tests+=("${st}")
-    done
-fi
-
 get_cell() {
     local l="$1"
     for i in "${!PERF_LIBS[@]}"; do
@@ -119,96 +113,133 @@ get_cell() {
 }
 
 #######################################
-# Unique session ID
+# Validate inputs
 #######################################
-log "START (dry-run=${DRY_RUN})"
-uniqueid="perf_$(date +%Y%m%d_%H%M%S)_${USER_NAME}"
-log "uniqueid: ${uniqueid}"
+validate_inputs() {
+    local sl st found
 
-#######################################
-# Prepare directories
-#######################################
-run_cmd "mkdir -p WORKSPACES_MANAGED WORKSPACES_UNMANAGED"
-run_cmd "mkdir -p result/${uniqueid} CDS_log/${uniqueid}"
+    for sl in "${selected_libs[@]}"; do
+        found=false
+        for pl in "${PERF_LIBS[@]}"; do
+            [[ "${sl}" == "${pl}" ]] && { found=true; break; }
+        done
+        [[ "${found}" == true ]] || error_exit "Unknown lib: ${sl} (valid: ${PERF_LIBS[*]})"
+    done
 
-if [[ "${DRY_RUN}" -lt 2 ]]; then
-    echo "managed"   > WORKSPACES_MANAGED/managed.txt
-    echo "unmanaged" > WORKSPACES_UNMANAGED/managed.txt
-fi
-
-#######################################
-# Pre-write date_virtuosoVer.txt
-#######################################
-log "Writing date_virtuosoVer.txt: ${uniqueid}"
-if [[ "${DRY_RUN}" -lt 2 ]]; then
-    echo "${uniqueid}" > code/date_virtuosoVer.txt
-fi
+    for st in "${selected_tests[@]}"; do
+        found=false
+        for pt in "${PERF_TESTS[@]}"; do
+            [[ "${st}" == "${pt}" ]] && { found=true; break; }
+        done
+        [[ "${found}" == true ]] || error_exit "Unknown test: ${st} (valid: ${PERF_TESTS[*]})"
+    done
+}
 
 #######################################
 # Build combo arrays
 #######################################
-combos_init=()      # "testtype lib cell"  — Phase 1 generate + Phase 2 init
-combos_run=()       # "testtype lib mode"  — Phase 3 run
-combos_teardown=()  # "testtype lib"       — Phase 5 teardown
-for testtype in "${active_tests[@]}"; do
-    for lib in "${active_libs[@]}"; do
-        cell=$(get_cell "${lib}")
-        combos_init+=("${testtype} ${lib} ${cell}")
-        combos_teardown+=("${testtype} ${lib}")
-        for mode in "${selected_modes[@]}"; do
-            combos_run+=("${testtype} ${lib} ${mode}")
+build_combos() {
+    local testtype lib cell mode
+
+    if [[ ${#selected_libs[@]} -eq 0 ]];  then active_libs=("${PERF_LIBS[@]}");  else active_libs=("${selected_libs[@]}");  fi
+    if [[ ${#selected_tests[@]} -eq 0 ]]; then active_tests=("${PERF_TESTS[@]}"); else active_tests=("${selected_tests[@]}"); fi
+
+    combos_init=()      # "testtype lib cell"  — Phase 1 generate + Phase 2 init
+    combos_run=()       # "testtype lib mode"  — Phase 3 run
+    combos_teardown=()  # "testtype lib"       — Phase 5 teardown
+
+    for testtype in "${active_tests[@]}"; do
+        for lib in "${active_libs[@]}"; do
+            cell=$(get_cell "${lib}")
+            combos_init+=("${testtype} ${lib} ${cell}")
+            combos_teardown+=("${testtype} ${lib}")
+            for mode in "${selected_modes[@]}"; do
+                combos_run+=("${testtype} ${lib} ${mode}")
+            done
         done
     done
-done
-
-log "Matrix: ${#combos_init[@]} (testtype×lib) × ${#selected_modes[@]} modes = ${#combos_run[@]} runs"
+}
 
 #######################################
 # Phase 1: Generate replays (sequential)
 #######################################
-log "--- Phase 1: Generate replays ---"
-for combo in "${combos_init[@]}"; do
-    read -r testtype lib cell <<< "${combo}"
-    bash "${script_dir}/code/perf_generate_replay.sh" \
-        "${testtype}" "${lib}" "${cell}" -d "${DRY_RUN}"
-done
+generate_replays() {
+    local testtype lib cell
+
+    log "--- Phase 1: Generate replays ---"
+    for combo in "${combos_init[@]}"; do
+        read -r testtype lib cell <<< "${combo}"
+        bash "${script_dir}/code/perf_generate_replay.sh" \
+            "${testtype}" "${lib}" "${cell}" -d "${DRY_RUN}"
+    done
+}
 
 #######################################
 # Phase 2: Init workspaces (parallel)
 #######################################
-log "--- Phase 2: Init workspaces (jobs=${jobs}) ---"
-printf "%s\n" "${combos_init[@]}" | \
-    xargs -n3 -P"${jobs}" bash -c "
-        bash \"${script_dir}/code/perf_init.sh\" \"\$1\" \"\$2\" \"\$3\" \"${uniqueid}\" -d \"${DRY_RUN}\"
-    " _
+init_workspaces() {
+    log "--- Phase 2: Init workspaces (jobs=${jobs}) ---"
+    printf "%s\n" "${combos_init[@]}" | \
+        xargs -n3 -P"${jobs}" bash -c "
+            bash \"${script_dir}/code/perf_init.sh\" \"\$1\" \"\$2\" \"\$3\" \"${uniqueid}\" -d \"${DRY_RUN}\"
+        " _
+}
 
 #######################################
 # Phase 3: Run tests (parallel)
 #######################################
-log "--- Phase 3: Run tests (jobs=${jobs}) ---"
-printf "%s\n" "${combos_run[@]}" | \
-    xargs -n3 -P"${jobs}" bash -c "
-        bash \"${script_dir}/code/perf_run_single.sh\" \"\$1\" \"\$2\" \"\$3\" \"${uniqueid}\" -d \"${DRY_RUN}\"
-    " _
-
-log "All tests finished."
-
-#######################################
-# Phase 4: Summary
-#######################################
-log "--- Phase 4: Summary ---"
-bash "${script_dir}/code/summary.sh" -d "${DRY_RUN}" "${uniqueid}"
+run_tests() {
+    log "--- Phase 3: Run tests (jobs=${jobs}) ---"
+    printf "%s\n" "${combos_run[@]}" | \
+        xargs -n3 -P"${jobs}" bash -c "
+            bash \"${script_dir}/code/perf_run_single.sh\" \"\$1\" \"\$2\" \"\$3\" \"${uniqueid}\" -d \"${DRY_RUN}\"
+        " _
+}
 
 #######################################
-# Phase 5: Teardown (optional, parallel)
+# Phase 5: Teardown (parallel)
 #######################################
-if [[ "${do_teardown}" == true ]]; then
+teardown_workspaces() {
     log "--- Phase 5: Teardown (jobs=${jobs}) ---"
     printf "%s\n" "${combos_teardown[@]}" | \
         xargs -n2 -P"${jobs}" bash -c "
             bash \"${script_dir}/code/perf_teardown.sh\" \"\$1\" \"\$2\" \"${uniqueid}\" -d \"${DRY_RUN}\"
         " _
     log "All teardowns completed."
+}
+
+#######################################
+# Main
+#######################################
+log "START (dry-run=${DRY_RUN})"
+
+uniqueid="perf_$(date +%Y%m%d_%H%M%S)_${USER_NAME}"
+log "uniqueid: ${uniqueid}"
+
+validate_inputs
+build_combos
+log "Matrix: ${#combos_init[@]} (testtype×lib) × ${#selected_modes[@]} modes = ${#combos_run[@]} runs"
+
+run_cmd "mkdir -p WORKSPACES_MANAGED WORKSPACES_UNMANAGED"
+run_cmd "mkdir -p result/${uniqueid} CDS_log/${uniqueid}"
+
+if [[ "${DRY_RUN}" -lt 2 ]]; then
+    echo "managed"   > WORKSPACES_MANAGED/managed.txt
+    echo "unmanaged" > WORKSPACES_UNMANAGED/managed.txt
+    echo "${uniqueid}" > "${script_dir}/code/date_virtuosoVer.txt"
+fi
+
+generate_replays
+init_workspaces
+run_tests
+
+log "All tests finished."
+
+log "Generating summary for result/${uniqueid}"
+bash "${script_dir}/code/summary.sh" -d "${DRY_RUN}" "${uniqueid}"
+
+if [[ "${do_teardown}" == true ]]; then
+    teardown_workspaces
 fi
 
 log "perf_main.sh DONE"
