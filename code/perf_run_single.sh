@@ -38,12 +38,29 @@ uniqueid="$4"
     error_exit "mode must be 'managed' or 'unmanaged', got: ${mode}"
 
 ws_name="${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}"
-mode_upper="${mode^^}"
-ws_dir="${script_dir}/WORKSPACES_${mode_upper}/${ws_name}"
 
 log "[RUN] ${testtype}/${lib}/${mode} ws=${ws_name}"
 
-[[ -d "${ws_dir}" ]] || error_exit "Workspace directory not found: ${ws_dir}"
+#######################################
+# Locate workspace directory
+# MANAGED  : gdp find (authoritative, location-independent)
+# UNMANAGED: derived from MANAGED path (local dir, not GDP-registered)
+#######################################
+ws_gdp_path=$(run_cmd "gdp find --type=workspace \":=${ws_name}\"" || true)
+[[ -n "${ws_gdp_path}" ]] || error_exit "Workspace not found via gdp find: ${ws_name}"
+
+managed_ws=$(run_cmd "gdp list \"${ws_gdp_path}\" --columns=rootDir")
+[[ -d "${managed_ws}" ]] || error_exit "MANAGED workspace directory not found: ${managed_ws}"
+
+managed_parent="$(dirname "${managed_ws}")"
+unmanaged_ws="${managed_parent/%WORKSPACES_MANAGED/WORKSPACES_UNMANAGED}/${ws_name}"
+
+if [[ "${mode}" == "managed" ]]; then
+    ws_dir="${managed_ws}"
+else
+    [[ -d "${unmanaged_ws}" ]] || error_exit "UNMANAGED workspace directory not found: ${unmanaged_ws}"
+    ws_dir="${unmanaged_ws}"
+fi
 
 #######################################
 # Run VSE inside workspace
@@ -52,8 +69,8 @@ log "[RUN] Running VSE (mode=${VSE_MODE:-run}) in ${ws_dir}"
 (
     cd "${ws_dir}" || exit 1
 
-    run_cmd "mkdir -p \"../../CDS_log/${uniqueid}\""
-    run_vse "./${testtype}_${lib}.au" "../../CDS_log/${uniqueid}/${testtype}_${lib}_${mode}.log"
+    run_cmd "mkdir -p \"${script_dir}/CDS_log/${uniqueid}\""
+    run_vse "./${testtype}_${lib}.au" "${script_dir}/CDS_log/${uniqueid}/${testtype}_${lib}_${mode}.log"
 )
 
 log "[RUN] Done: ${testtype}/${lib}/${mode}"
