@@ -29,6 +29,8 @@ cico_ws_*/
 WORKSPACES_MANAGED/
 WORKSPACES_UNMANAGED/
 result/
+.gdp_ws_lock
+perf_session.txt
 
 # GenerateReplayScript runtime outputs
 GenerateReplayScript/lcv.txt

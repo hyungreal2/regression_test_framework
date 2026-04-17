@@ -86,13 +86,17 @@ done
 
 #######################################
 # Build MANAGED workspace
+# flock: serialise p4 protect table updates
+# across parallel perf_init.sh processes
 #######################################
 log "[INIT] Building MANAGED workspace: ${ws_name}"
 if [[ "${DRY_RUN}" -lt 2 ]]; then
     (
+        flock 9
+        log "[INIT] Lock acquired for gdp build workspace: ${ws_name}"
         cd "${script_dir}/WORKSPACES_MANAGED" || exit 1
         run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${ws_name}\" --location \"$(pwd)\""
-    )
+    ) 9>"${script_dir}/.gdp_ws_lock"
 else
     log "[DRY-RUN:2] Would: gdp build workspace --gdp-name ${ws_name}"
 fi
@@ -130,9 +134,11 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
         # rebuild MANAGED to restore oa
         log "[INIT] Rebuilding MANAGED workspace to restore oa"
         (
+            flock 9
+            log "[INIT] Lock acquired for gdp rebuild workspace: ${ws_name}"
             cd "${managed_ws}" || exit 1
             run_cmd "gdp rebuild workspace ."
-        )
+        ) 9>"${script_dir}/.gdp_ws_lock"
     else
         log "[INIT] No oa dir in managed_ws (skipped at dry-run level)"
     fi
