@@ -29,6 +29,8 @@ selected_modes=(managed unmanaged)
 teardown_worker_pid=""
 
 session_file="${script_dir}/perf_session.txt"
+uniqueid=""
+session_ws=()   # entries: "testtype lib ws_name"
 
 #######################################
 # Trap: ensure any background work
@@ -75,8 +77,12 @@ OPTIONS
                                    without prompting (useful for scripted runs)
 
 SESSION
-  The active session ID is stored in:
+  The active session is stored in:
     ${session_file}
+
+  Format (one entry per line):
+    Line 1   : uniqueid (used for log/result directories)
+    Line 2+  : testtype lib ws_name (one workspace per line)
 
   Session lifecycle:
     init only   perf_main.sh -no-run         → creates session file
@@ -193,42 +199,78 @@ validate_inputs() {
 }
 
 #######################################
-# Build combo arrays
+# Build combos_init (for generate + init phases only)
 #######################################
 build_combos() {
-    local testtype lib cell mode
+    local testtype lib cell
 
     if [[ ${#selected_libs[@]} -eq 0 ]];  then active_libs=("${PERF_LIBS[@]}");  else active_libs=("${selected_libs[@]}");  fi
     if [[ ${#selected_tests[@]} -eq 0 ]]; then active_tests=("${PERF_TESTS[@]}"); else active_tests=("${selected_tests[@]}"); fi
 
-    combos_init=()      # "testtype lib cell"  — Phase 1 generate + Phase 2 init
-    combos_run=()       # "testtype lib mode"  — Phase 3 run
-    combos_teardown=()  # "testtype lib"       — Phase 5 teardown
+    combos_init=()  # "testtype lib cell"  — Phase 1 generate + Phase 2 init
 
     for testtype in "${active_tests[@]}"; do
         for lib in "${active_libs[@]}"; do
             cell=$(get_cell "${lib}")
             combos_init+=("${testtype} ${lib} ${cell}")
-            combos_teardown+=("${testtype} ${lib}")
-            for mode in "${selected_modes[@]}"; do
-                combos_run+=("${testtype} ${lib} ${mode}")
-            done
         done
     done
 }
 
 #######################################
-# Session: load or init
+# Session: read from file into memory
+#######################################
+_read_session() {
+    local lines=()
+    mapfile -t lines < "${session_file}"
+    uniqueid="${lines[0]}"
+    session_ws=()
+    local i
+    for (( i=1; i<${#lines[@]}; i++ )); do
+        [[ -n "${lines[$i]}" ]] && session_ws+=("${lines[$i]}")
+    done
+    log "Session loaded: uniqueid=${uniqueid}, ${#session_ws[@]} workspace(s)"
+}
+
+#######################################
+# Session: save to file
+# Format:
+#   line 1  : uniqueid
+#   line 2+ : testtype lib ws_name
+#######################################
+save_session() {
+    local testtype lib cell
+    {
+        echo "${uniqueid}"
+        for combo in "${combos_init[@]}"; do
+            read -r testtype lib cell <<< "${combo}"
+            echo "${testtype} ${lib} ${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}"
+        done
+    } > "${session_file}"
+    log "Session saved: ${session_file}"
+    _read_session
+}
+
+#######################################
+# Session: remove file
+#######################################
+remove_session() {
+    if [[ -f "${session_file}" ]]; then
+        rm -f "${session_file}"
+        log "Session removed: ${session_file}"
+    fi
+}
+
+#######################################
+# Session: load or prompt init
 #######################################
 load_or_init_session() {
     if [[ -f "${session_file}" ]]; then
-        uniqueid=$(<"${session_file}")
-        log "Session loaded: ${uniqueid} (from ${session_file})"
+        _read_session
         return
     fi
 
-    # No session — ask or auto-init
-    local answer="n"
+    local answer
     if [[ "${auto_init}" == true ]]; then
         log "No session found. --auto-init: running init automatically."
         answer="y"
@@ -243,21 +285,6 @@ load_or_init_session() {
         run_init_phases
     else
         error_exit "No session. Run with -no-run to initialise the environment first."
-    fi
-}
-
-#######################################
-# Save / remove session
-#######################################
-save_session() {
-    echo "${uniqueid}" > "${session_file}"
-    log "Session saved: ${uniqueid} → ${session_file}"
-}
-
-remove_session() {
-    if [[ -f "${session_file}" ]]; then
-        rm -f "${session_file}"
-        log "Session removed: ${session_file}"
     fi
 }
 
@@ -288,24 +315,36 @@ init_workspaces() {
 
 #######################################
 # Phase 3: Run tests (parallel)
+# Combos built from session_ws × selected_modes.
+# Passes ws_name explicitly so perf_run_single
+# does not need to reconstruct it from uniqueid.
 #######################################
 run_tests() {
-    log "--- Phase 3: Run tests (jobs=${jobs}) ---"
+    local testtype lib ws_name combos_run=()
+
+    for entry in "${session_ws[@]}"; do
+        read -r testtype lib ws_name <<< "${entry}"
+        for mode in "${selected_modes[@]}"; do
+            combos_run+=("${testtype} ${lib} ${mode} ${ws_name}")
+        done
+    done
+
+    log "--- Phase 3: Run tests (${#combos_run[@]} jobs, parallelism=${jobs}) ---"
     printf "%s\n" "${combos_run[@]}" | \
-        xargs -n3 -P"${jobs}" bash -c "
-            bash \"${script_dir}/code/perf_run_single.sh\" \"\$1\" \"\$2\" \"\$3\" \"${uniqueid}\" -d \"${DRY_RUN}\"
+        xargs -n4 -P"${jobs}" bash -c "
+            bash \"${script_dir}/code/perf_run_single.sh\" \"\$1\" \"\$2\" \"\$3\" \"\$4\" \"${uniqueid}\" -d \"${DRY_RUN}\"
         " _
 }
 
 #######################################
 # Phase 5: Teardown (parallel)
+# ws_names read directly from session_ws.
 #######################################
 teardown_workspaces() {
-    local testtype lib ws_names=()
+    local ws_names=()
 
-    for combo in "${combos_teardown[@]}"; do
-        read -r testtype lib <<< "${combo}"
-        ws_names+=("${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}")
+    for entry in "${session_ws[@]}"; do
+        ws_names+=("$(awk '{print $3}' <<< "${entry}")")
     done
 
     log "--- Phase 5: Teardown (jobs=${jobs}) ---"
@@ -342,16 +381,16 @@ log "START (dry-run=${DRY_RUN})"
 
 validate_inputs
 build_combos
-log "Matrix: ${#combos_init[@]} (testtype×lib) × ${#selected_modes[@]} modes = ${#combos_run[@]} runs"
+log "Init matrix: ${#combos_init[@]} workspace(s) (testtype×lib)"
 
 if [[ "${do_run}" == false && "${do_teardown}" == false ]]; then
-    # --no-run only: always run init phases
+    # -no-run: init only
     run_init_phases
     log "Init complete. Run without -no-run to execute tests."
+
 elif [[ "${do_run}" == true ]]; then
     load_or_init_session
 
-    log "--- Phase 3: Run tests ---"
     run_tests
 
     log "All tests finished."
@@ -362,13 +401,11 @@ elif [[ "${do_run}" == true ]]; then
         teardown_workspaces
         remove_session
     fi
+
 elif [[ "${do_run}" == false && "${do_teardown}" == true ]]; then
-    # --no-run -t: teardown only using existing session
-    if [[ ! -f "${session_file}" ]]; then
-        error_exit "No session found. Cannot teardown without an active session."
-    fi
-    uniqueid=$(<"${session_file}")
-    log "Session loaded for teardown: ${uniqueid}"
+    # -no-run -t: teardown only
+    [[ -f "${session_file}" ]] || error_exit "No session found. Cannot teardown without an active session."
+    _read_session
     teardown_workspaces
     remove_session
 fi

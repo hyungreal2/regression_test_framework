@@ -28,16 +28,15 @@ source "${script_dir}/code/common.sh"
 #######################################
 # Args
 #######################################
-[[ $# -ge 4 ]] || error_exit "Usage: $0 <testtype> <lib> <mode> <uniqueid> [-d <level>]"
+[[ $# -ge 5 ]] || error_exit "Usage: $0 <testtype> <lib> <mode> <ws_name> <uniqueid> [-d <level>]"
 testtype="$1"
 lib="$2"
 mode="$3"     # managed | unmanaged
-uniqueid="$4"
+ws_name="$4"
+uniqueid="$5"
 
 [[ "${mode}" == "managed" || "${mode}" == "unmanaged" ]] || \
     error_exit "mode must be 'managed' or 'unmanaged', got: ${mode}"
-
-ws_name="${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}"
 
 log "[RUN] ${testtype}/${lib}/${mode} ws=${ws_name}"
 
