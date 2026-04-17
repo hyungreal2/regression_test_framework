@@ -99,6 +99,24 @@ run_cmd() {
 }
 
 #######################################
+# VSE execution wrapper
+# VSE_MODE=run  → vse_run  (synchronous, env 1)
+# VSE_MODE=sub  → vse_sub + bwait (async submit, env 2)
+#######################################
+run_vse() {
+    local replay="$1" logfile="$2"
+    if [[ "${VSE_MODE:-run}" == "sub" ]]; then
+        local vse_out job_id
+        vse_out=$(run_cmd "vse_sub -v ${VSE_VERSION} -env ${ICM_ENV} -replay ${replay} -log ${logfile}")
+        job_id=$(awk -F'[<>]' '{print $2}' <<< "${vse_out}")
+        log "Waiting for job: ${job_id}"
+        run_cmd "bwait -w \"ended(${job_id})\""
+    else
+        run_cmd "vse_run -v ${VSE_VERSION} -replay ${replay} -log ${logfile}"
+    fi
+}
+
+#######################################
 # Safe rm
 #######################################
 safe_rm_rf() {

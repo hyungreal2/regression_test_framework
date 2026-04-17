@@ -46,17 +46,14 @@ log "[RUN] ${testtype}/${lib}/${mode} ws=${ws_name}"
 [[ -d "${ws_dir}" ]] || error_exit "Workspace directory not found: ${ws_dir}"
 
 #######################################
-# Run vse_run inside workspace
+# Run VSE inside workspace
 #######################################
-log "[RUN] Running vse_run in ${ws_dir}"
+log "[RUN] Running VSE (mode=${VSE_MODE:-run}) in ${ws_dir}"
 (
     cd "${ws_dir}" || exit 1
 
     run_cmd "mkdir -p \"../../CDS_log/${uniqueid}\""
-    run_cmd "vse_run \
-        -v ${VSE_VERSION} \
-        -replay ./${testtype}_${lib}.au \
-        -log ../../CDS_log/${uniqueid}/${testtype}_${lib}_${mode}.log"
+    run_vse "./${testtype}_${lib}.au" "../../CDS_log/${uniqueid}/${testtype}_${lib}_${mode}.log"
 )
 
 log "[RUN] Done: ${testtype}/${lib}/${mode}"
