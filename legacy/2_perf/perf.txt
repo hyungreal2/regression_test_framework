@@ -1,0 +1,779 @@
+**GenerateReplayScript/checkHier** \o \p envLoadFile("../../code/.cdsenv") load("../../code/perfFunctions.il") code_path = "../../code/" result_path = "../../result/" load( strcat( code_path "date_virtuosoVer.il")) ddAutoCtlSetVars(0 0 3 3) ;-------------------------------------------------- ;# Start Time ;# Open Design ;-------------------------------------------------- t1=getCurrentTime() openDesign( "a") ;-------------------------------------------------- ;# Set Samsung Setting ;-------------------------------------------------- LoadSamsungEnv() hiFormDone(schSRCForm) ;-------------------------------------------------- ;# Test1_Replace_Lib_here: Editor->Check->Hierarchy ;-------------------------------------------------- schHiCheckHier() hiiSetCurrentForm('schCheckHierForm) schCheckHierForm->checkAlways->value= t schCheckHierForm->checkRefLibs->value= t schCheckHierForm->openMode->value="edit" schCheckHierForm->saveStrategy->value="Save all" schCheckHierForm->closeErrorCVs->value= t hiFormDone(schCheckHierForm) hiCloseWindow(geGetCellViewWindow(gec())) ;-------------------------------------------------- ;# End Time ;-------------------------------------------------- t2=getCurrentTime() final=compareTime(t2 t1) system(strcat("mkdir -p " result_path date_virtuosoVer(code_path) )) inport = infile(strcat(code_path "managed.txt")) gets(managed inport) managed = substring(managed 1 strlen(managed)-1) close(inport) fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test1_Replace_Lib_here_" managed "_" date_virtuosoVer(code_path) ".log") "w") fprintf(fd "Test1_Replace_Lib_here. Performance Edit-Check-Hierarchy %s time %d\n" managed final) close(fd) ;-------------------------------------------------- ;# Exit ;-------------------------------------------------- exit geSaveAllForm->none->value= t hiFormDone(geSaveAllForm)**GenerateReplayScript/copyHierToEmpty** envLoadFile("../../code/.cdsenv") load("../../code/perfFunctions.il") code_path = "../../code/" result_path = "../../result/" load( strcat( code_path "date_virtuosoVer.il")) ddAutoCtlSetVars(0 0 3 3) ;-------------------------------------------------- ;# Start Time ;# Open Design ;-------------------------------------------------- openDesign("a") ;-------------------------------------------------- ;# Set Samsung Setting ;-------------------------------------------------- LoadSamsungEnv() hiFormDone(schSRCForm) hiCloseWindow(geGetCellViewWindow(gec())) hiDBoxOK(geDBox) ;--------------------------------------------------------------------------------------- ;# Deleting cells in Replace_Lib_here_COPY if exits before execute copy operation. ;--------------------------------------------------------------------------------------- inport = infile(strcat(code_path "managed.txt")) gets(managed inport) managed = substring(managed 1 strlen(managed)-1) close(inport) if(managed=="managed" then \i ICM_Sensitivity_popup("popup_L" "Replace_Lib_here_COPY" "" "" "" "") \i ICM_Delete_Lib("ICMDeleteLIB" "Replace_Lib_here_COPY" "" "" "" "") \i hiDBoxUser(ICM_delLibQuery nil 3) \i hiDBoxUser(ICM_intHierOkay nil 1) ;ddDeleteObj(ddGetObj("Replace_Lib_here_COPY" "" "" "data.dm")) ) \i cells = ddGetObj( "Replace_Lib_here_COPY" )~>cells \i foreach(cell cells ddDeleteObj(cell)) ;-------------------------------------------------- ;# #Test6_Replace_Lib_here: Copy Hierarchy to empty library ;-------------------------------------------------- t1=getCurrentTime() HierCopy("Replace_Lib_here" "Replace_Cell_here" "" "Replace_Lib_here_COPY" list("DRAMLIB")) ;-------------------------------------------------- ;# End Time ;-------------------------------------------------- t2=getCurrentTime() final=compareTime(t2 t1) system(strcat("mkdir -p " result_path date_virtuosoVer(code_path) )) inport = infile(strcat(code_path "managed.txt")) gets(managed inport) managed = substring(managed 1 strlen(managed)-1) close(inport) fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test6_Replace_Lib_here_" managed "_" date_virtuosoVer(code_path) ".log") "w") fprintf(fd "Test6_Replace_Lib_here. Performance Copy Hierarchy to empty library %s time %d\n" managed final) close(fd) ;-------------------------------------------------- ;# Deleting cells to make empty Replace_Lib_here_COPY after copy operation. ;-------------------------------------------------- if(managed=="managed" then \i ICM_Sensitivity_popup("popup_L" "Replace_Lib_here_COPY" "" "" "" "") \i ICM_Delete_Lib("ICMDeleteLIB" "Replace_Lib_here_COPY" "" "" "" "") \i hiDBoxUser(ICM_delLibQuery nil 3) \i hiDBoxUser(ICM_intHierOkay nil 1) ;ddDeleteObj(ddGetObj("Replace_Lib_here_COPY" "" "" "data.dm")) ) \i cells = ddGetObj( "Replace_Lib_here_COPY" )~>cells \i foreach(cell cells ddDeleteObj(cell)) ;-------------------------------------------------- ;# Exit ;-------------------------------------------------- exit geSaveAllForm->none->value= t hiFormDone(geSaveAllForm)**GenerateReplayScript/copyHierToNonEmpty** envLoadFile("../../code/.cdsenv") load("../../code/perfFunctions.il") code_path = "../../code/" result_path = "../../result/" load( strcat( code_path "date_virtuosoVer.il")) ddAutoCtlSetVars(0 0 3 3) ;-------------------------------------------------- ;# Start Time ;# Open Design ;-------------------------------------------------- t1=getCurrentTime() openDesign("a") ;-------------------------------------------------- ;# Set Samsung Setting ;-------------------------------------------------- LoadSamsungEnv() hiFormDone(schSRCForm) hiCloseWindow(geGetCellViewWindow(gec())) hiDBoxOK(geDBox) ;-------------------------------------------------- ;# Test7_Replace_Lib_here: Copy Hierarchy to non-empty library ;-------------------------------------------------- HierCopy("Replace_Lib_here" "Replace_Cell_here" "" "Replace_Lib_here_CHIP" list("DRAMLIB")) ;-------------------------------------------------- ;; End Time ;-------------------------------------------------- t2=getCurrentTime() final=compareTime(t2 t1) system(strcat("mkdir -p " result_path date_virtuosoVer(code_path) )) inport = infile(strcat(code_path "managed.txt")) gets(managed inport) managed = substring(managed 1 strlen(managed)-1) close(inport) fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test7_Replace_Lib_here_" managed "_" date_virtuosoVer(code_path) ".log") "w") fprintf(fd "Test7_Replace_Lib_here. Performance Copy Hierarchy to Non-empty Library %s time %d\n" managed final) close(fd) ;-------------------------------------------------- ;# Exit ;-------------------------------------------------- exit geSaveAllForm->none->value= t hiFormDone(geSaveAllForm)**GenerateReplayScript/createReplay.pl** #!/usr/bin/perl use Getopt::Long; $_library = ""; $_cell = ""; $template = ""; GetOptions("lib=s" => \$_library, "cell=s" => \$_cell, "template=s" => \$template ); %spec; if(-e $template) { print ""; } else { print "Template Not Found \n"; exit; } open(testSpec, "test.spec"); while(<testSpec>) { if(/^$/) { next;} my @tmp = split("="); $spec{$tmp[0]} = $tmp[1]; } if($_library =~ /^$/) { $lcvPath = $spec{"LCVPath"}; chomp($lcvPath); } else { open(lcv, ">lcv.txt"); @libs=split(" ",$_library); @cells=split(" ",$_cell); if(scalar(@libs)!=scalar(@cells)) { print("Lib Cell Pairs mismatch\n"); exit; } for($i=0; $i<scalar(@libs); $i=$i+1) { print lcv ("\"$libs[$i]\" \"$cells[$i]\" \"schematic\"\n"); } $lcvPath="./lcv.txt"; } close(lcv); $replayMid = $template; $replayMid =~ s/\.au//g; open(libcellview, "$lcvPath"); $cnt = 1; while(<libcellview>) { if(/^$/) { next;} open(replayOut, ">replay.$replayMid$cnt.au"); $lcv = $_; chomp($lcv); $tmplcv = $lcv; $cell = $lcv; $lib = $lcv; $tmplcv =~ s/"(\w+)"\s+"(\w+)"\s+"(\w+)"/$1_$2_$3/g; $cell =~ s/"(\w+)"\s+"(\w+)"\s+"(\w+)"/$2/g; $lib =~ s/"(\w+)"\s+"(\w+)"\s+"(\w+)"/$1/g; open(template, $template); while(<template>) { s/(openDesign\()(.*\))/$1$lcv $2/g; s/(hiStartLog\()/$1"$tmplcv.log"/g; s/Replace_CellName_here/$tmplcv/g; s/Replace_Cell_here/$cell/g; s/Replace_Lib_here/$lib/g; s/(renameRefLib\()"(_\w+)"\s+"(_\w+)"\s+"(_\w+)"/$1"$lib$2" "$lib$3" "$lib$4"/g; print replayOut $_; } close(replayOut); $cnt = $cnt + 1; }**GenerateReplayScript/deleteAllMarker** envLoadFile("../../code/.cdsenv") load("../../code/perfFunctions.il") code_path = "../../code/" result_path = "../../result/" load( strcat( code_path "date_virtuosoVer.il")) ddAutoCtlSetVars(0 0 3 3) ;-------------------------------------------------- ;# Start Time ;# Open Design ;-------------------------------------------------- openDesign("a") ;-------------------------------------------------- ;# Set Samsung Setting ;-------------------------------------------------- LoadSamsungEnv() hiFormDone(schSRCForm) ;-------------------------------------------------- ;# Run Editor->Check->Hierarchy ;-------------------------------------------------- schHiCheckHier() hiiSetCurrentForm('schCheckHierForm) schCheckHierForm->checkAlways->value= t schCheckHierForm->checkRefLibs->value= t schCheckHierForm->openMode->value="edit" schCheckHierForm->saveStrategy->value="Save all" schCheckHierForm->closeErrorCVs->value= t hiFormDone(schCheckHierForm) hiCloseWindow(geGetCellViewWindow(gec())) ddsHiCloseData() hiiSetCurrentForm('ddsCloseDataForm) ddsCloseDataForm->CDCVModifiedOption->value="save" ddsiCloseDataButtonCB('all) hiFormDone(ddsCloseDataForm) ;-----------------strace start ------------------------ warn("-------------strace start here--------------") cid=ipcBatchProcess(sprintf(nil "strace -t -p %d -o ./strace.log" ipcGetPid()) "" "cmd.log") unless(ipcIsAliveProcess(cid) ipcSleep(1)) ;-----------------strace end------------------------ ;-------------------------------------------------- ;# Start Time for Delete Markers. ;#Test5_Replace_Lib_here: Editor->Check->Delete All marker ;-------------------------------------------------- t1=getCurrentTime() openDesign("a") geHiDeleteAllMarker() hiiSetCurrentForm('geDeleteAllMarkerForm) geDeleteAllMarkerForm->type->all->value = t geDeleteAllMarkerForm->scope->value="hierarchy starting from top cellview" geDeleteAllMarkerForm->geDelMarkerAccessMode->value="edit" geDeleteAllMarkerForm->sourcesScope->value="all" hiFormDone(geDeleteAllMarkerForm) hiCloseWindow(geGetCellViewWindow(gec())) hiDBoxOK(geDBox) ;-------------------------------------------------- ;# End Time ;-------------------------------------------------- t2=getCurrentTime() final=compareTime(t2 t1) system(strcat("mkdir -p " result_path date_virtuosoVer(code_path) )) inport = infile(strcat(code_path "managed.txt")) gets(managed inport) managed = substring(managed 1 strlen(managed)-1) close(inport) fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test5_Replace_Lib_here_" managed "_" date_virtuosoVer(code_path) ".log") "w") fprintf(fd "Test5_Replace_Lib_here. Performance Editor->Check->Delete %s time %d\n" managed final) close(fd) ;-------------------------------------------------- ;# Exit ;-------------------------------------------------- exit geSaveAllForm->none->value= t hiFormDone(geSaveAllForm)**GenerateReplayScript/lcv.txt** "BM02" "FULLCHIP" "schematic"**GenerateReplayScript/renameRefLib** envLoadFile("../../code/.cdsenv") load("../../code/perfFunctions.il") code_path = "../../code/" result_path = "../../result/" load( strcat( code_path "date_virtuosoVer.il")) ddAutoCtlSetVars(0 0 3 3) ;-------------------------------------------------- ;# Start Time ;# Open Design ;-------------------------------------------------- t1=getCurrentTime() openDesign("a") ;-------------------------------------------------- ;# Set Samsung Setting ;-------------------------------------------------- LoadSamsungEnv() hiFormDone(schSRCForm) hiCloseWindow(geGetCellViewWindow(gec())) hiDBoxOK(geDBox) ;-------------------------------------------------- ; #Test2_Replace_Lib_here: Rename Reference Library ;-------------------------------------------------- renameRefLib("_ORIGIN" "_TARGET" "_ORIGIN") ;-------------------------------------------------- ;# End Time ;-------------------------------------------------- t2=getCurrentTime() final=compareTime(t2 t1) system(strcat("mkdir -p " result_path date_virtuosoVer(code_path) )) inport = infile(strcat(code_path "managed.txt")) gets(managed inport) managed = substring(managed 1 strlen(managed)-1) close(inport) fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test2_Replace_Lib_here_" managed "_" date_virtuosoVer(code_path) ".log") "w") fprintf(fd "Test2_Replace_Lib_here. Performance Rename Reference Library %s time %d\n" managed final) close(fd) ;-------------------------------------------------- ;# Checked opened file ;-------------------------------------------------- when(isCallable('ICM_runP4) ICM_runP4("opened ...") printf("CMD: xlp4 opened ...\nANS: %Y\n" ICM_IPCBuffer) printf("\nEnd of xlp4 opened ...\n") ) ;-----------------strace start ------------------------ warn("-------------strace start here--------------") cid=ipcBatchProcess(sprintf(nil "strace -t -p %d -o ./strace.log" ipcGetPid()) "" "cmd.log") unless(ipcIsAliveProcess(cid) ipcSleep(1)) ;-----------------strace end------------------------ ;-------------------------------------------------- ;# Revert Last Rename Reference Library operation. ;-------------------------------------------------- renameRefLib("_TARGET" "_ORIGIN" "_ORIGIN") ;-------------------------------------------------- ;# Exit ;-------------------------------------------------- exit geSaveAllForm->none->value= t hiFormDone(geSaveAllForm)**GenerateReplayScript/replace** envLoadFile("../../code/.cdsenv") load("../../code/perfFunctions.il") code_path = "../../code/" result_path = "../../result/" load( strcat( code_path "functions.il")) load( strcat( code_path "date_virtuosoVer.il")) ddAutoCtlSetVars(0 0 3 3) ;-------------------------------------------------- ;# Add property test to all the hierarchy instances ;-------------------------------------------------- openDesign("a") AddInstProperty("test" "test") ; check in the prop changes ; system("xlp4 submit -d 'add prop - test' /user/virtuoso.catdm/USERS/CAT_DM/perfTest/managed/cadence_perf_ws_s.min.ju.mcr/...") ;-------------------------------------------------- ;# Start Time ;# Open Design ;-------------------------------------------------- t1=getCurrentTime() openDesign("a") ;-------------------------------------------------- ;# Set Samsung Setting ;-------------------------------------------------- LoadSamsungEnv() hiFormDone(schSRCForm) ;-------------------------------------------------- ; #Test4_Replace_Lib_here: Editor->Edit->Replace ;-------------------------------------------------- schHiReplace() hiiSetCurrentForm('schSchReplaceForm) schSchReplaceForm->objectFilterTri->value=t schSchReplaceForm->propName->value="other" hiiSetCurrentForm('schRepNewPropForm) schRepNewPropForm->schRepPropNameString->value="test" hiFormDone(schRepNewPropForm) hiiSetCurrentForm('schSchReplaceForm) schSchReplaceForm->condOp->value="==" schSchReplaceForm->propValue->value="*" schSchReplaceForm->newPropName->value="test" schSchReplaceForm->searchScope->value="hierarchy" schSchReplaceForm->newPropValue->value="MCR" schSchReplaceForm->hierarchyScope->value="top" schSchReplaceForm->matchMasterProps->value= t schSchReplaceForm->allNone->all->value = t schSchReplaceForm->instAllNone->all->value = t schSchReplaceForm->schRepSaveEdits->value= t schRepReplaceAll() hiDBoxOK(_schDBox) hiDBoxOK(_schDBox) hiFormCancel(schSchReplaceForm) hiCloseWindow(geGetCellViewWindow(gec())) hiDBoxCancel(geDBox) ;-------------------------------------------------- ;# End Time ;-------------------------------------------------- t2=getCurrentTime() final=compareTime(t2 t1) system(strcat("mkdir -p " result_path date_virtuosoVer(code_path) )) inport = infile(strcat(code_path "managed.txt")) gets(managed inport) managed = substring(managed 1 strlen(managed)-1) close(inport) fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test4_Replace_Lib_here_" managed "_" date_virtuosoVer(code_path) ".log") "w") fprintf(fd "Test4_Replace_Lib_here. Performance Editor->Edit->Replace %s time %d\n" managed final) close(fd) ;-------------------------------------------------- ;# Exit ;-------------------------------------------------- exit hiiSetCurrentForm('geSaveAllForm) geSaveAllForm->none->value= t hiFormDone(geSaveAllForm)**GenerateReplayScript/test.spec** LCVPath=./lib_cell_view.txt ReplayMidFix=dm**code/.cdsenv** schematic srcFloatingNets cyclic "error" schematic srcFloatingInputPins cyclic "error" schematic srcFloatingInputInstPins cyclic "error" schematic srcFloatingOutputPins cyclic "error" schematic srcFloatingOutputInstPins cyclic "error" schematic srcFloatingIOPins cyclic "error" schematic srcFloatingIOInstPins cyclic "error" schematic srcFloatingBIDIRPins cyclic "error" schematic srcFloatingBIDIRInstPins cyclic "error" schematic srcShortedOutputs cyclic "error" schematic srcShortedOutputGlobal boolean nil schematic srcOffsheetConnCheck cyclic "error" schematic srcFixedGlobalsCheck cyclic "error" schematic srcPinDirConflictCheck cyclic "error" schematic srcAutoNetIterationInst cyclic "error" schematic srcAutoNetIterationTerm cyclic "error" schematic srcUnconnectedWires cyclic "error" schematic srcSolderOnCrossover cyclic "error" schematic checkAlignOverlaps boolean nil schematic srcInstOverlap cyclic "ignored" schematic srcInstOverlapValue int 10 schematic srcMaxLabelOffset cyclic "ignored" schematic maxLabelOffsetUU float 0.045 schematic srcConnByName cyclic "ignored" schematic srcUnnamedConnection cyclic "error" schematic srcNameCollision cyclic "error" schematic srcPinNetCollision cyclic "error" schematic srcVerilogSyntax cyclic "error" schematic srcSysVerilogSyntax cyclic "error" schematic srcVHDLSyntax cyclic "error" schematic srcInstNameSyntax cyclic "error" schematic srcInstNameExpr string "" schematic srcTermNameSyntax cyclic "error" schematic srcTermNameExpr string "" schematic srcNetNameSyntax cyclic "ignored" schematic srcNetNameExpr string "" schematic srcSparseIndexBus cyclic "ignored" schematic srcSparseIndexBusOnlyTerms boolean nil schematic srcInheritedConn cyclic "error" schematic srcNoOverrideNet cyclic "error" schematic srcInhPinNetCollision cyclic "error" schematic srcInhImplicitTerm cyclic "error" schematic srcInhInstPinPinConn cyclic "error" schematic checkConstraints boolean nil schematic srcMatchedParameters cyclic "warning" schematic srcSigTypeIntegrity boolean nil cdsLibManager.copyGlobals delegateDM string "p4" cdsLibManager.copyGlobals delegateConfirmDM boolean t cdsCcpCopy.copyModel numThreads int 4 cdsCcpCopy.copyModel gdmOptimize boolean t maestro.cpupdtr keepHistoryData boolean t**code/.cdsinit****code/.cdslocal_project** if(env("ICM_HOME") then icm_skill_root = env("ICM_HOME") when(env("ICM_SkillRoot") icm_skill_root = env("ICM_SkillRoot")) if(isFile(strcat(icm_skill_root "/SKILL/cdsinit")) then println("Loading IC Manage integration...") load(strcat(icm_skill_root "/SKILL/cdsinit")) else println("ERROR: IC Manage integration not loaded") ) println("ERROR: IC Manage integration not loaded - $ICM_HOME not set.") ) ICM_EnableLibManCheckInICM=t ICM_EnableLibManCheckOutICM=t ICM_EnableLibManCancelCheckoutICM=t ICM_EnableRevisionHistory=t ICM_EnableLibManFastCheckInICM=t ICM_EnableLibManFastCheckOutICM=t ICM_EnableLibManFastCancelCheckOutICM=t ICM_useCadenceRegistry=t**code/ICM_createProj.sh** #!/bin/bash ###################################################################### dateno=$(date +%Y%m%d_%H%M%S) user_name=$(echo $USER) # default value ws_name=cadence_perf_ws_"$user_name" proj_name=cadence_perf_"$user_name"_"$dateno" postfix="" # libs=(DRAMLIB BM01 BM01_CHIP BM01_COPY BM01_ORIGIN BM01_TARGET BM02 BM02_CHIP BM02_COPY BM02_ORIGIN BM02_TARGET BM03 BM03_CHIP BM03_COPY BM03_ORIGIN BM03_TARGET) libs=(DRAMLIB BM02_CHIP BM02_TARGET) ###################################################################### while [[ $# -gt 0 ]]; do case "$1" in -p|--postfix) postfix=$2 shift 2 ;; -lib|--library) libs=$2 shift 2 ;; -ws|--ws_name) ws_name=$2 shift 2 ;; -proj|--proj_name) proj_name=$2 shift 2 ;; *) echo "Unknown input: $1" exit 1 ;; esac done if [[ $postfix != "" ]]; then ws_name="$ws_name"_"$postfix" fi # Check if the project name is existed if [[ $(gdp list /VSM/$proj_name) != "" ]]; then echo "" echo "****************************************************************************" echo "The project name is existed: /VSM/$proj_name" echo "Please use a unique project name, or add postfix argument" echo "For example: code/ICM_createProj.sh --postfix A" echo "****************************************************************************" exit 1 fi # Check if the ws name is existed if [[ $(gdp find --type=workspace :=$ws_name) != "" ]]; then echo "" echo "****************************************************************************" echo "The workspace name is existed in : $(gdp find --type=workspace :=$ws_name)" echo "Please use a unique workspace name, or add postfix argument" echo "For example: code/ICM_createProj.sh --postfix A" echo "****************************************************************************" exit 1 fi gdp create project /VSM/$proj_name gdp create variant /VSM/$proj_name/rev01 gdp create libtype /VSM/$proj_name/rev01/OA --libspec OA gdp create config /VSM/$proj_name/rev01/dev for lib in ${libs[@]}; do ########################################################## ## Edit here: library from name, library to name lib_from=$lib lib_to=$lib ########################################################## echo Building $lib ... gdp create library /VSM/$proj_name/rev01/OA/$lib_to --from /VSM/cadence_perf_20260317064432/rev01/OA/$lib_from --location=OA/{{library}} --columns id,name,type,path,description gdp update /VSM/$proj_name/rev01/dev --add /VSM/$proj_name/rev01/OA/$lib_to done # Creating MANAGED workspace... pushd managed echo Creating MANAGED workspace... gdp build workspace --content /VSM/$proj_name/rev01/dev --gdp-name $ws_name --location $(realpath .) popd # Creating UNMANAGED workspace... pushd unmanaged echo Creating UNMANAGED workspace... cp -rf ../managed/$ws_name ./$ws_name popd**code/ICM_deleteProj.sh** #!/bin/bash while [[ $# -gt 0 ]]; do case "$1" in -proj|--proj_name) proj_name=$2 shift 2 ;; *) echo "Unknown option: $1" exit 1 ;; esac done # delete project on gdp (web gui) echo -e "\nDeleting the project /VSM/$proj_name " gdp delete /VSM/$proj_name --recursive --force --proceed # obliterate files from depot echo -e "\nObliterating the files from //depot/VSM/$proj_name/..." xlp4 obliterate -y //depot/VSM/$proj_name/... echo "done"**code/date_virtuosoVer.il** procedure(date_virtuosoVer(@optional (prefix "")) let((filePath port ver date_virtuosoVer) filePath = strcat(prefix "date_virtuosoVer.txt") if(isFile(filePath) then ; read existing content port = infile(filePath) gets(date_virtuosoVer port) close(port) date_virtuosoVer = substring(date_virtuosoVer 1 strlen(date_virtuosoVer)-1) else ; remove "sub-version" rexCompile("sub-version") ver = rexReplace(getVersion(t) "" 1) ; remove all spaces rexCompile(" ") ver = rexReplace(ver "" 0) date_virtuosoVer = strcat(sprintf(nil "%d" stringToTime(getCurrentTime())) "_" ver) ; create file and write content port = outfile(filePath) fprintf(port "%s\n" date_virtuosoVer) close(port) ) date_virtuosoVer ) )**code/date_virtuosoVer.txt** 1776373562_IC25.1-64b.ISR5.EA.23 **code/functions.il**
+
+;;Check Out 
+procedure(dmCheckOut(fd RowNo libname cellname)
+prog(();cv id rval str 
+
+    ICM_Sensitivity_popup( "popup_V" libname cellname "schematic" "" "" ) 
+    ICM_Hier_View_CO( "ICMHierVIEWCO" libname cellname "schematic" "" "" )
+    hiSetCurrentForm('hier_operationForm) "\n" hiFormDone(hier_operationForm)
+    win=deOpen(list(nil 'libName libname 'cellName cellname 'viewName "schematic") nil "a") 
+    cv=gec() 
+    id = cv~>view 
+    rval=Validate(id "gdmStateCO" EXPECTED_VER) 
+    if(boundp('rval) && rval then
+	str =  "Check out PASS" 
+	EXPECTED_VER++ 
+    else 
+	str = "Check out FAIL"
+    )
+    fprintf(fd "%s_%s_%s: %s\n" RowNo libname cellname str)  
+    printf("%s_%s_%s: %s\n" RowNo libname cellname str)  
+
+))
+
+
+procedure(dmOpenTopCell(fd RowNo libname cellname )
+prog(()
+
+    win=deOpen(list(nil 'libName libname 'cellName cellname 'viewName "schematic") nil "a") 
+    if(win then 
+	fprintf(fd "RowNo_libname_cellname: deOpen UNEXPECTED pass\n")
+    else 
+	fprintf(fd "RowNo_libname_cellname: deOpen EXPECTED fail\n") 
+	win=deOpen(list(nil 'libName libname 'cellName cellname 'viewName "schematic") nil "r"))
+	cv=gec()  
+	id=cv~>view 
+	rval=Validate(id "gdmStateCI" EXPECTED_VER ) 
+	if(DM_AUTO_CHECKOUT == t then
+	    if(boundp('rval) && rval then 
+	   	str = "Expected : Check Out , Current: Check Out"
+	    else 
+	   	str = "Expected : Check Out , Current: Check In"
+	    )
+	else
+	    if(boundp('rval) && rval then 
+	   	str = "Expected : Check In, Current: Check Out"
+	    else 
+	   	str = "Expected : Check In , Current: Check In"
+	    )
+	)
+	fprintf(fd "%s_%s_%s: %s\n" RowNo libname cellname str)  
+	printf("%s_%s_%s: %s\n" RowNo libname cellname str)  
+
+))
+
+procedure(controlInit()
+prog(()
+
+    DM_AUTO_CHECKOUT = t
+    DM_AUTO_CHECKIN = t
+    
+    EXPECTED_VER = 1
+))
+
+procedure(checkoutValidate(fd RowNo libName cellName ) 
+prog(()
+    cv=gec()
+    id=cv~>view 
+    rval1=Validate(id "gdmStateCI" EXPECTED_VER ) 
+
+    if(boundp('rval1) && rval1 then 
+	str = "Check out PASS" 
+    else 
+	str = "Check out FAIL"
+    )
+    fprintf(fd "%s_%s_%s: %s\n" RowNo libName cellName str)
+
+))
+
+procedure(checkinValidate(fd RowNo libName cellName ) 
+prog(()
+    cv=gec()
+    id=cv~>view
+    rval1=Validate(id "gdmStateCI" EXPECTED_VER )
+
+    if(boundp('rval1) && rval1 then
+        str = "Check in PASS"
+        EXPECTED_VER++
+    else
+        str = "Check in FAIL"
+    )
+    fprintf(fd "%s_%s_%s: %s\n" RowNo libName cellName str)
+))
+
+
+procedure(dmDeleteAllMarkers(cv fd saveOnOff @optional (RowNo "RowNo") (libname "libname") (cellname "cellname"))
+prog(()
+
+    initMarkerNum = length(cv~>markers)
+
+    if(initMarkerNum == 0 then
+	dbCreateMarker(cv "test_marker" "" list(0:0))
+	initMarkerNum = length(cv~>markers)
+    )
+
+    geDeleteAllMarkerForm->type->all->value =  t
+    geDeleteAllMarkerForm->scope->value="hierarchy starting from top cellview"
+    geDeleteAllMarkerForm->geDelMarkerAccessMode->value="edit"
+    if(saveOnOff then 
+	geDeleteAllMarkerForm->geDelMarkerAutoSave->value = t	
+    else
+	geDeleteAllMarkerForm->geDelMarkerAutoSave->value = nil 	
+    ) 
+    
+    hiFormDone(geDeleteAllMarkerForm)
+    postMarkerNum = length(cv~>markers)
+    if(postMarkerNum == 0 then
+	;fprintf(fd "\tRowNo_libname_cellname: %s\n" "Validate PASS(All markers removed)" postMarkerNum)
+	fprintf(fd "\t%s_%s_%s: All Marker Delete : Validate PASS\n" RowNo libname cellname)
+	;printf("===\tDelete Markers Validate (Except PASS)\t===\n")
+	;printf("\t All Marker Delete : Validate PASS\n")
+	;result
+    else
+	;printf("===\tDelete Markers Validate (Except PASS)\t===\n")
+	;printf("\t %d Makrker Remain : Validate FAIL\n" postMarkerNum )
+	;fprintf(fd "\tRowNo_libname_cellname: %s, %d Markers Remain\n" "Validate FAIL(Not all markers removed)" postMarkerNum)
+	fprintf(fd "\t%s_%s_%s: %d Makrker Remain : Validate FAIL\n" RowNo libname cellname postMarkerNum )
+	;result = nil
+    )
+))
+
+
+procedure(dmRenameRefLib(fd fromLib toLib libname )
+prog(()
+
+    libId = ddGetObj(libname)
+
+    fromLibNum = checkInstNumByLibName(libId fromLib) 
+
+    renameRefLib(fromLib toLib libname) 
+    
+    toLibNum = checkInstNumByLibName(libId toLib) 
+
+    if(toLibNum == fromLibNum then
+	return(t)
+    else
+	return(nil)
+    )
+))
+
+
+procedure(checkInstNumByLibName(libId libname)
+prog(()
+
+    targetCellViews = nil 
+    checkCell = libId~>cells 
+    foreach(tmpCell checkCell
+	targetCellViews = append(targetCellViews setof(obj tmpCell~>views obj~>name == "schematic" || obj~>name == "layout"  ))
+    )
+
+
+    fromInstNum = 0
+
+    foreach(targetCellView targetCellViews
+	tmpCellViewId = dbOpenCellViewByType(targetCellView~>lib~>name targetCellView~>cell~>name targetCellView~>name nil nil "r")
+	dbRefreshCellView(tmpCellViewId)
+	fromInstNum = fromInstNum + length(setof(obj tmpCellViewId~>instances obj~>libName == libname))
+    )
+    return(fromInstNum)
+))
+
+
+
+procedure(dmICMCancleCheckOut(fd popup_V libName cellName expectValue )
+prog(()
+    cvId = dbOpenCellViewByType(libName cellName "schematic" nil nil "r")
+    CheckInCellList = dmGetHierInst(cvId)
+    
+
+    foreach(tmpCV CheckInCellList
+	ICM_CancelCheckoutButton(tmpCV popup_V libName cellName)
+	printf("xx")
+    )
+
+    rval1 = t
+    foreach(tmpCV CheckInCellList
+	rval1 = dmRunICMCancleCheckOutValidate(tmpCV~>view expectValue)
+	printf("yy")
+	if(!rval1 then	
+    	    fprintf(fd "\tRowNo_libname_cellname: %s\n"  "Check in FAIL") 
+	    return(nil)
+	)
+	
+    )
+    fprintf(fd "\tRowNo_libname_cellname: %s\n" "Check in PASS") 
+    return(t)
+    
+))
+
+
+procedure(dmRunICMCancleCheckOut(cv popup_V libName cellName)
+let(()
+   
+    ICM_Sensitivity_popup(popup_V libName cellName "schematic" "" "")
+    ICM_CancelCheckoutButton( "ICMCheckInButton" libName cellName "schematic" "" "" ) 
+    hiDBoxUser(ICM_intHierWarning nil 2)
+
+))
+
+procedure(dmRunICMCancleCheckOutValidate(viewId expectValue)
+let((val1)
+    val1=Validate(viewId "gdmStateCO" expectValue) 
+))
+
+procedure(dmICMCheckIn(popup_V checkCellList)
+prog((replayFId)
+
+    replayFId = outfile("./checkin.replay")
+    foreach(tmpCV checkCellList
+	libName = tmpCV~>libName
+	cellName = tmpCV~>cellName
+	dmRunICMCheckIn(replayFId popup_V libName cellName)
+	printf("add checkin %s %s\n" libName cellName)
+    )
+    close(replayFId)
+))
+
+procedure(testValidation(checkList expectValue)
+prog((rval1)
+    rval1 = t
+    foreach(tmpCV  checkList
+	rval1 = dmRunICMCheckInValidate(tmpCV~>view expectValue)
+	if(!rval1 then	
+    	    fprintf(fd "\tRowNo_libname_cellname: %s\n"  "Check in FAIL") 
+	    rval1 = nil
+	)
+    )
+    fprintf(fd "\tRowNo_libname_cellname: %s\n" "Check in PASS") 
+    return(rval1)
+))
+
+procedure(dmRunICMCheckInValidate(viewId expectValue)
+let((val1)
+    val1=Validate(viewId "gdmStateCI" expectValue) 
+))
+
+procedure(dmRunICMCheckIn(rfd popup_V libName cellName)
+let(()
+   
+    fprintf(rfd "\\i ICM_Sensitivity_popup(\"%s\" \"%s\" \"%s\" \"schematic\" \"\" \"\")\n" popup_V libName cellName)
+    fprintf(rfd "\\i ICM_CheckInButton( \"ICMCheckInButton\" \"%s\" \"%s\" \"schematic\" \"\" \"\" )\n" libName cellName) 
+    fprintf(rfd "\\i hiDBoxUser(ICM_intHierWarning nil 2)\n")
+    fprintf(rfd "\\i hiDBoxUser(ICM_intHierWarning nil 1)\n")
+    fprintf(rfd "\\i hiSetCurrentForm('ICM_menuCIform)\n")
+    fprintf(rfd "\\i hiFormDone(ICM_menuCIform)\n") 
+    fprintf(rfd "\\i iDBoxUser(ICM_intHierOkay nil 1)\n")
+    fprintf(rfd "\\i hiDBoxUser(ICM_intHierError nil 1)\n")
+    fprintf(rfd "\\i printf(\"xx\\n\")\n")
+    
+    
+))
+
+procedure(dmGetHierInst(cvId @optional (instList nil))
+prog((targetInst tmpCVId )
+	targetInst = setof(obj cvId~>instances obj~>purpose == "cell")
+	foreach(tmpInst targetInst
+	    if(ddGetObj(tmpInst~>libName tmpInst~>cellName "schematic" ) then
+		tmpCVId = dbOpenCellViewByType(tmpInst~>libName tmpInst~>cellName "schematic" nil nil "r") 
+		when( length(geGetEditCellView()~>instances) > 0
+		    instList = cons(tmpCVId instList)
+		    instList = append(instList dmGetHierInst(tmpCVId instList))
+		)
+	    )
+	)
+    return(removeListDuplicates(instList))
+))
+
+
+;----------------------------------------------------------
+;; Add the property on schematic instances:- 
+;----------------------------------------------------------
+procedure(AddInstProperty(propName propValue)
+let(( cv (cnt 0) propType visited )
+	cv = geGetWindowCellView()
+	visited = makeTable("visited" nil)
+
+    propType = case(type(propValue)
+        (fixnum  "int")
+        (flonum  "float")
+        (string  "string")
+        (boolean "boolean")
+        (t       "string")
+    )
+
+	cnt = iAddInstProperty(cv propName propType propValue visited 0)
+))
+
+
+procedure(iAddInstProperty(cv propName propType propValue visited cnt)
+let(( tmpSCId masterName )
+	visited[cv~>cellName] = t
+	foreach( inst cv~>instances
+		if( dbReplaceProp(inst propName propType propValue) then
+			cnt++
+		)
+		masterName = inst~>cellName
+		if( !visited[masterName] then
+			visited[masterName] = t
+			tmpSCId = dbOpenCellViewByType(inst~>libName inst~>cellName "schematic" nil "a")
+			if( tmpSCId then
+				cnt = iAddInstProperty( tmpSCId propName propType propValue visited cnt )
+			)
+		)
+	)	
+	dbSave(cv)
+	dbClose(cv)
+	cnt
+))
+
+;----------------------------------------------------------
+;;Verify that property added
+;----------------------------------------------------------
+procedure(VerifyInstPropValue(total propName propValue)
+let(( cv (cnt 0) visited )
+	cv = geGetWindowCellView()
+	visited = makeTable("visited" nil)
+
+	cnt = iVerifyInstPropValue(cv propName propValue visited cnt)
+    if(cnt == total && total > 0 then
+        printf("Success: All %d instances have %s = %L\n" cnt propName propValue)
+        t
+    else
+        printf("Failure: Only %d/%d instances match %s = %L\n" cnt total propName propValue)
+        nil
+    )
+))
+
+procedure(iVerifyInstPropValue(cv propName propValue visited cnt)
+let(( tmSCId masterName )
+	visited[cv~>cellName] = t
+	foreach( inst cv~>instances
+		if( dbFindProp(inst propName)~>value == propValue then
+			cnt++
+		)
+		masterName = inst~>cellName
+		if( !visited[masterName] then
+			visited[masterName] = t
+			tmpSCId = dbOpenCellViewByType(inst~>libName inst~>cellName "schematic" nil nil "a")
+			if( tmpSCId then
+				cnt = iVerifyInstPropValue(tmpSCId propName propValue visited cnt)
+			)
+		)
+	)
+	dbSave(cv)
+	dbClose(cv)
+	cnt
+))
+
+
+;----------------------------------------------------------
+;;Add property & Verify END.
+;----------------------------------------------------------**code/init.sh**
+#!/bin/bash
+
+######################################################################
+user_name=$(echo $USER)
+# default value
+uniqueid_path=/tmp/uniqueid_perf_"$user_name"
+ws_name=cadence_perf_ws_"$user_name"
+proj_prefix=cadence_perf_"$user_name"
+######################################################################
+
+if [ $# -le 0 ]
+then
+	echo "Usage: $0 <libname> [<libname>...]"
+	echo "Usage: $0 -id <uniqueid file path> --ws_name <workspace name> --proj_prefix <proj prefix> <libname> [<libname>...]"
+	exit 1
+fi
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+	-ws|--ws_name)
+	    ws_name=$2
+	    shift 2
+	    ;;
+	-proj|--proj_prefix)
+	    proj_prefix=$2
+	    shift 2
+	    ;;
+	-id|--uniqueid)
+	    uniqueid_path=$2
+	    shift 2
+	    ;;
+	-*)
+	    echo "Unknown option: $1"
+	    exit 1
+	    ;;
+	*)
+	    break
+	    ;;
+    esac
+done
+
+dateno=$(date +%Y%m%d%H%M%S)
+export uniqueid=$dateno
+
+echo uniqueid=$uniqueid > $uniqueid_path
+proj_name=$proj_prefix$uniqueid
+
+gdp create project /VSM/$proj_name
+gdp create variant /VSM/$proj_name/rev01
+gdp create libtype /VSM/$proj_name/rev01/OA --libspec OA
+gdp create config /VSM/$proj_name/rev01/dev
+
+libs=("$@")
+for lib in ${libs[@]}; do
+	##########################################################
+	## Edit here: library from name, library to name
+	lib_from=$lib
+	lib_to=$lib
+	##########################################################
+	echo Building $lib ...
+	gdp create library /VSM/$proj_name/rev01/OA/$lib_to --from /VSM/demo/rev1/OA/$lib_from --location=OA/{{library}} --columns id,name,type,path,description
+	gdp update /VSM/$proj_name/rev01/dev --add /VSM/$proj_name/rev01/OA/$lib_to 
+
+done
+gdp build workspace --content /VSM/$proj_name/rev01/dev --gdp-name $ws_name --location $(realpath .)**code/managed.txt**
+managed**code/perfFunctions.il**
+;-------------------------------------
+;# SKILL Function :open Design
+;-------------------------------------
+
+procedure( openDesign(lib cell view mode)
+    let( (cellViewId windowId viewType)
+        ; Determine the correct viewType based on the view name
+        case( view
+            ("schematic" viewType = "schematic")
+            ("layout"    viewType = "maskLayout")
+            ("symbol"    viewType = "schematicSymbol")
+            (t           viewType = "schematic") ; Default fallback
+
+        )
+
+; Open the cellView with the detected viewType
+        cellViewId = deOpenCellView(lib cell view viewType nil mode)
+        if(cellViewId then
+            printf("Opened %s/%s/%s as %s in %s mode.\n" lib cell view viewType mode)
+            windowId = hiGetCurrentWindow()
+        else
+            printf("Failed to open %s/%s/%s.\n" lib cell view)
+
+        )
+
+        cellViewId
+
+    )
+
+)
+
+;------------------------------------------------------
+;# SKILL Function Hier Copy in Non-Empty Library
+;------------------------------------------------------
+
+procedure( HierCopy(srcLib srcCell srcView destLib skipLibs)
+  let( (src dst skip)
+    ;; source & destination specs
+    src  = gdmCreateSpecFromDDID(ddGetObj(srcLib srcCell srcView))
+    dst  = gdmCreateSpecFromDDID(ddGetObj(destLib))
+    ;; skip list
+    skip = gdmCreateSpecList()
+    foreach(lib skipLibs
+      gdmAddSpecToSpecList(
+        gdmCreateSpecFromDDID(ddGetObj(lib))
+        skip
+      )
+    )
+;; Hier copy
+ccpCopyDesign(src dst t 'CCP_EXPAND_ALL skip nil list("schematic" "symbol"))
+ )
+  )
+
+
+;-------------------------------------------------------------------------------------------
+;Examples:-
+;HierCopy("Opamp" "DualAmp" "" "Opamp_Skip_All_Libs" list())
+;HierCopy("Opamp" "DualAmp" "" "Opamp_Skip_basic_Lib" list("basic"))
+;HierCopy("Opamp" "DualAmp" "" "Opamp_Skip_basic_analog_Lib" list("basic" "analogLib" ))
+;--------------------------------------------------------------------------------------------------------
+
+;------------------------------------------------------
+;# SKILL Function:  Hier Copy in New Empty Library
+;------------------------------------------------------
+procedure( HierCopyToNewLib(srcLib srcCell srcView destLib skipLibs)
+  let( (src dst skip)
+;; source & destination specs
+src  = gdmCreateSpecFromDDID(ddGetObj(srcLib srcCell srcView))
+dst = gdmCreateSpec(destLib "" "" "" "CDBA" 0)
+;dst  = gdmCreateSpecFromDDID(ddGetObj(destLib))
+;; skip list
+    skip = gdmCreateSpecList()
+    foreach(lib skipLibs
+      gdmAddSpecToSpecList(
+        gdmCreateSpecFromDDID(ddGetObj(lib))
+        skip
+      )
+    )
+;; Hier copy
+    ccpCopyDesign(src dst t 'CCP_EXPAND_ALL skip nil list("schematic" "symbol"))
+    )
+       )
+;---------------------------------------------------------------------------------------------
+; Ex: HierCopyToNewLib("Two_Stage_Opamp" "DualAmp" "" "new34" list("basic" "analogLib"))
+;---------------------------------------------------------------------------------------------
+
+;------------------------------------------------------
+;# SKILL Function:  Rename Reference Library
+;------------------------------------------------------
+procedure( renameRefLib(fromLibName toLibName updateLibName)
+  let( (fromSpec toSpec updateList)
+    fromSpec   = gdmCreateSpecFromDDID(ddGetObj(fromLibName))
+    toSpec     = gdmCreateSpecFromDDID(ddGetObj(toLibName))
+    updateList = gdmCreateSpecList()
+    gdmAddSpecToSpecList(
+      gdmCreateSpecFromDDID(ddGetObj(updateLibName))
+      updateList
+    )
+    ccpRenameReferenceLib(fromSpec toSpec updateList)
+
+  )
+
+)
+
+;------------------------------------------------------
+;# SKILL Function: Delete Library
+;------------------------------------------------------
+procedure( deleteLibrary(libName)
+    let( (libObj)
+        libObj = ddGetObj(libName)
+        if(libObj then
+            ddDeleteObj(libObj)
+            printf("Library %s deleted.\n" libName)
+        else
+            printf("Library %s not found.\n" libName)
+        )
+    )
+)
+
+;------------------------------------------------------
+;# SKILL Function:  Dump Hier Cell Names
+;------------------------------------------------------
+procedure( listHierLibCells(libName cellName @optional (viewName "schematic"))
+  let( (seen pairs)
+    seen  = makeTable('seen nil)  ; set by "lib/cell" key
+    pairs = nil
+    procedure( _walk(l c)
+      let( (cv key)
+        key = sprintf(nil "%s/%s" l c)
+        unless(seen[key]
+          seen[key] = t
+          pairs     = cons(key pairs)
+          cv = dbOpenCellViewByType(l c "schematic" "" "r")
+          when(cv
+            foreach(inst cv~>instances
+              when(inst~>master
+                _walk(inst~>master~>libName inst~>master~>cellName)
+              )
+            )
+            dbClose(cv)
+          )
+        )
+      )
+    )
+    _walk(libName cellName)
+    sort(pairs 'alphalessp)
+  )
+)
+;-----------------------------------------------------------------------
+;Example: listHierLibCells("Two_Stage_Opamp" "DualAmp" "schematic")
+;-----------------------------------------------------------------------
+
+;------------------------------------------------------------------------
+;# Load Samsung Env
+;------------------------------------------------------------------------
+procedure( LoadSamsungEnv()
+ schHiSRC("editOptions")
+ schSRCForm->tabField->page1->floatingGlobalNets->value="error"
+ schSRCForm->tabField->page8->scrollRegion->localNetNameUniqueCaseFold->value="error"
+ schSRCForm->tabField->page8->scrollRegion->globalNetNameUniqueCaseFold->value="error"
+ schSRCForm->tabField->page8->scrollRegion->instNameUniqueCaseFold->value="error"
+ schSRCForm->tabField->page8->scrollRegion->propertyNameSyntax->value="error"
+ schSRCForm->tabField->page8->scrollRegion->net_name_start_with_number->value="error"
+ schSRCForm->tabField->page9->scrollRegion->inconsistent_bus_directions->value="error"
+ schSRCForm->tabField->page9->scrollRegion->instance_shorted_to_global_all->value="error"
+ schSRCForm->tabField->page9->scrollRegion->instance_input_port_shorted_to_global_signal->value="error"
+ schSRCForm->tabField->page9->scrollRegion->instance_output_port_shorted_to_global_signal->value="error"
+ schSRCForm->tabField->page9->scrollRegion->instance_bidir_port_shorted_to_global_signal->value="error"
+ schSRCForm->tabField->page9->scrollRegion->instance_shorted_to_global_spice_primitive_ignore->value="error"
+ schSRCForm->tabField->page10->scrollRegion->overlap_among_instances->value="error"
+ schSRCForm->tabField->page10->scrollRegion->instances_in_blockage_area->value="error"
+ schSRCForm->tabField->page10->scrollRegion->instance_with_homonym_master->value="error"
+hiFormDone(schSRCForm)
+
+ )**code/summary.sh**
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <folder name> "
+    exit 1
+fi
+
+foldername=$1
+target_dir=./result/$foldername
+summary_file=$target_dir/summary.txt
+
+if [ ! -d $target_dir ]; then
+    echo "Error: Folder $target_dir does not exist"
+    exit 1
+fi
+
+> $summary_file
+
+for file in "$target_dir"/*; do
+    if [ $(basename "$file") = "summary.txt" ]; then
+	continue
+    fi
+
+    if [ -f $file ]; then
+	echo $(basename $file) >> $summary_file # write log file name
+	cat $file >> $summary_file # write log file content
+	echo " " >> "$summary_file" # write new line
+    fi
+done
+
+echo Summary genereated at $summary_file**code/teardown.sh**
+#!/bin/bash
+
+#############################################################
+
+user_name=$(echo $USER)
+## Edit default value: uniqueid file ##
+uniqueid_path=/tmp/uniqueid_perf_"$user_name"
+
+
+## Edit default value: workspace name, proj_prefix, project_name ##
+ws_name=cadence_perf_ws_"$user_name"
+proj_prefix=cadence_perf_"$user_name"
+
+#############################################################
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+	-ws|--ws_name)
+	    ws_name=$2
+	    shift 2
+	    ;;
+	-proj|--proj_prefix)
+	    proj_prefix=$2
+	    shift 2
+	    ;;
+	-id|--uniqueid)
+	    uniqueid_path=$2
+	    shift 2
+	    ;;
+    	*)
+	    echo "Unknown option: $1"
+	    exit 1
+	    ;;
+    esac
+done
+
+
+
+if [ -f $uniqueid_path ] ; then
+    source $uniqueid_path
+fi
+
+project_name=$proj_prefix$uniqueid
+project_depot_path=//depot/VSM/$project_name/...
+ws_gdp_path=$(gdp find --type=workspace :=$ws_name)
+ws_local_path=$(gdp list $ws_gdp_path --columns=rootDir)
+echo -e "\nWorkspace local path: $ws_local_path"
+
+# collect original path
+pushd $(pwd)
+
+# revert all opened files
+cd $ws_local_path
+echo -e "\nReverting all opened files: $project_depot_path"
+xlp4 -c $ws_name revert $project_depot_path > /tmp/null_"$user_name"
+
+# go to one dir before the ws
+cd ..
+
+# delete workspace on gdp
+echo -e "\nDeleting workspace on gdpxl: $ws_name"
+gdp delete workspace --leave-files --force --name $ws_name 
+
+# delete workspace on local machine
+echo -e "\nRemoving workspace on local: $ws_local_path"
+chmod -R 777 $ws_local_path/.gdpxl
+rm -rf $ws_local_path
+
+# delete project on gdp (web gui)
+echo -e "\nDeleting the project /VSM/$project_name "
+gdp delete /VSM/$project_name --recursive --force --proceed
+
+# obliterate files from depot
+echo -e "\nObliterating the files from //depot/VSM/$project_name/..."
+xlp4 obliterate -y //depot/VSM/$project_name/... > /tmp/null_"$user_name"
+
+# back to original path
+popd**code/teardown.sh_paul**
+#!/bin/bash
+
+#############################################################
+user_name=$(echo $USER)
+
+## Edit default value: workspace name, proj_prefix, proj_name ##
+ws_name=cadence_cico_ws_"$user_name"
+proj_name=cadence_cico_"$user_name"
+
+#############################################################
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+	-ws|--ws_name)
+	    ws_name=$2
+	    shift 2
+	    ;;
+	-proj|--proj_name)
+	    proj_name=$2
+	    shift 2
+	    ;;
+    	*)
+	    echo "Unknown option: $1"
+	    exit 1
+	    ;;
+    esac
+done
+
+project_depot_path=//depot/VSM/$proj_name/...
+ws_gdp_path=$(gdp find --type=workspace :=$ws_name)
+ws_local_path=$(gdp list $ws_gdp_path --columns=rootDir)
+echo -e "\nWorkspace local path: $ws_local_path"
+
+# collect original path
+pushd $(pwd)
+
+# revert all opened files
+cd $ws_local_path
+echo -e "\nReverting all opened files: $project_depot_path"
+xlp4 -c $ws_name revert $project_depot_path 
+
+# go to one dir before the ws
+cd ..
+
+# delete client
+xlp4 client -d -f $ws_name
+
+# delete workspace on gdp
+echo -e "\nDeleting workspace on gdpxl: $ws_name"
+gdp delete workspace --leave-files --force --name $ws_name 
+
+# delete workspace on local machine
+echo -e "\nRemoving workspace on local: $ws_local_path"
+chmod -R 777 $ws_local_path/.gdpxl
+rm -rf $ws_local_path
+
+# delete project on gdp (web gui)
+echo -e "\nDeleting the project /VSM/$proj_name "
+gdp delete /VSM/$proj_name --recursive --force --proceed
+
+# obliterate files from depot
+echo -e "\nObliterating the files from //depot/VSM/$proj_name/..."
+xlp4 obliterate -y //depot/VSM/$proj_name/... 
+
+# back to original path
+popd
+**code/validate.il** procedure(Validate(ddid expectedState expectedVersion) prog((speclist result) result=t speclist=gdmCreateSpecList() gdmAddSpecToSpecList(gdmCreateSpecFromDDID(ddid) speclist) rexCompile("(\\.cdslck.*)|(\\.oacache.*)|(\\.tmp\\.[a-z])") foreach(spec gdmstatus(speclist 6) tokens=parseString(car(spec)) unless(or(rexMatchp("\\.cdslck.*" car(tokens)) rexMatchp("\\.oacache.*" car(tokens)) rexMatchp("\\.tmp\\.[a-z]" car(tokens)) rexMatchp("data.dm\\.*" car(tokens)) rexMatchp("thumbnail_128x128.png\\.*" car(tokens))) if(strcmp(cadr(tokens) expectedState) != 0 then printf("ERROR: %s expected %s but got %s\n" car(tokens) expectedState cadr(tokens)) result=nil ) ) ) gdmResetSpecList(speclist) foreach(spec gdmstatus(speclist 10) tokens=parseString(car(spec)) unless(or(rexMatchp("\\.cdslck.*" car(tokens)) rexMatchp("\\.oacache.*" car(tokens)) rexMatchp("\\.tmp\\.[a-z]" car(tokens)) rexMatchp("data.dm\\.*" car(tokens)) rexMatchp("thumbnail_128x128.png\\.*" car(tokens))) if(strcmp(cadr(tokens) expectedVersion) != 0 then printf("ERROR: %s expected version %s but got %s\n" car(tokens) expectedVersion cadr(tokens)) result=nil ) ) ) return(result) ) ) procedure(Validate_hier(ddid expectedState) ; expectedState={"CI" "CO"} prog(( result libName cellName hierCnt ) result=t libName=ddid->lib->name cellName=ddid->cell->name mgHierParse( libName cellName "schematic" "./text.txt") case(expectedState ("CI" ICM_runP4("-x text.txt files 2>/dev/null | sed 's/#.*//'> ./hier.txt") ICM_runP4("-x hier.txt opened 2>/dev/null | wc -l") if(ICM_IPCBuffer != "0\n" then printf("ERROR: %Y/%Y/%Y expected hier opened 0 but got %Y\n" ddid->lib->name ddid->cell->name ddid->name ICM_IPCBuffer) result=nil ) ) ("CO" ICM_runP4("-x text.txt files 2>/dev/null | sed 's/#.*//'> ./hier.txt") ICM_runCmd("cat hier.txt | wc -l") hierCnt = ICM_IPCBuffer ICM_runP4("-x hier.txt opened 2>/dev/null | wc -l") if(ICM_IPCBuffer != hierCnt then printf("ERROR: %Y/%Y/%Y expected hier opened %Y but got %Y\n" ddid->lib->name ddid->cell->name ddid->name substring(hierCnt 1 strlen(hierCnt)-1) ICM_IPCBuffer) result=nil ) ) ) return(result) ) ) procedure(Validate_hierAll(ddid openedPreCnt) ; expectedState={"CI" "CO"} prog(( result libName cellName hierCnt ) result=t libName=ddid->lib->name cellName=ddid->cell->name mgHierParse( libName cellName "schematic" "./text.txt") ICM_runP4("-x text.txt files 2>/dev/null | sed 's/#.*//' | wc -l ") hierCount=atoi(car(last(parseString(ICM_IPCBuffer "\n")))) ICM_runP4("opened ... | wc -l") openedPostCnt=atoi(car(last(parseString(ICM_IPCBuffer "\n")))) if(openedPreCnt - hierCount != openedPostCnt then printf("ERROR: %Y/%Y/%Y expected opened %Y in lib but got %Y\n" ddid->lib->name ddid->cell->name ddid->name openedPostCnt openedPreCnt-hierCount) result=nil ) return(result) ) ) procedure(Validate_refCount(ddid expectedCount) prog((result refCount) result=t refCount=_ddBatchRefCount(ddid) if(expectedCount != refCount then printf("ERROR: %Y/%Y/%Y expected refCount %Y but got %Y\n" ddid->lib->name ddid->cell->name ddid->name expectedCount refCount) result=nil ) return(list(result refCount)) ) )**main.pl** #!/usr/bin/perl use Getopt::Long; $cwd=pwd; chomp($cwd); $library = ""; $cell = ""; $manage = "unmanaged managed"; $ws = ""; $proj = ""; $id = ""; $mode=""; @generatedReplay; $genOnly = 1; $totalArgs = scalar(@ARGV); GetOptions("lib=s" => \$library, "cell=s" => \$cell, "mode=s" => \$mode, "manage=s" => \$manage, "ws=s" => \$ws, "proj=s" => \$proj, "id=s" => \$id, "version=s" => \$version, "genOnly=s" => \$genOnly, ); if($version=~ /^$/) { print("Missing Virtuoso Version \n"); exit; } if($library=~ /^~/) { print("Error lib argument Missing"); exit; } if($cell =~ /^$/) { print("Error cell argument Missing"); exit; } @libs = split(" ",$library); @cells = split(" ",$cell); if(scalar(@libs)!=scalar(@cells)){ print("Lib Cell Pairs Mismatch\n"); exit; } if($manage !~ /^(unmanaged managed|managed unmanaged|managed|unmanaged)$/){ if($manage!~ /^$/){ print "invalid combination\n"; exit; } } if($mode=~ /^$/) { @templates = ('checkHier','renameRefLib','replace','deleteAllMarker','copyHierToNonEmpty','copyHierToEmpty'); } else { @templates=split(/\s+/, $mode); } chdir "GenerateReplayScript"; system("\\rm replay*.au"); foreach my $key(@templates) { print("./createReplay.pl -lib \"$library\" -cell \"$cell\" -template $key\n"); system("./createReplay.pl -lib \"$library\" -cell \"$cell\" -template $key\n"); } @replayFiles =ls replay*.au; chdir $cwd; system("\\rm code/replay/replay*.au"); system("cp -r GenerateReplayScript/replay*.au code/replay/"); open(maintmpl, "main.template") ||die "can't open script Template \n"; open(main.sh, ">main.sh") || die "Can;t open script \n"; $start=0; while(<maintmpl>) { s/man_folders=\(\)/man_folders=\($manage\)/g; s/(virtuoso_version=)/$1$version/g; if(/replay_files=\(/){ $start=1; print mainsh $_; next; } if($start==1) { foreach my $key(@replayFiles) { print mainsh "$key"; } $start=0; } print mainsh $_; } close(mainsh); system("chmod +x main.sh"); if($genOnly == 1) { exit; } else { system("./main.sh"); }**main.template** #!/bin/bash show_help() { cat << EOF Usage: ./main.sh [OPTIONS] Options: -ws, --ws_name NAME Workspace name (default: perf_ws) -proj, --proj_prefix NAME Project prefix (default: cadence_pv_) -id, --uniqueid FILE Unique ID file (default: /tmp/uniqueid_perf) -lib, --libname NAME Library name wants to run (default: BM01) -cell, --cellname NAME Cell name wants to run (default: VP_FULLCHIP) -h, --help Show this help message Example: ./main.sh ./main.sh --ws_name test_ws --proj_prefix demo -id /tmp/uniqueid EOF } set -e user_name=$(echo $USER) ws_name=cadence_perf_ws_"$user_name" proj_prefix=cadence_perf_"$user_name" uniqueid=/tmp/uniqueid_perf_"$user_name" #(unmanaged managed) man_folders=() virtuoso_version= replay_files=( ) # pre. collect all the input args while [[ $# -gt 0 ]]; do case "$1" in -ws|--ws_name) ws_name=$2 shift 2 ;; -proj|--proj_prefix) proj_prefix=$2 shift 2 ;; -id|--uniqueid) uniqueid=$2 shift 2 ;; -lib|--libname) lib_name=$2 shift 2 ;; -cell|--cellname) cell_name=$2 shift 2 ;; -h|--help) show_help exit 0 ;; *) echo "Unknown option: $1" echo "Use -h for help" exit 1 ;; esac done # 1. Remove date_virtuoso.txt rm -f code/date_virtuosoVer.txt # 2. create result folder if not exist mkdir -p result mkdir -p CDS_log # 3. create tmp/perf_lib and tmp/perf_cell #echo $lib_name > /tmp/perf_lib #echo $cell_name > /tmp/perf_cell # 4. Check unmanaged workspace whether is existed if [[ " ${man_folders[*]} " == *" unmanaged "* ]]; then if [ -d $(pwd)/unmanaged/cadence_perf_ws ]; then echo "Moving unmanaged/cadence_perf_ws TO unmanaged/$ws_name" mv unmanaged/cadence_perf_ws unmanaged/$ws_name elif [ ! -d $(pwd)/unmanaged/cadence_perf_ws ]; then echo "" echo "*************************************************" echo "Please check the workspace in $(pwd)/unmanaged" echo "It should have unmanaged/cadence_perf_ws" echo "*************************************************" exit 1 else echo "ERROR" fi fi ####################################### # Run virtuoso replay ####################################### for managed in ${man_folders[@]}; do for replay in ${replay_files[@]}; do ori_path=$(pwd) testdir=$(pwd)/$managed/$ws_name # absolute path rm -f code/managed.txt echo $managed > code/managed.txt echo "Running perf test in $testdir" ( cd $testdir || exit 1 # init the workspace (making sure no opened files and sync the files to latest) if [[ $managed == "managed" ]]; then # revert opened files while true; do # Get opened files mapfile -t lines < <(xlp4 opened -a //depot/VSM/cadence_perf_20260317064432/rev01/...) # Exit if none if [ ${#lines[@]} -eq 0 ]; then echo "No opened files found. Done." break fi # Extract unique workspace names workspaces=($(printf "%s\n" "${lines[@]}" | awk -F@ '{print $2}' | awk '{print $1}' | sort -u)) for ws in "${workspaces[@]}"; do echo "Reverting all files in workspace: $ws" xlp4 revert -C "$ws" //depot/VSM/cadence_perf_20260317064432/rev01/... 2>/dev/null done echo "Rechecking..." done # sync the files to latest echo "Sync the workspace to the latest." xlp4 sync ... 2>/dev/null fi # Run virtuoso replay (Cadence Virtuoso) vse_run -v $virtuoso_version -replay ../../code/replay/$replay -log ../../CDS_log/$replay"_"$managed".log" # vse_run -v $virtuoso_version -replay ../../code/replay/$replay -log ../../CDS_log/$replay"_"$managed".log" -logtime -opt3264 -debugger3264 "strace -t -o ./strace.log %exe% %args%" #virtuoso -replay ../../code/replay/$replay -log ../../CDS_LOG/$replay".log" # csh -c /user/virtuoso.cat/TOOL/IC251_ISR5-023_CAT/ic231.env # virtuoso -logtime -replay ../../code/replay/$replay -log ../../CDS_log/$replay"_"$managed".log" -opt3264 -debugger3264 "strace -t -o ./strace.log %exe% %args%" ) cd $ori_path done if [[ $managed == "unmanaged" ]]; then echo "Moving unmanaged/$ws_name TO unmanaged/cadence_perf_ws" mv unmanaged/$ws_name unmanaged/cadence_perf_ws fi done echo "All selected tests finished." date_virtuosoVer=$(cat code/date_virtuosoVer.txt) code/summary.sh $date_virtuosoVer

@@ -1,0 +1,15 @@
+if(env("ICM_HOME") then icm_skill_root = env("ICM_HOME")
+when(env("ICM_SkillRoot") icm_skill_root = env("ICM_SkillRoot"))
+if(isFile(strcat(icm_skill_root "/SKILL/cdsinit")) then
+println("Loading IC Manage integration...")
+load(strcat(icm_skill_root "/SKILL/cdsinit")) else
+println("ERROR: IC Manage integration not loaded") )
+println("ERROR: IC Manage integration not loaded - $ICM_HOME not set.") )
+ICM_EnableLibManCheckInICM=t
+ICM_EnableLibManCheckOutICM=t
+ICM_EnableLibManCancelCheckoutICM=t
+ICM_EnableRevisionHistory=t
+ICM_EnableLibManFastCheckInICM=t
+ICM_EnableLibManFastCheckOutICM=t
+ICM_EnableLibManFastCancelCheckOutICM=t
+ICM_useCadenceRegistry=t

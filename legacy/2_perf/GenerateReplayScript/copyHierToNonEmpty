@@ -1,0 +1,40 @@
+envLoadFile("../../code/.cdsenv")
+load("../../code/perfFunctions.il")
+code_path = "../../code/"
+result_path = "../../result/"
+load( strcat(
+code_path "date_virtuosoVer.il"))
+ddAutoCtlSetVars(0 0 3 3)
+;--------------------------------------------------
+;# Start Time
+;# Open Design
+;--------------------------------------------------
+t1=getCurrentTime()
+openDesign("a")
+;--------------------------------------------------
+;# Set Samsung Setting
+;-------------------------------------------------- LoadSamsungEnv()
+hiFormDone(schSRCForm)
+hiCloseWindow(geGetCellViewWindow(gec()))
+hiDBoxOK(geDBox)
+;--------------------------------------------------
+;# Test7_Replace_Lib_here: Copy Hierarchy to non-empty library
+;-------------------------------------------------- HierCopy("Replace_Lib_here" "Replace_Cell_here" "" "Replace_Lib_here_CHIP" list("DRAMLIB"))
+;--------------------------------------------------
+;; End Time
+;--------------------------------------------------
+t2=getCurrentTime()
+final=compareTime(t2 t1)
+system(strcat("mkdir -p "
+result_path date_virtuosoVer(code_path) ))
+inport =
+infile("../managed.txt")
+gets(managed inport)
+managed = substring(managed 1 strlen(managed)-1)
+close(inport)
+fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test7_Replace_Lib_here_" managed "_" date_virtuosoVer(code_path) ".log") "w")
+fprintf(fd "Test7_Replace_Lib_here. Performance Copy Hierarchy to Non-empty Library %s time %d\n" managed final)
+close(fd)
+;--------------------------------------------------
+;# Exit
+;-------------------------------------------------- exit geSaveAllForm->none->value= t hiFormDone(geSaveAllForm)
