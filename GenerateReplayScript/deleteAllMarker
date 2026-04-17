@@ -1,1 +1,72 @@
- envLoadFile("../../code/.cdsenv") load("../../code/perfFunctions.il") code_path = "../../code/" result_path = "../../result/" load( strcat( code_path "date_virtuosoVer.il")) ddAutoCtlSetVars(0 0 3 3) ;-------------------------------------------------- ;# Start Time ;# Open Design ;-------------------------------------------------- openDesign("a") ;-------------------------------------------------- ;# Set Samsung Setting ;-------------------------------------------------- LoadSamsungEnv() hiFormDone(schSRCForm) ;-------------------------------------------------- ;# Run Editor->Check->Hierarchy ;-------------------------------------------------- schHiCheckHier() hiiSetCurrentForm('schCheckHierForm) schCheckHierForm->checkAlways->value= t schCheckHierForm->checkRefLibs->value= t schCheckHierForm->openMode->value="edit" schCheckHierForm->saveStrategy->value="Save all" schCheckHierForm->closeErrorCVs->value= t hiFormDone(schCheckHierForm) hiCloseWindow(geGetCellViewWindow(gec())) ddsHiCloseData() hiiSetCurrentForm('ddsCloseDataForm) ddsCloseDataForm->CDCVModifiedOption->value="save" ddsiCloseDataButtonCB('all) hiFormDone(ddsCloseDataForm) ;-----------------strace start ------------------------ warn("-------------strace start here--------------") cid=ipcBatchProcess(sprintf(nil "strace -t -p %d -o ./strace.log" ipcGetPid()) "" "cmd.log") unless(ipcIsAliveProcess(cid) ipcSleep(1)) ;-----------------strace end------------------------ ;-------------------------------------------------- ;# Start Time for Delete Markers. ;#Test5_Replace_Lib_here: Editor->Check->Delete All marker ;-------------------------------------------------- t1=getCurrentTime() openDesign("a") geHiDeleteAllMarker() hiiSetCurrentForm('geDeleteAllMarkerForm) geDeleteAllMarkerForm->type->all->value = t geDeleteAllMarkerForm->scope->value="hierarchy starting from top cellview" geDeleteAllMarkerForm->geDelMarkerAccessMode->value="edit" geDeleteAllMarkerForm->sourcesScope->value="all" hiFormDone(geDeleteAllMarkerForm) hiCloseWindow(geGetCellViewWindow(gec())) hiDBoxOK(geDBox) ;-------------------------------------------------- ;# End Time ;-------------------------------------------------- t2=getCurrentTime() final=compareTime(t2 t1) system(strcat("mkdir -p " result_path date_virtuosoVer(code_path) )) inport = infile("../managed.txt") gets(managed inport) managed = substring(managed 1 strlen(managed)-1) close(inport) fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test5_Replace_Lib_here_" managed "_" date_virtuosoVer(code_path) ".log") "w") fprintf(fd "Test5_Replace_Lib_here. Performance Editor->Check->Delete %s time %d\n" managed final) close(fd) ;-------------------------------------------------- ;# Exit ;-------------------------------------------------- exit geSaveAllForm->none->value= t hiFormDone(geSaveAllForm)
+envLoadFile("../../code/.cdsenv")
+load("../../code/perfFunctions.il")
+code_path = "../../code/"
+result_path = "../../result/"
+load( strcat(
+code_path "date_virtuosoVer.il"))
+ddAutoCtlSetVars(0 0 3 3)
+;--------------------------------------------------
+;# Start Time
+;# Open Design
+;--------------------------------------------------
+openDesign("a")
+;--------------------------------------------------
+;# Set Samsung Setting
+;--------------------------------------------------
+LoadSamsungEnv()
+hiFormDone(schSRCForm)
+;--------------------------------------------------
+;# Run Editor->Check->Hierarchy
+;--------------------------------------------------
+schHiCheckHier()
+hiiSetCurrentForm('schCheckHierForm)
+schCheckHierForm->checkAlways->value= t
+schCheckHierForm->checkRefLibs->value= t
+schCheckHierForm->openMode->value="edit"
+schCheckHierForm->saveStrategy->value="Save all"
+schCheckHierForm->closeErrorCVs->value= t
+hiFormDone(schCheckHierForm)
+hiCloseWindow(geGetCellViewWindow(gec()))
+ddsHiCloseData()
+hiiSetCurrentForm('ddsCloseDataForm)
+ddsCloseDataForm->CDCVModifiedOption->value="save" ddsiCloseDataButtonCB('all)
+hiFormDone(ddsCloseDataForm)
+;-----------------strace start ------------------------ warn("-------------strace start here--------------")
+cid=ipcBatchProcess(sprintf(nil "strace -t -p %d -o ./strace.log" ipcGetPid()) "" "cmd.log")
+unless(ipcIsAliveProcess(cid)
+ipcSleep(1))
+;-----------------strace end------------------------
+;--------------------------------------------------
+;# Start Time for Delete Markers.
+;#Test5_Replace_Lib_here: Editor->Check->Delete All marker
+;--------------------------------------------------
+t1=getCurrentTime()
+openDesign("a")
+geHiDeleteAllMarker()
+hiiSetCurrentForm('geDeleteAllMarkerForm)
+geDeleteAllMarkerForm->type->all->value = t geDeleteAllMarkerForm->scope->value="hierarchy starting from top cellview" geDeleteAllMarkerForm->geDelMarkerAccessMode->value="edit" geDeleteAllMarkerForm->sourcesScope->value="all"
+hiFormDone(geDeleteAllMarkerForm)
+hiCloseWindow(geGetCellViewWindow(gec()))
+hiDBoxOK(geDBox)
+;--------------------------------------------------
+;# End Time
+;--------------------------------------------------
+t2=getCurrentTime()
+final=compareTime(t2 t1)
+system(strcat("mkdir -p "
+result_path date_virtuosoVer(code_path) ))
+inport = infile("../managed.txt")
+gets(managed
+inport)
+managed = substring(managed 1 strlen(managed)-1)
+close(inport)
+fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test5_Replace_Lib_here_"
+managed "_" date_virtuosoVer(code_path) ".log") "w")
+fprintf(fd "Test5_Replace_Lib_here. Performance Editor->Check->Delete %s time %d\n"
+managed final)
+close(fd)
+;--------------------------------------------------
+;# Exit
+;--------------------------------------------------
+exit geSaveAllForm->none->value= t
+hiFormDone(geSaveAllForm)
