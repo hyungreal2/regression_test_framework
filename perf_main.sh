@@ -21,10 +21,14 @@ log "Logging to ${logfile}"
 #######################################
 jobs=4
 do_teardown=false
+do_run=true
+auto_init=false
 selected_libs=()
 selected_tests=()
 selected_modes=(managed unmanaged)
 teardown_worker_pid=""
+
+session_file="${script_dir}/perf_session.txt"
 
 #######################################
 # Trap: ensure any background work
@@ -45,13 +49,20 @@ print_help() {
 Usage: $(basename "$0") [options]
 
 Options:
-  -h  | --help               Print this help message
-  -lib  <lib[,lib...]>       Libraries to test (default: all — ${PERF_LIBS[*]})
-  -test <test[,test...]>     Test types     (default: all — ${PERF_TESTS[*]})
-  -mode <managed|unmanaged>  Mode           (default: both)
-  -j  | --jobs <n>           Parallel jobs  (default: ${jobs})
-  -d  | --dry-run [n]        Dry-run level 0/1/2 (default: 2)
-  -t  | --teardown           Run teardown after all tests
+  -h         | --help          Print this help message
+  -lib         <lib[,lib...]>  Libraries to test    (default: all — ${PERF_LIBS[*]})
+  -test        <test[,test...]> Test types          (default: all — ${PERF_TESTS[*]})
+  -mode        <managed|unmanaged>  Mode            (default: both)
+  -j         | --jobs <n>      Parallel jobs        (default: ${jobs})
+  -d         | --dry-run [n]   Dry-run level 0/1/2  (default: ${DRY_RUN})
+  -no-run    | --no-run        Init only; skip test execution
+  -t         | --teardown      Run teardown after tests
+  -auto-init | --auto-init     Auto-run init if no session exists (no prompt)
+
+Session:
+  Active session is stored in: ${session_file}
+  Default behavior skips init and reuses the existing session.
+  If no session exists, an interactive prompt asks whether to run init.
 EOF
 }
 
@@ -90,8 +101,16 @@ while [[ $# -gt 0 ]]; do
             jobs="$2"
             shift 2
             ;;
+        -no-run|--no-run)
+            do_run=false
+            shift
+            ;;
         -t|--teardown)
             do_teardown=true
+            shift
+            ;;
+        -auto-init|--auto-init)
+            auto_init=true
             shift
             ;;
         *)
@@ -162,6 +181,50 @@ build_combos() {
 }
 
 #######################################
+# Session: load or init
+#######################################
+load_or_init_session() {
+    if [[ -f "${session_file}" ]]; then
+        uniqueid=$(<"${session_file}")
+        log "Session loaded: ${uniqueid} (from ${session_file})"
+        return
+    fi
+
+    # No session — ask or auto-init
+    local answer="n"
+    if [[ "${auto_init}" == true ]]; then
+        log "No session found. --auto-init: running init automatically."
+        answer="y"
+    else
+        echo ""
+        echo "No active session found (${session_file} does not exist)."
+        echo -n "Run init to set up the environment? [y/N] "
+        read -r answer
+    fi
+
+    if [[ "${answer}" =~ ^[Yy]$ ]]; then
+        run_init_phases
+    else
+        error_exit "No session. Run with -no-run to initialise the environment first."
+    fi
+}
+
+#######################################
+# Save / remove session
+#######################################
+save_session() {
+    echo "${uniqueid}" > "${session_file}"
+    log "Session saved: ${uniqueid} → ${session_file}"
+}
+
+remove_session() {
+    if [[ -f "${session_file}" ]]; then
+        rm -f "${session_file}"
+        log "Session removed: ${session_file}"
+    fi
+}
+
+#######################################
 # Phase 1: Generate replays (sequential)
 #######################################
 generate_replays() {
@@ -210,37 +273,60 @@ teardown_workspaces() {
 }
 
 #######################################
+# Init phases (1+2): generate + init
+#######################################
+run_init_phases() {
+    uniqueid="$(date +%Y%m%d_%H%M%S)_${USER_NAME}"
+    log "uniqueid: ${uniqueid}"
+
+    run_cmd "mkdir -p WORKSPACES_MANAGED WORKSPACES_UNMANAGED"
+    run_cmd "mkdir -p result/${uniqueid} CDS_log/${uniqueid}"
+
+    if [[ "${DRY_RUN}" -lt 2 ]]; then
+        echo "${uniqueid}" > "${script_dir}/code/date_virtuosoVer.txt"
+    fi
+
+    generate_replays
+    init_workspaces
+    save_session
+}
+
+#######################################
 # Main
 #######################################
 log "START (dry-run=${DRY_RUN})"
-
-uniqueid="perf_$(date +%Y%m%d_%H%M%S)_${USER_NAME}"
-log "uniqueid: ${uniqueid}"
 
 validate_inputs
 build_combos
 log "Matrix: ${#combos_init[@]} (testtype×lib) × ${#selected_modes[@]} modes = ${#combos_run[@]} runs"
 
-run_cmd "mkdir -p WORKSPACES_MANAGED WORKSPACES_UNMANAGED"
-run_cmd "mkdir -p result/${uniqueid} CDS_log/${uniqueid}"
+if [[ "${do_run}" == false && "${do_teardown}" == false ]]; then
+    # --no-run only: always run init phases
+    run_init_phases
+    log "Init complete. Run without -no-run to execute tests."
+elif [[ "${do_run}" == true ]]; then
+    load_or_init_session
 
-if [[ "${DRY_RUN}" -lt 2 ]]; then
-    echo "managed"   > WORKSPACES_MANAGED/managed.txt
-    echo "unmanaged" > WORKSPACES_UNMANAGED/managed.txt
-    echo "${uniqueid}" > "${script_dir}/code/date_virtuosoVer.txt"
-fi
+    log "--- Phase 3: Run tests ---"
+    run_tests
 
-generate_replays
-init_workspaces
-run_tests
+    log "All tests finished."
+    log "Generating summary for result/${uniqueid}"
+    bash "${script_dir}/code/summary.sh" -d "${DRY_RUN}" "${uniqueid}"
 
-log "All tests finished."
-
-log "Generating summary for result/${uniqueid}"
-bash "${script_dir}/code/summary.sh" -d "${DRY_RUN}" "${uniqueid}"
-
-if [[ "${do_teardown}" == true ]]; then
+    if [[ "${do_teardown}" == true ]]; then
+        teardown_workspaces
+        remove_session
+    fi
+elif [[ "${do_run}" == false && "${do_teardown}" == true ]]; then
+    # --no-run -t: teardown only using existing session
+    if [[ ! -f "${session_file}" ]]; then
+        error_exit "No session found. Cannot teardown without an active session."
+    fi
+    uniqueid=$(<"${session_file}")
+    log "Session loaded for teardown: ${uniqueid}"
     teardown_workspaces
+    remove_session
 fi
 
 log "perf_main.sh DONE"
