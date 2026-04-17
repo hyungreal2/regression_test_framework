@@ -54,7 +54,7 @@ _mock_gdp_workspace() {
 #######################################
 # Dry-run wrapper
 # Level 0: run all (echo command before exec)
-# Level 1: skip gdp / xlp4 / rm / vse_sub / vse_run / bwait
+# Level 1: skip gdp / xlp4 / rm / vse_sub / vse_run
 # Level 2: skip all
 #######################################
 run_cmd() {
@@ -70,7 +70,7 @@ run_cmd() {
             ;;
         1)
             case "${first_word}" in
-                gdp|xlp4|rm|vse_sub|vse_run|bwait)
+                gdp|xlp4|rm|vse_sub|vse_run)
                     if [[ "${cmd}" == *"gdp build workspace"* ]]; then
                         local gdp_name
                         gdp_name=$(grep -oP '(?<=--gdp-name\s)\S+' <<< "${cmd}" | tr -d "\"'" || true)
@@ -101,16 +101,25 @@ run_cmd() {
 #######################################
 # VSE execution wrapper
 # VSE_MODE=run  → vse_run  (synchronous, env 1)
-# VSE_MODE=sub  → vse_sub + bwait (async submit, env 2)
+# VSE_MODE=sub  → vse_sub + poll bjobs (async submit, env 2)
 #######################################
 run_vse() {
     local replay="$1" logfile="$2"
     if [[ "${VSE_MODE:-run}" == "sub" ]]; then
-        local vse_out job_id
+        local vse_out job_id stat
         vse_out=$(run_cmd "vse_sub -v ${VSE_VERSION} -env ${ICM_ENV} -replay ${replay} -log ${logfile}")
         job_id=$(awk -F'[<>]' '{print $2}' <<< "${vse_out}")
-        log "Waiting for job: ${job_id}"
-        run_cmd "bwait -w \"ended(${job_id})\""
+        log "Submitted job: ${job_id}. Polling every 10s..."
+        # bwait -w "ended(${job_id})"  # disabled: pending verification
+        while true; do
+            stat=$(bjobs -noheader -o stat "${job_id}" 2>/dev/null | awk '{print $1}')
+            log "  job ${job_id} stat=${stat:-unknown}"
+            case "${stat}" in
+                DONE) log "Job ${job_id} finished: DONE"; break ;;
+                EXIT) log "Job ${job_id} finished: EXIT"; break ;;
+            esac
+            sleep 10
+        done
     else
         run_cmd "vse_run -v ${VSE_VERSION} -replay ${replay} -log ${logfile}"
     fi
