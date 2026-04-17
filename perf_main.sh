@@ -90,6 +90,21 @@ SESSION
     run+cleanup perf_main.sh -t              → reads, then removes session file
     teardown    perf_main.sh -no-run -t      → removes session file (no run)
 
+OPTION COMBINATIONS
+  The -lib, -test, and -mode options can be combined freely at run time
+  to select a subset of the initialized workspaces.
+
+  Command                                    Tests run
+  ─────────────────────────────────────────  ──────────────────────────────────
+  $(basename "$0")                                        all session entries × managed + unmanaged
+  $(basename "$0") -lib BM02 -test checkHier              checkHier/BM02 × managed + unmanaged  (2)
+  $(basename "$0") -lib BM02 -test checkHier -mode managed  checkHier/BM02/managed only          (1)
+  $(basename "$0") -mode managed                          all session entries × managed only
+
+  Note: -lib and -test filter the run against the current session.
+  The session must already contain the requested lib/test combination
+  (i.e. it was included when -no-run was executed).
+
 WORKFLOW EXAMPLES
   # Step 1: Set up workspaces (do once)
   $(basename "$0") -no-run -lib BM01 -test checkHier
@@ -97,6 +112,7 @@ WORKFLOW EXAMPLES
   # Step 2: Run tests (repeat as needed)
   $(basename "$0")
   $(basename "$0") -lib BM01 -test checkHier
+  $(basename "$0") -lib BM01 -test checkHier -mode managed
 
   # Step 3: Tear down workspaces when done
   $(basename "$0") -no-run -t
