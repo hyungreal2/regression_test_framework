@@ -97,6 +97,14 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
         cd "${script_dir}/WORKSPACES_MANAGED" || exit 1
         run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${ws_name}\" --location \"$(pwd)\""
     ) 9>"${script_dir}/.gdp_ws_lock"
+
+    #######################################
+    # Symlinks in MANAGED workspace
+    #######################################
+    managed_ws_build="${script_dir}/WORKSPACES_MANAGED/${ws_name}"
+    log "[INIT] Creating symlinks in MANAGED workspace"
+    run_cmd "ln -sf \"${CDS_LIB_MGR}\" \"${managed_ws_build}/\""
+    run_cmd "ln -sf \"${script_dir}/code/.cdsenv\" \"${managed_ws_build}/.cdsenv\""
 else
     log "[DRY-RUN:2] Would: gdp build workspace --gdp-name ${ws_name}"
 fi

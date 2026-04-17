@@ -321,9 +321,31 @@ init_workspaces() {
 #######################################
 run_tests() {
     local testtype lib ws_name combos_run=()
+    local lib_match test_match al at
 
     for entry in "${session_ws[@]}"; do
         read -r testtype lib ws_name <<< "${entry}"
+
+        # Filter by -lib (if specified)
+        lib_match=true
+        if [[ ${#selected_libs[@]} -gt 0 ]]; then
+            lib_match=false
+            for al in "${selected_libs[@]}"; do
+                [[ "${lib}" == "${al}" ]] && { lib_match=true; break; }
+            done
+        fi
+        [[ "${lib_match}" == true ]] || continue
+
+        # Filter by -test (if specified)
+        test_match=true
+        if [[ ${#selected_tests[@]} -gt 0 ]]; then
+            test_match=false
+            for at in "${selected_tests[@]}"; do
+                [[ "${testtype}" == "${at}" ]] && { test_match=true; break; }
+            done
+        fi
+        [[ "${test_match}" == true ]] || continue
+
         for mode in "${selected_modes[@]}"; do
             combos_run+=("${testtype} ${lib} ${mode} ${ws_name}")
         done
