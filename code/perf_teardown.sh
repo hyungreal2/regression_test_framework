@@ -28,35 +28,38 @@ source "${script_dir}/code/common.sh"
 #######################################
 # Args
 #######################################
-[[ $# -ge 3 ]] || error_exit "Usage: $0 <testtype> <lib> <uniqueid> [-d <level>]"
-testtype="$1"
-lib="$2"
-uniqueid="$3"
+[[ $# -ge 1 ]] || error_exit "Usage: $0 <ws_name> [-d <level>]"
+ws_name="$1"
 
-ws_name="${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}"
 proj_path="${PERF_GDP_BASE}/${ws_name}"
 proj_depot_path="//depot${proj_path}/..."
-managed_ws="${script_dir}/WORKSPACES_MANAGED/${ws_name}"
 unmanaged_ws="${script_dir}/WORKSPACES_UNMANAGED/${ws_name}"
 
-log "[TEARDOWN] ${testtype}/${lib} ws=${ws_name}"
+log "[TEARDOWN] ws=${ws_name}"
 
 #######################################
-# Revert opened files in MANAGED ws
+# Find MANAGED workspace via gdp find
 #######################################
-if [[ -d "${managed_ws}" ]]; then
-    log "[TEARDOWN] Reverting opened files"
+log "[TEARDOWN] Finding workspace: ${ws_name}"
+ws_gdp_path=$(run_cmd "gdp find --type=workspace \":=${ws_name}\"" || true)
+
+if [[ -n "${ws_gdp_path}" ]]; then
+    managed_ws=$(run_cmd "gdp list \"${ws_gdp_path}\" --columns=rootDir")
+    log "[TEARDOWN] Workspace local path: ${managed_ws}"
+
     (
         cd "${managed_ws}" || exit 1
+
+        #######################################
+        # Revert opened files
+        #######################################
+        log "[TEARDOWN] Reverting opened files"
         run_cmd "xlp4 -c \"${ws_name}\" revert \"${proj_depot_path}\" > /dev/null 2>&1 || true"
-    )
 
-    #######################################
-    # Delete pending changelists
-    #######################################
-    log "[TEARDOWN] Checking pending changelists"
-    (
-        cd "${managed_ws}" || exit 1
+        #######################################
+        # Delete pending changelists
+        #######################################
+        log "[TEARDOWN] Checking pending changelists"
         raw_cls=$(run_cmd "xlp4 changes -c \"${ws_name}\" -s pending" || true)
         pending_cls=$(awk '{print $2}' <<< "${raw_cls}")
         for cl in ${pending_cls}; do
@@ -76,6 +79,8 @@ if [[ -d "${managed_ws}" ]]; then
 
     log "[TEARDOWN] Removing MANAGED workspace: ${managed_ws}"
     safe_rm_rf "${managed_ws}"
+else
+    log "[TEARDOWN] Workspace not found via gdp find: ${ws_name} (may already be deleted)"
 fi
 
 #######################################
@@ -104,4 +109,4 @@ run_cmd "gdp delete \"${proj_path}\" --recursive --force --proceed"
 log "[TEARDOWN] Obliterating depot: ${proj_depot_path}"
 run_cmd "xlp4 obliterate -y \"${proj_depot_path}\""
 
-log "[TEARDOWN] Done: ${testtype}/${lib}"
+log "[TEARDOWN] Done: ${ws_name}"

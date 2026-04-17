@@ -301,10 +301,17 @@ run_tests() {
 # Phase 5: Teardown (parallel)
 #######################################
 teardown_workspaces() {
+    local testtype lib ws_names=()
+
+    for combo in "${combos_teardown[@]}"; do
+        read -r testtype lib <<< "${combo}"
+        ws_names+=("${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}")
+    done
+
     log "--- Phase 5: Teardown (jobs=${jobs}) ---"
-    printf "%s\n" "${combos_teardown[@]}" | \
-        xargs -n2 -P"${jobs}" bash -c "
-            bash \"${script_dir}/code/perf_teardown.sh\" \"\$1\" \"\$2\" \"${uniqueid}\" -d \"${DRY_RUN}\"
+    printf "%s\n" "${ws_names[@]}" | \
+        xargs -n1 -P"${jobs}" bash -c "
+            bash \"${script_dir}/code/perf_teardown.sh\" \"\$1\" -d \"${DRY_RUN}\"
         " _
     log "All teardowns completed."
 }
