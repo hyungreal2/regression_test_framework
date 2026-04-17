@@ -22,6 +22,7 @@ log "Logging to ${logfile}"
 jobs=4
 do_teardown=false
 do_run=true
+do_gen_replay=false
 auto_init=false
 selected_libs=()
 selected_tests=()
@@ -69,6 +70,7 @@ OPTIONS
                                    0 = run everything
                                    1 = skip gdp / xlp4 / rm / vse (mock workspaces)
                                    2 = skip all commands (print only)
+  -gen-replay | --gen-replay     Generate replay files only (Phase 1); no init or run
   -no-run    | --no-run          Run init phases only; skip test execution
                                    Saves session to ${session_file}
   -t         | --teardown        Run teardown after tests
@@ -106,6 +108,9 @@ OPTION COMBINATIONS
   (i.e. it was included when -no-run was executed).
 
 WORKFLOW EXAMPLES
+  # Generate replay files only (no workspace setup)
+  $(basename "$0") -gen-replay -lib BM01 -test checkHier
+
   # Step 1: Set up workspaces (do once)
   $(basename "$0") -no-run -lib BM01 -test checkHier
 
@@ -159,6 +164,10 @@ while [[ $# -gt 0 ]]; do
             [[ "${2:-}" =~ ^[0-9]+$ ]] || error_exit "-j requires a positive integer"
             jobs="$2"
             shift 2
+            ;;
+        -gen-replay|--gen-replay)
+            do_gen_replay=true
+            shift
             ;;
         -no-run|--no-run)
             do_run=false
@@ -421,7 +430,12 @@ validate_inputs
 build_combos
 log "Init matrix: ${#combos_init[@]} workspace(s) (testtype×lib)"
 
-if [[ "${do_run}" == false && "${do_teardown}" == false ]]; then
+if [[ "${do_gen_replay}" == true ]]; then
+    # -gen-replay: Phase 1 only
+    generate_replays
+    log "Replay generation complete."
+
+elif [[ "${do_run}" == false && "${do_teardown}" == false ]]; then
     # -no-run: init only
     run_init_phases
     log "Init complete. Run without -no-run to execute tests."
