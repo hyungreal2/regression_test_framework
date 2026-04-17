@@ -27,6 +27,31 @@ error_exit() {
 }
 
 #######################################
+# GDP workspace mock (DRY_RUN=1)
+# Creates minimal workspace structure:
+#   cds.lib, cds.libicm, oa/<lib>/<cell>/, oa/<lib>/cdsinfo.tag
+# Reads MOCK_GDP_LIBS (space-separated) and MOCK_GDP_CELL from env.
+#######################################
+_mock_gdp_workspace() {
+    local ws_dir="$1"
+    local ts="$2"
+    local caller="$3"
+
+    echo "[MOCK:1][${ts}][${caller}] gdp workspace: ${ws_dir}" >&2
+    mkdir -p "${ws_dir}"
+    touch "${ws_dir}/cds.lib"
+    touch "${ws_dir}/cds.libicm"
+
+    if [[ -n "${MOCK_GDP_LIBS:-}" && -n "${MOCK_GDP_CELL:-}" ]]; then
+        local lib
+        for lib in ${MOCK_GDP_LIBS}; do
+            mkdir -p "${ws_dir}/oa/${lib}/${MOCK_GDP_CELL}"
+            printf "DMTYPE p4\n" > "${ws_dir}/oa/${lib}/cdsinfo.tag"
+        done
+    fi
+}
+
+#######################################
 # Dry-run wrapper
 # Level 0: run all (echo command before exec)
 # Level 1: skip gdp / xlp4 / rm / vse_sub / vse_run / bwait
@@ -50,11 +75,12 @@ run_cmd() {
                         local gdp_name
                         gdp_name=$(grep -oP '(?<=--gdp-name\s)\S+' <<< "${cmd}" | tr -d "\"'" || true)
                         if [[ -n "${gdp_name}" ]]; then
-                            echo "[MOCK:1][${ts}][${caller}] mkdir -p ${gdp_name}" >&2
-                            mkdir -p "${gdp_name}"
+                            _mock_gdp_workspace "${gdp_name}" "${ts}" "${caller}"
                         else
                             echo "[SKIP:1][${ts}][${caller}] ${cmd}" >&2
                         fi
+                    elif [[ "${cmd}" == *"gdp rebuild workspace"* ]]; then
+                        _mock_gdp_workspace "." "${ts}" "${caller}"
                     else
                         echo "[SKIP:1][${ts}][${caller}] ${cmd}" >&2
                     fi

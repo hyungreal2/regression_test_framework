@@ -1,0 +1,153 @@
+#!/bin/bash
+
+set -euo pipefail
+
+#######################################
+# Parse -d before sourcing env.sh
+#######################################
+_i=1
+while [[ $_i -le $# ]]; do
+    _arg="${!_i}"
+    if [[ "${_arg}" == "-d" || "${_arg}" == "--dry-run" ]]; then
+        _j=$(( _i + 1 ))
+        _next="${!_j:-}"
+        if [[ "${_next}" =~ ^[012]$ ]]; then
+            export DRY_RUN="${_next}"
+        else
+            export DRY_RUN=2
+        fi
+        break
+    fi
+    _i=$(( _i + 1 ))
+done
+
+source "$(dirname "$0")/env.sh"
+source "$(dirname "$0")/common.sh"
+
+#######################################
+# Args
+#######################################
+[[ $# -ge 4 ]] || error_exit "Usage: $0 <testtype> <lib> <cell> <uniqueid> [-d <level>]"
+testtype="$1"
+lib="$2"
+cell="$3"
+uniqueid="$4"
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+project_root="$(cd "${script_dir}/.." && pwd)"
+
+ws_name="${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}"
+proj_path="${PERF_GDP_BASE}/${ws_name}"
+proj_depot_path="//depot${proj_path}/..."
+config="${proj_path}/rev01/dev"
+
+#######################################
+# Libraries for this testtype
+#######################################
+perf_libs() {
+    local tt="$1" l="$2"
+    case "${tt}" in
+        checkHier|replace|deleteAllMarker)
+            echo "${l}" ;;
+        renameRefLib)
+            echo "${l} ${l}_ORIGIN ${l}_TARGET" ;;
+        copyHierToEmpty)
+            echo "${l} ${l}_CHIP ${l}_COPY" ;;
+        copyHierToNonEmpty)
+            echo "${l} ${l}_CHIP" ;;
+        *)
+            error_exit "Unknown testtype: ${tt}" ;;
+    esac
+}
+
+IFS=' ' read -ra libs <<< "$(perf_libs "${testtype}" "${lib}")"
+
+# Export for gdp workspace mock (DRY_RUN=1)
+export MOCK_GDP_LIBS="${libs[*]}"
+export MOCK_GDP_CELL="${cell}"
+
+log "[INIT] ${testtype}/${lib}/${cell} → ws=${ws_name}"
+
+#######################################
+# GDP: create project / variant / libtype / config
+#######################################
+log "[INIT] Creating GDP project: ${proj_path}"
+run_cmd "gdp create project ${proj_path}"
+run_cmd "gdp create variant ${proj_path}/rev01"
+run_cmd "gdp create libtype ${proj_path}/rev01/oa --libspec oa"
+run_cmd "gdp create config ${config}"
+
+#######################################
+# GDP: create libraries
+#######################################
+for l in "${libs[@]}"; do
+    log "[INIT] Creating library: ${l}"
+    run_cmd "gdp create library \"${proj_path}/rev01/oa/${l}\" --from \"${FROM_LIB}/${l}\" --columns id,name,type,path,description"
+    run_cmd "gdp update \"${config}\" --add \"${proj_path}/rev01/oa/${l}\""
+done
+
+#######################################
+# Build MANAGED workspace
+#######################################
+log "[INIT] Building MANAGED workspace: ${ws_name}"
+if [[ "${DRY_RUN}" -lt 2 ]]; then
+    (
+        cd "${project_root}/WORKSPACES_MANAGED" || exit 1
+        run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${ws_name}\" --location \"$(pwd)\""
+    )
+else
+    log "[DRY-RUN:2] Would: gdp build workspace --gdp-name ${ws_name}"
+fi
+
+#######################################
+# Setup UNMANAGED workspace
+# - copy non-oa files from MANAGED
+# - mv oa from MANAGED to UNMANAGED
+# - gdp rebuild MANAGED to restore oa
+#######################################
+log "[INIT] Setting up UNMANAGED workspace: ${ws_name}"
+managed_ws="${project_root}/WORKSPACES_MANAGED/${ws_name}"
+unmanaged_ws="${project_root}/WORKSPACES_UNMANAGED/${ws_name}"
+
+if [[ "${DRY_RUN}" -lt 2 ]]; then
+    run_cmd "mkdir -p \"${unmanaged_ws}\""
+
+    # copy non-oa files/dirs (skip if managed_ws is empty — e.g., dry-run mock)
+    for item in "${managed_ws}"/*; do
+        [[ -e "${item}" ]] || continue
+        name="$(basename "${item}")"
+        [[ "${name}" == "oa" ]] && continue
+        run_cmd "cp -r \"${item}\" \"${unmanaged_ws}/\""
+    done
+
+    # mv oa (only if it exists — skipped at DRY_RUN=1 since gdp never built workspace)
+    if [[ -d "${managed_ws}/oa" ]]; then
+        log "[INIT] Moving oa: MANAGED → UNMANAGED"
+        run_cmd "mv \"${managed_ws}/oa\" \"${unmanaged_ws}/oa\""
+
+        # rebuild MANAGED to restore oa
+        log "[INIT] Rebuilding MANAGED workspace to restore oa"
+        (
+            cd "${managed_ws}" || exit 1
+            run_cmd "gdp rebuild workspace ."
+        )
+    else
+        log "[INIT] No oa dir in managed_ws (skipped at dry-run level)"
+    fi
+else
+    log "[DRY-RUN:2] Would setup UNMANAGED workspace and rebuild MANAGED"
+fi
+
+#######################################
+# Copy replay file to both workspaces
+#######################################
+replay_src="${project_root}/GenerateReplayScript/${testtype}_${lib}.au"
+log "[INIT] Copying replay to workspaces"
+if [[ "${DRY_RUN}" -lt 2 ]]; then
+    run_cmd "cp \"${replay_src}\" \"${managed_ws}/${testtype}_${lib}.au\""
+    run_cmd "cp \"${replay_src}\" \"${unmanaged_ws}/${testtype}_${lib}.au\""
+else
+    log "[DRY-RUN:2] Would copy ${testtype}_${lib}.au to both workspaces"
+fi
+
+log "[INIT] Done: ${testtype}/${lib}"

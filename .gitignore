@@ -26,6 +26,16 @@ code/date_virtuosoVer.txt
 # Workspaces created by gdp build workspace (dry-run level 1)
 cico_ws_*/
 
+# perf_main.sh runtime outputs
+WORKSPACES_MANAGED/
+WORKSPACES_UNMANAGED/
+result/
+perf_main.log.*.txt
+
+# GenerateReplayScript runtime outputs
+GenerateReplayScript/lcv.txt
+GenerateReplayScript/*.au
+
 # ----------------------------------------
 # Python
 # ----------------------------------------

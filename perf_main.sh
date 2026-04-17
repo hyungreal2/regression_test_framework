@@ -6,36 +6,31 @@ source "$(dirname "$0")/code/env.sh"
 source "$(dirname "$0")/code/common.sh"
 
 #######################################
+# Log file
+#######################################
+logfile="perf_main.log.$(date +%Y%m%d_%H%M%S).txt"
+exec > >(tee "${logfile}") 2>&1
+log "Logging to ${logfile}"
+
+#######################################
 # Defaults
 #######################################
-ws_name="cadence_perf_ws_${USER_NAME}"
-proj_prefix="cadence_perf_${USER_NAME}"
-uniqueid_file="/tmp/uniqueid_perf_${USER_NAME}"
-lib_name="BM01"
-cell_name="VP_FULLCHIP"
+jobs=4
+do_teardown=false
+selected_libs=()
+selected_tests=()
+selected_modes=(managed unmanaged)
+teardown_worker_pid=""
 
-man_folders=(unmanaged managed)
-
-replay_files=(
-    Test1_BM01_Check_Hierarchy.au
-    Test1_BM02_Check_Hierarchy.au
-    Test1_BM03_Check_Hierarchy.au
-    Test2_BM01_RenameRefLibrary.au
-    Test2_BM02_RenameRefLibrary.au
-    Test2_BM03_RenameRefLibrary.au
-    Test4_BM01_Replace.au
-    Test4_BM02_Replace.au
-    Test4_BM03_Replace.au
-    Test5_BM01_Delete_All_Marker.au
-    Test5_BM02_Delete_All_Marker.au
-    Test5_BM03_Delete_All_Marker.au
-    # Test6_BM01_Hier_Copy_EmptyLib.au
-    # Test6_BM02_Hier_Copy_EmptyLib.au
-    Test6_BM03_Hier_Copy_EmptyLib.au
-    # Test7_BM01_Hier_Copy_NonEmptyLib.au
-    # Test7_BM02_Hier_Copy_NonEmptyLib.au
-    Test7_BM03_Hier_Copy_NonEmptyLib.au
-)
+#######################################
+# Trap
+#######################################
+_cleanup() {
+    if [[ -n "${teardown_worker_pid}" ]]; then
+        wait "${teardown_worker_pid}" 2>/dev/null || true
+    fi
+}
+trap '_cleanup' EXIT INT TERM
 
 #######################################
 # Help
@@ -45,13 +40,13 @@ print_help() {
 Usage: $(basename "$0") [options]
 
 Options:
-  -h     | --help               Print this help message
-  -ws    | --ws_name <name>     Workspace name         (default: ${ws_name})
-  -proj  | --proj_prefix <p>    Project prefix         (default: ${proj_prefix})
-  -id    | --uniqueid <file>    Unique ID file         (default: ${uniqueid_file})
-  -lib   | --libname <name>     Library name           (default: ${lib_name})
-  -cell  | --cellname <name>    Cell name              (default: ${cell_name})
-  -d     | --dry-run [n]        Dry-run level 0/1/2    (default: 2)
+  -h  | --help               Print this help message
+  -lib  <lib[,lib...]>       Libraries to test (default: all — ${PERF_LIBS[*]})
+  -test <test[,test...]>     Test types     (default: all — ${PERF_TESTS[*]})
+  -mode <managed|unmanaged>  Mode           (default: both)
+  -j  | --jobs <n>           Parallel jobs  (default: ${jobs})
+  -d  | --dry-run [n]        Dry-run level 0/1/2 (default: 2)
+  -t  | --teardown           Run teardown after all tests
 EOF
 }
 
@@ -60,94 +55,159 @@ EOF
 #######################################
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -h|--help)
-            print_help
-            exit 0
-            ;;
-        -ws|--ws_name)
-            ws_name="$2"
-            shift 2
-            ;;
-        -proj|--proj_prefix)
-            proj_prefix="$2"
-            shift 2
-            ;;
-        -id|--uniqueid)
-            uniqueid_file="$2"
-            shift 2
-            ;;
-        -lib|--libname)
-            lib_name="$2"
-            shift 2
-            ;;
-        -cell|--cellname)
-            cell_name="$2"
-            shift 2
-            ;;
+        -h|--help)  print_help; exit 0 ;;
+        -lib)
+            IFS=',' read -ra selected_libs <<< "$2"; shift 2 ;;
+        -test)
+            IFS=',' read -ra selected_tests <<< "$2"; shift 2 ;;
+        -mode)
+            selected_modes=("$2"); shift 2 ;;
         -d|--dry-run)
-            if [[ "${2:-}" =~ ^[012]$ ]]; then
-                DRY_RUN="$2"
-                shift 2
-            else
-                DRY_RUN=2
-                shift
-            fi
-            ;;
-        *)
-            error_exit "Unknown option: $1"
-            ;;
+            if [[ "${2:-}" =~ ^[012]$ ]]; then DRY_RUN="$2"; shift 2
+            else DRY_RUN=2; shift; fi ;;
+        -j|--jobs)
+            [[ "${2:-}" =~ ^[0-9]+$ ]] || error_exit "-j requires a positive integer"
+            jobs="$2"; shift 2 ;;
+        -t|--teardown)
+            do_teardown=true; shift ;;
+        *)  error_exit "Unknown option: $1" ;;
     esac
 done
 
 export DRY_RUN
 
 #######################################
-# Main
+# Resolve active libs / tests
+#######################################
+active_libs=()
+if [[ ${#selected_libs[@]} -eq 0 ]]; then
+    active_libs=("${PERF_LIBS[@]}")
+else
+    for sl in "${selected_libs[@]}"; do
+        found=false
+        for pl in "${PERF_LIBS[@]}"; do
+            [[ "${sl}" == "${pl}" ]] && { found=true; break; }
+        done
+        [[ "${found}" == true ]] || error_exit "Unknown lib: ${sl} (valid: ${PERF_LIBS[*]})"
+        active_libs+=("${sl}")
+    done
+fi
+
+active_tests=()
+if [[ ${#selected_tests[@]} -eq 0 ]]; then
+    active_tests=("${PERF_TESTS[@]}")
+else
+    for st in "${selected_tests[@]}"; do
+        found=false
+        for pt in "${PERF_TESTS[@]}"; do
+            [[ "${st}" == "${pt}" ]] && { found=true; break; }
+        done
+        [[ "${found}" == true ]] || error_exit "Unknown test: ${st} (valid: ${PERF_TESTS[*]})"
+        active_tests+=("${st}")
+    done
+fi
+
+get_cell() {
+    local l="$1"
+    for i in "${!PERF_LIBS[@]}"; do
+        [[ "${PERF_LIBS[$i]}" == "${l}" ]] && { echo "${PERF_CELLS[$i]}"; return; }
+    done
+    error_exit "No cell mapping for lib: ${l}"
+}
+
+#######################################
+# Unique session ID
 #######################################
 log "START (dry-run=${DRY_RUN})"
-
-log "Removing date_virtuosoVer.txt"
-run_cmd "rm -f code/date_virtuosoVer.txt"
-
-log "Creating output directories"
-mkdir -p result
-mkdir -p CDS_log
-
-log "Writing lib/cell info to /tmp"
-run_cmd "echo ${lib_name} > /tmp/perf_lib"
-run_cmd "echo ${cell_name} > /tmp/perf_cell"
+uniqueid="perf_$(date +%Y%m%d_%H%M%S)_${USER_NAME}"
+log "uniqueid: ${uniqueid}"
 
 #######################################
-# Run tests
+# Prepare directories
 #######################################
-for managed in "${man_folders[@]}"; do
-    for replay in "${replay_files[@]}"; do
-        testdir="$(pwd)/${managed}/${ws_name}"
+run_cmd "mkdir -p WORKSPACES_MANAGED WORKSPACES_UNMANAGED"
+run_cmd "mkdir -p result/${uniqueid} CDS_log/${uniqueid}"
 
-        log "Writing managed flag: ${managed}"
-        run_cmd "rm -f code/managed.txt"
-        run_cmd "echo ${managed} > code/managed.txt"
+if [[ "${DRY_RUN}" -lt 2 ]]; then
+    echo "managed"   > WORKSPACES_MANAGED/managed.txt
+    echo "unmanaged" > WORKSPACES_UNMANAGED/managed.txt
+fi
 
-        log "Running perf test: ${replay} [${managed}] in ${testdir}"
-        (
-            cd "${testdir}" || exit 1
-            run_cmd "vse_run \
-                -v IC251_ISR5-010 \
-                -replay ../../code/replay/${replay} \
-                -log ../../CDS_log/${replay}_${managed}.log"
-        )
+#######################################
+# Pre-write date_virtuosoVer.txt
+#######################################
+log "Writing date_virtuosoVer.txt: ${uniqueid}"
+if [[ "${DRY_RUN}" -lt 2 ]]; then
+    echo "${uniqueid}" > code/date_virtuosoVer.txt
+fi
+
+#######################################
+# Build combo arrays
+#######################################
+combos_init=()      # "testtype lib cell"  — Phase 1 generate + Phase 2 init
+combos_run=()       # "testtype lib mode"  — Phase 3 run
+combos_teardown=()  # "testtype lib"       — Phase 5 teardown
+for testtype in "${active_tests[@]}"; do
+    for lib in "${active_libs[@]}"; do
+        cell=$(get_cell "${lib}")
+        combos_init+=("${testtype} ${lib} ${cell}")
+        combos_teardown+=("${testtype} ${lib}")
+        for mode in "${selected_modes[@]}"; do
+            combos_run+=("${testtype} ${lib} ${mode}")
+        done
     done
 done
 
-log "All selected tests finished."
+log "Matrix: ${#combos_init[@]} (testtype×lib) × ${#selected_modes[@]} modes = ${#combos_run[@]} runs"
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
 
 #######################################
-# Summary
+# Phase 1: Generate replays (sequential)
 #######################################
-if [[ -f code/date_virtuosoVer.txt ]]; then
-    date_virtuoso_ver=$(cat code/date_virtuosoVer.txt)
-    log "Generating summary for version: ${date_virtuoso_ver}"
-    run_cmd "code/summary.sh ${date_virtuoso_ver}"
-else
-    warn "date_virtuosoVer.txt not found, skipping summary"
+log "--- Phase 1: Generate replays ---"
+for combo in "${combos_init[@]}"; do
+    read -r testtype lib cell <<< "${combo}"
+    bash "${script_dir}/code/perf_generate_replay.sh" \
+        "${testtype}" "${lib}" "${cell}" -d "${DRY_RUN}"
+done
+
+#######################################
+# Phase 2: Init workspaces (parallel)
+#######################################
+log "--- Phase 2: Init workspaces (jobs=${jobs}) ---"
+printf "%s\n" "${combos_init[@]}" | \
+    xargs -n3 -P"${jobs}" bash -c "
+        bash \"${script_dir}/code/perf_init.sh\" \"\$1\" \"\$2\" \"\$3\" \"${uniqueid}\" -d \"${DRY_RUN}\"
+    " _
+
+#######################################
+# Phase 3: Run tests (parallel)
+#######################################
+log "--- Phase 3: Run tests (jobs=${jobs}) ---"
+printf "%s\n" "${combos_run[@]}" | \
+    xargs -n3 -P"${jobs}" bash -c "
+        bash \"${script_dir}/code/perf_run_single.sh\" \"\$1\" \"\$2\" \"\$3\" \"${uniqueid}\" -d \"${DRY_RUN}\"
+    " _
+
+log "All tests finished."
+
+#######################################
+# Phase 4: Summary
+#######################################
+log "--- Phase 4: Summary ---"
+bash "${script_dir}/code/summary.sh" -d "${DRY_RUN}" "${uniqueid}"
+
+#######################################
+# Phase 5: Teardown (optional, parallel)
+#######################################
+if [[ "${do_teardown}" == true ]]; then
+    log "--- Phase 5: Teardown (jobs=${jobs}) ---"
+    printf "%s\n" "${combos_teardown[@]}" | \
+        xargs -n2 -P"${jobs}" bash -c "
+            bash \"${script_dir}/code/perf_teardown.sh\" \"\$1\" \"\$2\" \"${uniqueid}\" -d \"${DRY_RUN}\"
+        " _
+    log "All teardowns completed."
 fi
+
+log "perf_main.sh DONE"
