@@ -32,9 +32,8 @@ result/
 .gdp_ws_lock
 perf_session.txt
 
-# GenerateReplayScript runtime outputs
-GenerateReplayScript/lcv.txt
-GenerateReplayScript/*.au
+# GenerateReplayScript: not managed in this repo (local reference only)
+GenerateReplayScript/
 
 # ----------------------------------------
 # Legacy reference files (local only, not tracked)
