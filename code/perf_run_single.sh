@@ -21,7 +21,7 @@ while [[ $_i -le $# ]]; do
     _i=$(( _i + 1 ))
 done
 
-script_dir="${script_dir:-$(cd "$(dirname "$0")/.." && pwd)}"
+[[ -n "${script_dir:-}" ]] || { echo "ERROR: script_dir is not set. Run via main.sh or perf_main.sh." >&2; exit 1; }
 source "${script_dir}/code/env.sh"
 source "${script_dir}/code/common.sh"
 
