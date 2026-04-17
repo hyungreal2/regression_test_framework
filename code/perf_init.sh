@@ -112,18 +112,22 @@ unmanaged_ws="${project_root}/WORKSPACES_UNMANAGED/${ws_name}"
 if [[ "${DRY_RUN}" -lt 2 ]]; then
     run_cmd "mkdir -p \"${unmanaged_ws}\""
 
-    # copy non-oa files/dirs (skip if managed_ws is empty — e.g., dry-run mock)
-    for item in "${managed_ws}"/*; do
-        [[ -e "${item}" ]] || continue
-        name="$(basename "${item}")"
-        [[ "${name}" == "oa" ]] && continue
-        run_cmd "cp -r \"${item}\" \"${unmanaged_ws}/\""
-    done
+    # UNMANAGED: cds.lib = MANAGED's cds.libicm (no cds.libicm in UNMANAGED)
+    if [[ -e "${managed_ws}/cds.libicm" ]]; then
+        run_cmd "cp \"${managed_ws}/cds.libicm\" \"${unmanaged_ws}/cds.lib\""
+    fi
 
-    # mv oa (only if it exists — skipped at DRY_RUN=1 since gdp never built workspace)
+    # mv oa MANAGED → UNMANAGED
     if [[ -d "${managed_ws}/oa" ]]; then
         log "[INIT] Moving oa: MANAGED → UNMANAGED"
         run_cmd "mv \"${managed_ws}/oa\" \"${unmanaged_ws}/oa\""
+
+        # UNMANAGED: patch cdsinfo.tag — DMTYPE p4 → DMTYPE none
+        log "[INIT] Patching cdsinfo.tag: DMTYPE p4 → DMTYPE none (UNMANAGED)"
+        while IFS= read -r -d '' tag; do
+            log "[INIT]   ${tag}"
+            sed -i 's/DMTYPE p4/DMTYPE none/g' "${tag}"
+        done < <(find "${unmanaged_ws}/oa" -name "cdsinfo.tag" -print0)
 
         # rebuild MANAGED to restore oa
         log "[INIT] Rebuilding MANAGED workspace to restore oa"
