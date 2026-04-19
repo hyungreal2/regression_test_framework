@@ -314,6 +314,30 @@ load_or_init_session() {
 }
 
 #######################################
+# Ensure GDP base folders exist
+# Checks GDP_BASE and PERF_GDP_BASE in order;
+# creates any that are missing.
+# Skipped at DRY_RUN >= 1 (no real GDP calls).
+#######################################
+ensure_gdp_folders() {
+    if [[ "${DRY_RUN}" -ge 1 ]]; then
+        log "[DRY-RUN] Would ensure GDP folders: ${GDP_BASE}, ${PERF_GDP_BASE}"
+        return
+    fi
+
+    local folder
+    for folder in "${GDP_BASE}" "${PERF_GDP_BASE}"; do
+        log "Checking GDP folder: ${folder}"
+        if gdp list "${folder}" > /dev/null 2>&1; then
+            log "  → exists: ${folder}"
+        else
+            log "  → not found, creating: ${folder}"
+            gdp create folder "${folder}"
+        fi
+    done
+}
+
+#######################################
 # Phase 1: Generate replays (sequential)
 #######################################
 generate_replays() {
@@ -416,6 +440,7 @@ run_init_phases() {
         echo "${uniqueid}" > "${script_dir}/code/date_virtuosoVer.txt"
     fi
 
+    ensure_gdp_folders
     generate_replays
     init_workspaces
     save_session
