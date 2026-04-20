@@ -13,7 +13,7 @@
 
 | 항목 | Legacy | 현재 | 적용 범위 |
 |---|---|---|---|
-| 진입점 | `init.sh`, `main.pl` (스텁) | `main.sh`, `perf_main.sh` | 공통 |
+| 진입점 | `legacy/1_cico/main.sh` (순차 Bash), `main.pl` (Perl + 템플릿) | `main.sh`, `perf_main.sh` | 공통 |
 | 경로 관리 | 각 스크립트 `$(dirname $0)` | `script_dir` 한 번만 export | 공통 |
 | 에러 처리 | 조용한 실패 | `set -euo pipefail` + 명시적 메시지 | 공통 |
 | Dry-run 지원 | 없음 | 3단계 `DRY_RUN` (0/1/2) | 공통 |
@@ -215,7 +215,7 @@ perf_main.sh 실행 흐름:
 | 파일 | Legacy | 현재 |
 |---|---|---|
 | `main.sh` | 누락 (삭제됨) | 복원 — 구조화된 Bash, `script_dir`, 병렬 xargs |
-| `perf_main.sh` | `main.pl` (Perl 1줄) | 전체 Bash 재작성 — 세션 기반, 단계별, 풍부한 옵션 |
+| `perf_main.sh` | `main.pl` (Perl: 리플레이 생성 + 템플릿 치환 → 생성된 Bash 실행) | 전체 Bash 재작성 — 세션 기반, 단계별, 풍부한 옵션 |
 | `code/common.sh` | 없음 | `run_cmd()`, `run_vse()`, `_mock_gdp_workspace()`, `safe_rm_rf()` |
 | `code/env.sh` | 각 스크립트마다 인라인 중복 | 중앙화 — 모든 변수를 한 곳에 |
 | `code/perf_init.sh` | `ICM_createProj.sh` (기본) | MANAGED + UNMANAGED, flock, 심볼릭 링크, `-common` |

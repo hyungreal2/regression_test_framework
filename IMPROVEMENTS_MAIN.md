@@ -1,6 +1,6 @@
-# CAT — Regression Test Framework (`main.sh`) Improvements
+# CAT — Regression Test Framework Improvements
+## `legacy/1_cico/main.sh` → `main.sh`
 
-> Detailed before-and-after comparison for the regression test workflow.
 > Korean version: [IMPROVEMENTS_MAIN_KR.md](IMPROVEMENTS_MAIN_KR.md)
 > Combined overview: [IMPROVEMENTS.md](IMPROVEMENTS.md)
 
@@ -8,337 +8,404 @@
 
 ## Overview
 
-| Area | Legacy | Current |
+| Area | Legacy (`1_cico/main.sh`) | Current (`main.sh`) |
 |---|---|---|
-| Entry point | Missing / stub | `main.sh` — structured Bash |
-| Path resolution | Per-script `$(dirname $0)` | `script_dir` exported once, inherited by all children |
-| Error handling | Silent failures | `set -euo pipefail` + explicit `error_exit` messages |
-| Dry-run support | None | 3-level `DRY_RUN` (0 = run / 1 = mock / 2 = print) |
+| Code quality | Unformatted, no indentation | Structured, readable Bash |
+| Error handling | `set -e` only | `set -euo pipefail` + trap + `error_exit` |
+| Shared environment | Each script re-declares variables | `code/env.sh` + `code/common.sh` sourced once |
+| Path resolution | Relative paths (`../../code/`) | `${script_dir}/code/` — works from any directory |
 | Test execution | Sequential `for` loop | `xargs -P` parallel workers |
-| Job completion wait | `bwait` (unreliable) | `bjobs` polling loop (10 s interval) |
-| Teardown timing | After all tests, blocking | Background worker — runs while tests continue |
-| Log management | Scattered per-script | Central `log/perf_main.log.<timestamp>.txt` |
-| VSE invocation | Hardcoded `vse_sub` | `run_vse()` wrapper — `vse_run` / `vse_sub` switchable |
+| VSE invocation | `virtuoso` (direct binary call) | `run_vse()` wrapper — `vse_run` / `vse_sub` switchable |
+| Teardown timing | Inline, end of each test loop | Background worker — runs concurrently with tests |
+| Dry-run | None — every run hits real infra | 3-level `DRY_RUN` system |
+| Logging | `echo` to stdout only | `tee` to timestamped `log/main.log.*` file |
+| Replay file handling | `cp` into test dir (source remains) | `mv` into test dir (source consumed) |
+| Regression dir naming | Timestamp-based `regression_test_<user>_<date>` | Counter-based `regression_test_001`, `002`, … |
+| Cleanup | `rm -rf` at the end (unless debugMode) | Separate `teardown.sh` + `teardown_all.sh` |
+| Test order | Sorted numerically (`sort -n`) | Preserved as user specified |
 
 ---
 
-## 1. Script Architecture
+## 1. Entry Point & Shared Infrastructure
+
+### Legacy — Everything Inline
+
+```bash
+# legacy/1_cico/main.sh (unformatted, as written)
+#!/bin/bash show_help() { ... } set -e
+dateno=$(date +%Y%m%d_%H%M%S)
+user_name=$(echo $USER)
+max=256 cases="" ws_name=cadence_cico_ws_"$user_name"_"$dateno"
+proj_name=cadence_cico_"$user_name"_"$dateno"
+regression_test_name=regression_test_"$user_name"_"$dateno"
+libname=ESD01 cellname=FULLCHIP
+```
+
+Every variable is defined inline in the script. No shared environment.
+Changing a default means editing the script directly.
+
+### Current — Centralised Config + Shared Utilities
+
+```bash
+# main.sh
+#!/bin/bash
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+export script_dir
+
+source "${script_dir}/code/env.sh"    # all variables: paths, defaults, DRY_RUN, VSE_MODE
+source "${script_dir}/code/common.sh" # run_cmd(), run_vse(), log(), error_exit()
+```
+
+All defaults live in `code/env.sh`. All shared functions in `code/common.sh`.
+Child scripts inherit `script_dir` and source the same files — one source of truth.
+
+---
+
+## 2. Error Handling
 
 ### Legacy
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  LEGACY                                                     │
-│                                                             │
-│  main.pl  ←── (Perl stub, effectively 1 line)              │
-│                                                             │
-│  init.sh          teardown.sh          summary.sh           │
-│    │                   │                    │               │
-│    ├─ $(dirname $0)    ├─ $(dirname $0)     ├─ $(dirname $0)│
-│    ├─ own env vars     ├─ own env vars      ├─ own env vars  │
-│    └─ no shared log    └─ no shared log     └─ no shared log │
-│                                                             │
-│  Problems:                                                  │
-│   ✗ No shared context between scripts                       │
-│   ✗ No common error handling or logging                     │
-│   ✗ Silent failures — partial execution with no warning     │
-│   ✗ Cannot run from any directory other than project root   │
-└─────────────────────────────────────────────────────────────┘
+```bash
+set -e           # exits on error, but no guarantee on unset vars or pipe failures
+# No trap — signals like CTRL+C leave workspaces dangling
+# No explicit error messages: scripts just exit silently
 ```
 
 ### Current
 
-```mermaid
-graph TD
-    MS["main.sh (entry point)<br/>━━━━━━━━━━━━━━━━━━━━━━<br/>script_dir = $(dirname $0)<br/>export script_dir<br/>source code/env.sh<br/>source code/common.sh<br/>exec → log/main.log.*"]
+```bash
+set -euo pipefail
+# -e  : exit on error
+# -u  : exit on unset variable reference
+# -o pipefail : pipe fails if any command in the pipe fails
 
-    MS -->|"export script_dir<br/>export libname<br/>export regression_dir<br/>export uniqueid"| RST[run_single_test.sh]
-    MS -->|"export script_dir<br/>export uniqueid"| SUM[summary.sh]
-    MS -->|"export script_dir<br/>(background)"| TW[teardown_worker.sh]
+# Trap: ensures teardown worker is always waited on
+_cleanup() {
+    if [[ -n "${main_done_flag}" && ! -f "${main_done_flag}" ]]; then
+        touch "${main_done_flag}" 2>/dev/null || true
+    fi
+    if [[ -n "${teardown_worker_pid}" ]]; then
+        wait "${teardown_worker_pid}" 2>/dev/null || true
+    fi
+}
+trap '_cleanup' EXIT INT TERM
 
-    RST --> INIT[init.sh]
-    TW -->|"export uniquetestid"| TD[teardown.sh]
-```
-
-**Context propagation rule:**
-
-```
-main.sh                          (sets script_dir, sources env+common)
-  │
-  ├─ export script_dir ──────────────────────────────────────────┐
-  │                                                              │
-  ├─ run_single_test.sh          receives: script_dir            │
-  │    └─ init.sh                receives: script_dir            │
-  │                                                              │
-  ├─ teardown_worker.sh          receives: script_dir            │
-  │    └─ teardown.sh            receives: script_dir            │
-  │                                                              │
-  └─ summary.sh                  receives: script_dir            │
-                                                                 │
-  ALL child scripts enforce at top:                              │
-    [[ -n "${script_dir:-}" ]] || { echo "ERROR..."; exit 1; }  │
+# Explicit messages from common.sh
+error_exit() { log "ERROR: $*"; exit 1; }
 ```
 
 ---
 
-## 2. DRY_RUN System
+## 3. Path Resolution
 
-### The Problem
-
-The legacy framework had no way to test or preview behaviour without a live
-GDP / p4 / VSE environment. Every invocation attempted real infrastructure calls.
-
-### Solution — 3-Level DRY_RUN
-
-```
-┌───────────┬──────────────────────────────────────────────────────────┐
-│  DRY_RUN  │  Behaviour                                               │
-├───────────┼──────────────────────────────────────────────────────────┤
-│     2     │  PRINT ONLY                                              │
-│           │  run_cmd() logs "[DRY-RUN:2] Would: <cmd>"               │
-│           │  No commands executed at all                             │
-│           │  Use for: previewing, CI syntax checks                   │
-├───────────┼──────────────────────────────────────────────────────────┤
-│     1     │  MOCK MODE                                               │
-│           │  Skips: gdp  xlp4  rm  vse_run  vse_sub                 │
-│           │  Mocks: gdp build workspace                              │
-│           │    → creates local directory structure:                  │
-│           │       cico_ws_<name>/                                    │
-│           │         cds.lib, cds.libicm                              │
-│           │         oa/<lib>/<cell>/                                 │
-│           │         oa/<lib>/cdsinfo.tag  (DMTYPE p4)                │
-│           │  Use for: smoke testing script logic locally             │
-├───────────┼──────────────────────────────────────────────────────────┤
-│     0     │  PRODUCTION — all commands execute normally              │
-└───────────┴──────────────────────────────────────────────────────────┘
-```
-
-### How run_cmd() Works
+### Legacy
 
 ```bash
-# code/common.sh
-run_cmd() {
-    local cmd="$1"
-    if   [[ "${DRY_RUN}" -ge 2 ]]; then
-        log "[DRY-RUN:2] Would: ${cmd}"
+# All paths relative to wherever the script is called from
+../../code/init.sh -ws $ws_name -proj $proj_name $libname
+cp ../../code/cdsLibMgr.il $ws_name/
+cp ../../code/.cdsenv $ws_name/
+rm -rf code/$replays_folder
+python3 code/generate_templates.py ...
+```
 
-    elif [[ "${DRY_RUN}" -ge 1 ]] && \
-         [[ "${cmd}" =~ ^(gdp|xlp4|rm|vse_run|vse_sub) ]]; then
-        log "[DRY-RUN:1] Skipping: ${cmd}"
-        _mock_gdp_workspace "${cmd}"     # only if "gdp build workspace"
+These paths assume the caller is always in a specific subdirectory.
+If the script is called from the project root they break immediately.
 
+### Current
+
+```bash
+# All paths anchored to script_dir, set once at startup
+run_cmd "rm -rf \"${script_dir}/code/${replays_folder}\""
+run_cmd "python3 \"${script_dir}/code/generate_templates.py\" ..."
+run_cmd "mv -f \"${script_dir}/code/${replays_folder}/replay_${num}.il\" \"${testdir}/\""
+```
+
+Works correctly from any working directory.
+
+---
+
+## 4. Test Execution — Sequential vs Parallel
+
+### Legacy — Sequential for Loop
+
+```bash
+# legacy/1_cico/main.sh
+for i in $tests; do
+    three_digit_num=$(printf "%03d" $i)
+    testdir=$(pwd)/"$regression_test_name"/test_$three_digit_num
+
+    echo "Running test $three_digit_num in $testdir"
+    (
+        cd $testdir || exit 1
+        ../../code/init.sh -ws $ws_name -proj $proj_name $libname || true
+        cp ../../code/cdsLibMgr.il $ws_name/
+        virtuoso -replay ../replay_$three_digit_num.il -log ../../../CDS_log/$uniqueid/CDS_$three_digit_num".log" || true
+        ../../code/teardown.sh -ws $ws_name -proj $proj_name
+    )
+done
+```
+
+One test at a time. Total wall time = sum of all test times.
+
+### Current — xargs Parallel Workers
+
+```bash
+# main.sh
+printf "%s\n" "${tests[@]}" | \
+    xargs -n1 -P"${jobs}" bash "${script_dir}/code/run_single_test.sh"
+```
+
+```
+Time ──────────────────────────────────────────────────────────►
+  (legacy)
+    test_001 ────────────────────────────────────────────────────►
+                                                   test_002 ─────►
+
+  (current, -j 4)
+    test_001 ██████████████████████████
+    test_002 ██████████████████████████
+    test_003 ██████████████████████████
+    test_004 ██████████████████████████
+    test_005               ████████████  ← starts when a slot frees
+
+  10 tests × 5 min / 4 workers ≈ 15 min  (vs 50 min sequential)
+```
+
+`run_single_test.sh` receives the test number and reads `libname`, `regression_dir`,
+`uniqueid` from exported env vars — clean separation from the orchestrator.
+
+---
+
+## 5. VSE Invocation
+
+### Legacy — Direct Binary Call
+
+```bash
+# legacy/1_cico/main.sh (inside test loop)
+virtuoso \
+    -replay ../replay_$three_digit_num.il \
+    -log ../../../CDS_log/$uniqueid/CDS_$three_digit_num".log" || true
+```
+
+- Hardcoded to `virtuoso` binary — cannot switch to `vse_run` or `vse_sub`
+- `|| true` suppresses errors silently
+- No version specification
+- No ICM environment setup
+
+### Current — run_vse() Wrapper
+
+```bash
+# code/run_single_test.sh
+run_vse "./${testtype}_${lib}.au" "${script_dir}/CDS_log/${uniqueid}/..."
+```
+
+```bash
+# code/common.sh — run_vse()
+run_vse() {
+    local replay_file="$1" log_file="$2"
+    if [[ "${VSE_MODE}" == "sub" ]]; then
+        vse_out=$(vse_sub -v "${VSE_VERSION}" -env "${ICM_ENV}" \
+                          -replay "${replay_file}" -log "${log_file}")
+        job_id=$(...)
+        # poll bjobs every 10s: DONE → success, EXIT → failure
+        while true; do
+            stat=$(bjobs -noheader -o stat "${job_id}")
+            [[ "${stat}" == "DONE" ]] && break
+            [[ "${stat}" == "EXIT" ]] && error_exit "VSE job failed"
+            sleep 10
+        done
     else
-        eval "${cmd}"
+        run_cmd "vse_run -v \"${VSE_VERSION}\" -env \"${ICM_ENV}\" \
+                         -replay \"${replay_file}\" -log \"${log_file}\""
     fi
 }
 ```
 
+Switch at runtime without editing any script:
+```bash
+VSE_MODE=sub ./main.sh -m 10     # batch submit + bjobs polling
+VSE_MODE=run ./main.sh -m 10     # synchronous vse_run
+```
+
 ---
 
-## 3. Parallel Test Execution
+## 6. Teardown Strategy
 
-### Legacy — Sequential
+### Legacy — Inline, Blocking
 
 ```bash
-for test in ${tests}; do
-    run_single_test.sh "${test}"   # one at a time
-done
-# 10 tests × 5 min each = 50 min total
+# Inside the test loop
+(
+    cd $testdir || exit 1
+    ...
+    ../../code/teardown.sh -ws $ws_name -proj $proj_name
+)
+# test_001 teardown must complete before test_002 can start
 ```
 
-### Current — xargs -P parallel workers
+Teardown blocked test start. Also: if the script was interrupted mid-loop,
+all remaining workspaces were leaked. Cleanup was `rm -rf` at the very end —
+no GDP/p4 cleanup unless teardown.sh ran for each test.
+
+### Current — Background Queue Worker
 
 ```
-printf "%s\n" "${tests[@]}" | xargs -n1 -P"${jobs}" bash run_single_test.sh
-
-Time ─────────────────────────────────────────────────────►
-
-  (legacy)   test_1 ──── test_2 ──── test_3 ──── test_4 ────
-
-  (current, -j4)
-             test_1 █████████████████
-             test_2 █████████████
-             test_3 █████████████████████
-             test_4 ████████████████████
-             test_5               █████████   ← starts when a slot frees
-
-  10 tests × 5 min each / 4 workers ≈ 15 min  (vs 50 min sequential)
+main.sh (foreground)              teardown_worker.sh (background)
+─────────────────────             ──────────────────────────────
+test_001 completes                poll teardown_queue.txt (2s)
+  → enqueue uniquetestid_001  ──► dequeue → teardown.sh
+test_002 completes
+  → enqueue uniquetestid_002  ──► dequeue → teardown.sh
+...
+touch main_done.flag          ──► sees flag + empty queue → exit
 ```
 
-Each test gets a unique ID: `<test_num>_<timestamp>_<PID>` stored in
-`regression_dir/test_<NNN>/uniqueid.txt` — used later by teardown.
+Teardown overlaps with test execution.
+Even if main.sh is killed, `_cleanup()` trap sets the done flag so the worker exits cleanly.
 
 ---
 
-## 4. Background Teardown Worker
-
-### Legacy
-
-Teardown ran synchronously after all tests completed, blocking the terminal.
-No way to overlap teardown with test execution.
-
-### Current — Asynchronous Queue
-
-```mermaid
-flowchart LR
-    subgraph main ["main.sh (foreground)"]
-        direction TB
-        T1[test_001] --> Q1[enqueue uniquetestid]
-        T2[test_002] --> Q2[enqueue uniquetestid]
-        T3[test_003] --> Q3[enqueue uniquetestid]
-        DONE[all tests done] --> FLAG[touch main_done.flag]
-    end
-
-    subgraph worker ["teardown_worker.sh (background)"]
-        direction TB
-        POLL[poll queue file<br/>every 2s]
-        POLL -->|"entry found"| TD[teardown.sh<br/>gdp delete + xlp4 obliterate]
-        TD --> POLL
-        POLL -->|"queue empty +<br/>done.flag exists"| EXIT[exit]
-    end
-
-    Q1 --> QUEUE[(teardown_queue.txt)]
-    Q2 --> QUEUE
-    Q3 --> QUEUE
-    QUEUE --> POLL
-    FLAG --> EXIT
-```
-
-**Benefits:**
-- Tests and teardown run **concurrently**: as soon as test_001 finishes, its
-  workspace is being deleted while test_002–004 are still running.
-- The worker is started in the background (`bash teardown_worker.sh &`) and
-  `wait $!` is called only after all tests and the `main_done.flag` is set.
-- If main.sh exits abnormally, the `_cleanup()` trap ensures the worker is
-  waited on and the done flag is set.
-
----
-
-## 5. VSE Environment Abstraction
+## 7. Regression Directory Management
 
 ### Legacy
 
 ```bash
-vse_sub -v IC25.1... -env "${ICM_ENV}" -replay "./replay.au" -log "out.log"
-job_id=$(echo "${vse_out}" | grep ...)
-bwait -w "ended(${job_id})"    # bwait: unreliable, no timeout, not switchable
+# Single timestamp-based name — changes every run
+regression_test_name=regression_test_"$user_name"_"$dateno"
+
+# Deleted at end (unless debug)
+rm -rf $regression_test_name || true
 ```
 
-### Current — run_vse() in common.sh
+No history of previous runs. Every run creates a new uniquely named dir and
+destroys it at the end. With `-debug`, the dir is kept but its name is
+unpredictable.
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  run_vse <replay_file> <log_file>                        │
-│  (VSE_MODE set in env.sh or overridden at runtime)       │
-├──────────────────┬───────────────────────────────────────┤
-│  VSE_MODE="run"  │  VSE_MODE="sub"                       │
-│                  │                                       │
-│  vse_run         │  vse_sub                              │
-│   -v VERSION      │   -v VERSION                          │
-│   -env ICM_ENV    │   -env ICM_ENV                        │
-│   -replay $1      │   -replay $1                          │
-│   -log $2         │   -log $2                             │
-│                  │         ↓                             │
-│  (synchronous)   │  job_id extracted from output         │
-│  blocks until    │         ↓                             │
-│  VSE exits       │  poll loop (every 10s):               │
-│                  │    bjobs -noheader -o stat $job_id     │
-│                  │    DONE → success exit                │
-│                  │    EXIT → failure exit                │
-│                  │    other → sleep 10                   │
-└──────────────────┴───────────────────────────────────────┘
+### Current
+
+```bash
+# Counter-based: regression_test_001, 002, ...
+create_regression_dir() {
+    num=$(<"${script_dir}/regression_num.txt")   # read last counter
+    while true; do
+        num=$(printf "%03d" $(( (10#${num} + 1) % 1000 )))
+        dir="${script_dir}/regression_test_${num}"
+        [[ ! -d "${dir}" ]] && break             # find next available
+    done
+    echo "${num}" > "${script_dir}/regression_num.txt"
+    regression_dir="${dir}"
+}
 ```
 
-**Why bjobs polling instead of bwait:**
-`bwait` was unreliable in this environment. The polling loop gives full
-visibility into job state, makes timeout easy to add, and works identically
-across LSF versions.
+Predictable, sequential names. Old regression dirs remain available for
+inspection until explicitly torn down via `teardown_all.sh`.
 
 ---
 
-## 6. Detailed Usage
+## 8. DRY_RUN System
+
+### Legacy — None
+
+Every run executes real GDP / p4 / VSE calls. Testing the script logic itself
+required a fully configured environment.
+
+### Current — 3 Levels
+
+```
+Level 2 : Print only  — log "[DRY-RUN:2] Would: <cmd>"
+Level 1 : Mock mode   — skip gdp/xlp4/rm/vse; create local workspace dirs
+Level 0 : Production  — all commands execute
+```
+
+```bash
+# Preview what main.sh will do without touching anything
+./main.sh -d 2
+
+# Full smoke test with local mock workspaces
+./main.sh -m 5 -d 1
+```
+
+---
+
+## 9. Logging
+
+### Legacy
+
+```bash
+echo "Running test $three_digit_num in $testdir"
+echo "All selected tests finished."
+# No timestamps, no log file, no central log
+```
+
+### Current
+
+```bash
+# main.sh — redirects all stdout/stderr to a timestamped log file
+mkdir -p "${script_dir}/log"
+logfile="${script_dir}/log/main.log.$(date +%Y%m%d_%H%M%S).txt"
+exec > >(tee "${logfile}") 2>&1
+
+# common.sh — all messages via log()
+log() { echo "[$(date +%H:%M:%S)] $*"; }
+```
+
+Terminal and log file receive the same output simultaneously. Log files
+accumulate in `log/` — useful for comparing runs.
+
+---
+
+## 10. Detailed Usage Comparison
+
+### Legacy Options
+
+```
+./main.sh [OPTIONS]
+  -m, --max N          Maximum case number          (default: 256)
+  -c, --cases LIST     Comma-separated or range
+  -ws, --ws_name NAME  Workspace name               (default: cadence_cico_ws_<user>_<date>)
+  -proj, --proj_name   Project name                 (default: cadence_cico_<user>_<date>)
+  -lib, --libname      Library name                 (default: ESD01)
+  -cell, --cellname    Cell name
+  -debug               Keep regression_test_* and replay folders
+  -h, --help
+```
+
+### Current Options
 
 ```
 ./main.sh [options]
-
-  -h  | --help                 Print this help
-  -ws | --ws_name  <name>      Workspace prefix           (default: $WS_PREFIX)
-  -proj| --proj_prefix <p>     Project prefix             (default: $PROJ_PREFIX)
-  -cell| --cell    <name>      Cell name                  (default: $CELLNAME)
-  -m  | --max      <n>         Run tests 1~N              (default: $MAX_CASES)
-  -c  | --cases    <list>      Specific tests: 1,3,5-9
-  -j  | --jobs     <n>         Parallel job count         (default: 4)
-  -d  | --dry-run  [0|1|2]     Dry-run level              (default: $DRY_RUN)
-  -t  | --teardown             Teardown after all tests
-
-  Note: -m and -c cannot be used together.
+  -h  | --help                Print help
+  -ws | --ws_name  <name>     Workspace prefix        (default: $WS_PREFIX from env.sh)
+  -proj| --proj_prefix <p>    Project prefix          (default: $PROJ_PREFIX from env.sh)
+  -cell| --cell    <name>     Cell name               (default: $CELLNAME from env.sh)
+  -m  | --max      <n>        Run tests 1~N           (default: $MAX_CASES from env.sh)
+  -c  | --cases    <list>     Specific tests: 1,3,5-9
+  -j  | --jobs     <n>        Parallel workers        (default: 4)
+  -d  | --dry-run  [0|1|2]    Dry-run level           (default: $DRY_RUN from env.sh)
+  -t  | --teardown            Background teardown after tests
 ```
 
-**Common workflows:**
-
-```bash
-# ── Preview: see all commands without executing ──────────────────
-./main.sh -d 2
-
-# ── Smoke test: full logic, mock workspaces, no real infra ───────
-./main.sh -m 10 -d 1
-
-# ── Run tests 1-10, 8 workers ────────────────────────────────────
-./main.sh -m 10 -j 8 -d 0
-
-# ── Run specific tests ────────────────────────────────────────────
-./main.sh -c 1,3,5-9 -d 0
-
-# ── Run with automatic teardown ──────────────────────────────────
-./main.sh -m 10 -d 0 -t
-
-# ── Override VSE mode for this run only ──────────────────────────
-VSE_MODE=sub ./main.sh -m 5 -d 0
-```
-
-**Test lifecycle (per test):**
-
-```
-run_single_test.sh <test_id>
-  │
-  ├─ 1. init.sh
-  │       gdp create project
-  │       gdp create variant / libtype / config
-  │       gdp create library (from $FROM_LIB)
-  │       gdp build workspace
-  │       ln -sf $CDS_LIB_MGR cdsLibMgr.il
-  │
-  ├─ 2. run_vse()
-  │       VSE_MODE=run  → vse_run  (synchronous)
-  │       VSE_MODE=sub  → vse_sub + bjobs poll
-  │
-  └─ 3. (if -t) enqueue uniquetestid → teardown_worker
-```
-
-**Teardown per test (teardown.sh):**
-
-```
-1. gdp find → locate workspace
-2. gdp delete workspace
-3. safe_rm_rf local workspace dir
-4. xlp4 client -d -f  (delete p4 client)
-5. gdp delete --recursive (project)
-6. xlp4 obliterate (depot path)
-```
+Key differences:
+- `-j` / `--jobs`: new — parallelism control
+- `-d` / `--dry-run`: new — 3-level dry-run
+- `-t` / `--teardown`: replaces inline teardown (can opt-out)
+- `-debug`: removed — teardown is now explicit via `-t` and `teardown_all.sh`
+- `-lib`: removed — libname set once in `env.sh`, not per-run arg
 
 ---
 
-## 7. Key Files
+## 11. Key File Changes
 
-| File | Role |
-|---|---|
-| `main.sh` | Entry point — parses args, sets `script_dir`, orchestrates all phases |
-| `code/env.sh` | All environment variables: paths, prefixes, `DRY_RUN`, `VSE_MODE` |
-| `code/common.sh` | `run_cmd()`, `run_vse()`, `log()`, `error_exit()`, `_mock_gdp_workspace()` |
-| `code/init.sh` | Create GDP project + workspace for one test |
-| `code/run_single_test.sh` | Init + VSE run for one test; enqueues teardown if `-t` |
-| `code/teardown.sh` | Delete GDP workspace + p4 client + project for one test |
-| `code/teardown_all.sh` | Batch teardown for a whole regression directory (standalone) |
-| `code/teardown_worker.sh` | Background queue worker — processes teardown entries as they arrive |
-| `code/summary.sh` | Parse `result/<uniqueid>/*.log` → PASS/FAIL summary |
-| `code/generate_templates.py` | Generate `replay_001.il` … `replay_N.il` from templates |
+| File | Legacy | Current |
+|---|---|---|
+| `main.sh` | 148 lines, unformatted, all-in-one | Structured, modular, delegates to child scripts |
+| `code/env.sh` | Not present — variables inline in main.sh | Central config: all paths, defaults, `DRY_RUN`, `VSE_MODE` |
+| `code/common.sh` | Not present | `run_cmd()`, `run_vse()`, `log()`, `error_exit()`, `_mock_gdp_workspace()` |
+| `code/init.sh` | Hardcoded paths, no DRY_RUN, no script_dir | `script_dir`-anchored, DRY_RUN-aware, `error_exit` |
+| `code/run_single_test.sh` | Not present — test loop inline in main.sh | Dedicated per-test script: init + run_vse + enqueue teardown |
+| `code/teardown_worker.sh` | Not present — teardown inline in test loop | Background queue worker |
+| `code/teardown_all.sh` | `code/ICM_deleteProj.sh` (manual) | Iterates regression dir, calls `teardown.sh` per test |
+| `code/summary.sh` | Called at end: `code/summary.sh $uniqueid` | Called with DRY_RUN: `bash summary.sh -d ${DRY_RUN} ${uniqueid}` |

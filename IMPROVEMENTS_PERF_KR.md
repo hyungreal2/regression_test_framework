@@ -1,6 +1,6 @@
-# CAT — 성능 테스트 프레임워크 (`perf_main.sh`) 개선 내용
+# CAT — 성능 테스트 프레임워크 개선 내용
+## `legacy/2_perf/main.pl` → `perf_main.sh`
 
-> 성능 테스트 워크플로우의 Before-and-After 비교 문서입니다.
 > English version: [IMPROVEMENTS_PERF.md](IMPROVEMENTS_PERF.md)
 > 통합 문서: [IMPROVEMENTS_KR.md](IMPROVEMENTS_KR.md)
 
@@ -8,454 +8,415 @@
 
 ## 개요
 
-| 항목 | Legacy (`2_perf`) | 현재 |
+| 항목 | Legacy (`2_perf/main.pl` + `main.template`) | 현재 (`perf_main.sh`) |
 |---|---|---|
-| 진입점 | `main.pl` (Perl 1줄 스텁) | `perf_main.sh` — 구조화된 Bash, 세션 기반 |
-| 워크플로우 | 단발성, 모두 또는 없음 | Init 한 번 → 여러 번 run → 원하는 시점에 teardown |
-| 세션 관리 | 없음 | `perf_session.txt` 에 워크스페이스 이름 저장 |
-| 워크스페이스 조회 | 하드코딩된 상대 경로 | `gdp find` 동적 조회 |
-| 워크스페이스 타입 | MANAGED만 | MANAGED + UNMANAGED (자동 설정) |
-| 병렬 실행 | 순차 | `xargs -P` 병렬, 3단계 모델 |
-| 경쟁 조건 | 처리 없음 (조용한 손상) | `flock`으로 `gdp build workspace` 직렬화 |
-| GDP 폴더 설정 | 수동 사전 작업 | `ensure_gdp_folders()` init 시 자동 생성 |
-| VSE 호출 | `vse_sub` + `bwait` 하드코딩 | `run_vse()` — `vse_run` / `vse_sub` 전환 가능 |
-| 공통 라이브러리 | 미지원 | `-common LIB` 으로 모든 테스트 콤보에 추가 |
-| Dry-run 지원 | 없음 | 3단계 `DRY_RUN` |
-| 리플레이 생성 | init 내에 인라인 | 독립된 Phase 1, 단독 실행 가능 (`-gen-replay`) |
-| 실행 시 필터링 | 불가 | `-lib`, `-test`, `-mode`로 세션 필터링 |
+| 언어 | Perl + 생성된 Bash | 순수 Bash |
+| 워크플로우 | 템플릿 생성 → 치환 → 생성된 스크립트 실행 | 세션 기반: init → run (×N) → teardown |
+| 워크스페이스 생성 | 별도 수동 `ICM_createProj.sh` | 통합된 Phase 2 (`perf_init.sh`) |
+| UNMANAGED 설정 | `cp -rf` MANAGED 복사 (데이터 그대로) | `mv oa/` + `cdsinfo.tag` 패치 + `gdp rebuild` |
+| 워크스페이스 조회 | 하드코딩된 경로 `unmanaged/cadence_perf_ws` | `gdp find --type=workspace` 동적 조회 |
+| 병렬 실행 | 순차 `for` 루프 | `xargs -P` 병렬 워커 |
+| 경쟁 조건 | 해당 없음 (순차) | `flock`으로 `gdp build workspace` 직렬화 |
+| 세션 관리 | 없음 — 워크스페이스 사전 생성 필요 | `perf_session.txt`로 워크스페이스 이름 추적 |
+| GDP 폴더 설정 | 수동 사전 작업 | `ensure_gdp_folders()` 자동 생성 |
+| 리플레이 생성 | `createReplay.pl` (mode/result 인수 없음) | `createReplay.pl -managed <mode> -result <uniqueid>` |
+| 리플레이 출력명 | `replay.<testtype>1.au` (단일 파일) | `<testtype>_<lib>_<mode>.au` (모드별) |
+| 런타임 필터링 | 템플릿 치환 시 고정 | `-lib`, `-test`, `-mode`로 실행 시 필터 |
+| Dry-run | 없음 | 3단계 `DRY_RUN` |
+| 에러 처리 | `set -e`만 | `set -euo pipefail` + `error_exit` |
 
 ---
 
-## 1. 세션 기반 워크플로우
+## 1. 아키텍처 — Perl + 템플릿 vs 구조화된 Bash
 
-### Legacy — 단발성
+### Legacy — 3단계 간접 실행
 
 ```
 main.pl
   │
-  ├─ 전체 워크스페이스 초기화
-  │    ├─ BM01 워크스페이스
-  │    ├─ BM02 워크스페이스
-  │    └─ ...
+  ├─ 1. 테스트 타입별 createReplay.pl 호출
+  │       → GenerateReplayScript/에 리플레이 파일 생성
+  │       → code/replay/로 복사
   │
-  ├─ 전체 테스트 즉시 실행
+  ├─ 2. main.template 읽어서 변수 치환:
+  │       man_folders=()        → man_folders=(managed unmanaged)
+  │       virtuoso_version=     → virtuoso_version=IC251_ISR5-023_CAT
+  │       replay_files=( )      → replay_files=(checkHier1.au renameRefLib1.au ...)
+  │       → main.sh 작성
+  │       → chmod +x main.sh
   │
-  └─ 전체 워크스페이스 삭제
-       └─ (단발성, 재실행 불가, 테스트 추가/제거 불가)
+  └─ 3. genOnly == 0 이면: system("./main.sh")
+            (워크스페이스는 이미 존재해야 함 — 미리 수동으로 생성)
 ```
 
-### 현재 — 단계 분리
+```perl
+# legacy/2_perf/main.pl (핵심 부분)
+chdir "GenerateReplayScript";
+system("\\rm replay*.au");
+foreach my $key (@templates) {
+    system("./createReplay.pl -lib \"$library\" -cell \"$cell\" -template $key\n");
+}
+system("cp -r GenerateReplayScript/replay*.au code/replay/");
+# 템플릿 열고, 치환하고, main.sh 작성
+open(maintmpl, "main.template") || die "can't open script Template\n";
+...
+system("chmod +x main.sh");
+if ($genOnly == 1) { exit; }
+else { system("./main.sh"); }
+```
+
+생성된 `main.sh`는 미리 존재하는 워크스페이스를 대상으로 하드코딩된 루프를 실행했습니다.
+워크스페이스는 `managed/<ws_name>/`과 `unmanaged/<ws_name>/`에 이미 있어야 했습니다.
+
+### 현재 — 구조화된 Bash, 모든 단계 통합
 
 ```mermaid
 flowchart LR
-    A([시작]) --> B{perf_session.txt\n존재?}
+    A([perf_main.sh]) --> B[인수 파싱\n유효성 검사\n콤보 구성]
+    B --> C{모드?}
 
-    B -- 없음 --> C["-no-run\n(init만)"]
-    C --> P1[Phase 1\n리플레이 생성]
-    P1 --> P2[Phase 2\n워크스페이스 초기화]
-    P2 --> SF[perf_session.txt 저장]
+    C -- "-gen-replay" --> P1[Phase 1만\n리플레이 생성]
+    C -- "-no-run" --> D[run_init_phases]
+    D --> P1b[Phase 1\n리플레이 생성]
+    P1b --> P2[Phase 2\n워크스페이스 초기화]
+    P2 --> SF[세션 파일 저장]
+
+    C -- "run" --> LOAD{세션\n존재?}
+    LOAD -- 있음 --> P3[Phase 3\n테스트 실행]
+    LOAD -- 없음 --> PROMPT{프롬프트\n또는 자동 init}
+    PROMPT --> D
+
     SF --> RUN?{지금 실행?}
+    RUN? -- 예 --> P3
+    RUN? -- 나중에 --> DONE1([완료 — 세션 유지])
 
-    B -- 있음 --> LOAD[perf_session.txt 로드]
-    RUN? -- 나중에 --> LOAD
-
-    RUN? -- 지금 --> P3
-    LOAD --> P3[Phase 3\n테스트 실행]
-
-    P3 --> TD?{-t teardown?}
-    TD? -- 아니오 --> KEEP([세션 유지\n언제든 재실행 가능])
+    P3 --> TD?{-t?}
+    TD? -- 아니오 --> DONE2([완료 — 세션 유지])
     TD? -- 예 --> P5[Phase 5\nTeardown]
-    P5 --> RM[perf_session.txt 삭제]
-    RM --> DONE([완료])
-```
-
-**핵심 장점:** 워크스페이스 생성은 비용이 큰 작업입니다 (GDP 프로젝트 생성, 라이브러리
-채우기, 워크스페이스 빌드). Init과 실행을 분리함으로써 워크스페이스를 한 번만 만들고
-성능 테스트를 여러 번 반복할 수 있습니다 — 다른 필터, VSE 모드, 잡 수로 —
-환경을 다시 구축하지 않고도 가능합니다.
-
-### 세션 파일 형식
-
-```
-perf_session.txt
-──────────────────────────────────────────────────────────────
-20260417_120000_username                 ← 1행: uniqueid
-checkHier    BM01  perf_checkHier_BM01_20260417_120000_username
-checkHier    BM02  perf_checkHier_BM02_20260417_120000_username
-renameRefLib BM01  perf_renameRefLib_BM01_20260417_120000_username
-──────────────────────────────────────────────────────────────
-1열: testtype   2열: lib   3열: ws_name
-```
-
-- **1행 (uniqueid):** `result/<uniqueid>/`, `CDS_log/<uniqueid>/` 디렉토리명으로 사용
-- **2행~ (ws_name):** *실제* GDP 워크스페이스 이름 — 실행 시 `gdp find`에 사용됩니다.
-  타임스탬프만이 아닌 실제 이름을 저장하므로 디렉토리 이동 후에도 세션이 유효하고
-  시계 오차에도 강건합니다.
-
----
-
-## 2. 단계 구조
-
-```
-╔═══════════════════════════════════════════════════════════════════╗
-║  perf_main.sh 실행 단계                                           ║
-╠═══════════════════════════════════════════════════════════════════╣
-║                                                                   ║
-║  Phase 1 — 리플레이 생성                        [순차]            ║
-║  ─────────────────────────────────────────────────────────        ║
-║  스크립트: perf_generate_replay.sh                                ║
-║  입력:    testtype, lib, cell, mode (managed|unmanaged), uniqueid ║
-║  출력:    GenerateReplayScript/<testtype>_<lib>_<mode>.au         ║
-║          (모드별 개별 파일 — managed / unmanaged 각 1개)           ║
-║                                                                   ║
-║  createReplay.pl 호출 옵션:                                       ║
-║    -managed <mode>    (managed | unmanaged)                       ║
-║    -result  <uniqueid>                                            ║
-║                                                                   ║
-║  createReplay.pl 툴 제약으로 순차 실행 필요.                       ║
-║  단독 실행 가능: perf_main.sh -gen-replay                         ║
-║                                                                   ║
-║  Phase 2 — 워크스페이스 초기화           [병렬 + flock]           ║
-║  ─────────────────────────────────────────────────────────        ║
-║  스크립트: perf_init.sh                                           ║
-║  xargs -n3 -P<jobs>   (testtype lib cell per slot)                ║
-║                                                                   ║
-║  각 콤보에 대해:                                                   ║
-║    1. GDP 프로젝트 / variant / libtype / config 생성              ║
-║    2. GDP 라이브러리 생성                                         ║
-║    3. [flock] gdp build workspace → WORKSPACES_MANAGED/           ║
-║    4. 심볼릭 링크 추가 (cdsLibMgr.il, .cdsenv)                    ║
-║    5. UNMANAGED 설정 (cds.lib 복사, oa/ 이동, tag 패치)           ║
-║    6. gdp rebuild workspace (MANAGED oa/ 복원)                    ║
-║    7. 리플레이 .au 파일 양쪽 워크스페이스에 복사                   ║
-║                                                                   ║
-║  Phase 3 — 테스트 실행                          [병렬]            ║
-║  ─────────────────────────────────────────────────────────        ║
-║  스크립트: perf_run_single.sh                                     ║
-║  xargs -n4 -P<jobs>   (testtype lib mode ws_name per slot)        ║
-║                                                                   ║
-║  각 콤보에 대해:                                                   ║
-║    1. gdp find → MANAGED 워크스페이스 경로                        ║
-║    2. MANAGED 부모 경로에서 UNMANAGED 경로 파생                    ║
-║    3. 워크스페이스 디렉토리 안에서 run_vse() 실행                  ║
-║    4. CDS_log/<uniqueid>/ 에 로그 기록                            ║
-║                                                                   ║
-║  Phase 5 — Teardown                             [병렬]            ║
-║  ─────────────────────────────────────────────────────────        ║
-║  스크립트: perf_teardown.sh                                       ║
-║  xargs -n1 -P<jobs>   (ws_name per slot)                          ║
-║                                                                   ║
-║  각 워크스페이스에 대해:                                           ║
-║    1. gdp find → MANAGED 경로                                     ║
-║    2. gdp delete workspace                                        ║
-║    3. safe_rm_rf MANAGED 디렉토리                                 ║
-║    4. safe_rm_rf UNMANAGED 디렉토리                               ║
-║                                                                   ║
-╚═══════════════════════════════════════════════════════════════════╝
+    P5 --> RM[세션 파일 삭제]
 ```
 
 ---
 
-## 3. 병렬 실행
+## 2. 워크스페이스 설정 — 수동 vs 통합
 
-### Legacy
-
-```
-init.sh BM01       ────────────────────────────────►
-init.sh BM02                                       ────────────────────────────────►
-init.sh BM03                                                                       ────────►
-# 순차 — 총 시간 = 모든 init 시간의 합
-```
-
-### 현재
-
-```
-시간 ─────────────────────────────────────────────────────────►
-
-Phase 1 (순차):
-  BM01/managed ──► BM01/unmanaged ──► BM02/managed ──► BM02/unmanaged ──► ...
-
-Phase 2 (병렬, build 시 flock):
-  BM01: [프로젝트/라이브러리 생성 ██████] [flock:획득][build ████][UNMANAGED ██]
-  BM02: [프로젝트/라이브러리 생성 ██████] [flock:대기 ──────────][획득][build ████][UNMANAGED ██]
-  BM03: [프로젝트/라이브러리 생성 ██████] [flock:대기 ──────────────────────────][획득][build ████]
-
-Phase 3 (병렬):
-  checkHier/BM01/managed   [run_vse ████████████████████████]
-  checkHier/BM01/unmanaged [run_vse ████████████████████████]
-  checkHier/BM02/managed   [run_vse ████████████████████████]
-  checkHier/BM02/unmanaged [run_vse ████████████████████████]
-```
-
-### xargs 인수 매핑
-
-| 단계 | 플래그 | 슬롯당 인수 | 수신값 |
-|------|--------|------------|--------|
-| Phase 2 Init | `-n3` | `testtype lib cell` | `$1 $2 $3` + `uniqueid` (bash -c로 추가 전달) |
-| Phase 3 Run | `-n4` | `testtype lib mode ws_name` | `$1 $2 $3 $4` + `uniqueid` (추가 전달) |
-| Phase 5 Teardown | `-n1` | `ws_name` | `$1` |
-
----
-
-## 4. 워크스페이스 구조 (MANAGED / UNMANAGED)
-
-### Legacy
-
-```
-단일 워크스페이스 타입만 지원.
-경로가 상대 경로 ../../workspaces/ 로 하드코딩.
-UNMANAGED 개념 없음.
-심볼릭 링크 자동 설정 없음.
-```
-
-### 현재
-
-```
-WORKSPACES_MANAGED/<ws_name>/
-│
-├── cds.lib                    ← 라이브러리 맵 (GDP 관리)
-├── cds.libicm                 ← ICManage 라이브러리 맵
-├── oa/
-│   └── <lib>/
-│       ├── <cell>/            ← 설계 데이터 (gdp build로 sync)
-│       └── cdsinfo.tag        ← DMTYPE p4
-│
-├── cdsLibMgr.il ──심볼릭──►  $CDS_LIB_MGR   ← gdp build 후 추가
-├── .cdsenv      ──심볼릭──►  code/.cdsenv    ← gdp build 후 추가
-└── <testtype>_<lib>.au        ← 리플레이 파일 (GenerateReplayScript/<testtype>_<lib>_managed.au에서 복사)
-
-
-WORKSPACES_UNMANAGED/<ws_name>/
-│
-├── cds.lib                    ← MANAGED의 cds.libicm 복사본
-├── oa/
-│   └── <lib>/
-│       ├── <cell>/            ← MANAGED에서 이동 (GDP re-sync 없음)
-│       └── cdsinfo.tag        ← DMTYPE none  (p4에서 패치됨)
-└── <testtype>_<lib>.au        ← 리플레이 파일 (복사)
-```
-
-### 설정 순서
-
-```
-perf_init.sh
-  │
-  ├─ 1. [flock] gdp build workspace
-  │         → WORKSPACES_MANAGED/<ws>/   (oa/ p4 sync으로 채워짐)
-  │
-  ├─ 2. MANAGED 워크스페이스에 심볼릭 링크 추가
-  │       ln -sf $CDS_LIB_MGR  MANAGED/<ws>/cdsLibMgr.il
-  │       ln -sf code/.cdsenv    MANAGED/<ws>/.cdsenv
-  │
-  ├─ 3. mkdir -p WORKSPACES_UNMANAGED/<ws>/
-  │    cp MANAGED/<ws>/cds.libicm → UNMANAGED/<ws>/cds.lib
-  │
-  ├─ 4. mv MANAGED/<ws>/oa/ → UNMANAGED/<ws>/oa/
-  │
-  ├─ 5. UNMANAGED/<ws>/oa 아래 모든 cdsinfo.tag:
-  │         sed -i 's/DMTYPE p4/DMTYPE none/g'
-  │
-  └─ 6. gdp rebuild workspace (MANAGED/<ws>/ 안에서)
-             → MANAGED/<ws>/oa/ GDP에서 복원
-```
-
-**두 가지 워크스페이스 타입이 필요한 이유:**
-MANAGED와 UNMANAGED는 Virtuoso가 라이브러리 데이터를 추적하는 방식이 다릅니다:
-- MANAGED: ICManage 제어 하의 라이브러리 (`DMTYPE p4`) — ICM 경로 테스트
-- UNMANAGED: 로컬 데이터로 취급 (`DMTYPE none`) — 비-ICM 경로 테스트
-모든 성능 실행에서 두 타입이 모두 테스트됩니다.
-
----
-
-## 5. 동적 워크스페이스 조회
-
-### Legacy
+### Legacy — 수동, 순차, rebuild 없음
 
 ```bash
-# 하드코딩 경로 — 디렉토리 이동 시 깨짐
-managed_ws="../../workspaces/${ws_name}"
+# legacy/2_perf/code/ICM_createProj.sh (main.pl 전에 수동으로 실행해야 함)
+# 라이브러리 목록 스크립트에 하드코딩:
+libs=(DRAMLIB BM01 BM01_CHIP BM01_COPY BM01_ORIGIN BM01_TARGET BM02 ...)
+
+gdp create project /VSM/$proj_name
+gdp create variant /VSM/$proj_name/rev01
+gdp create libtype /VSM/$proj_name/rev01/OA --libspec OA
+gdp create config /VSM/$proj_name/rev01/dev
+
+for lib in ${libs[@]}; do
+    gdp create library /VSM/$proj_name/rev01/OA/$lib \
+        --from /VSM/cadence_perf_20260317064432/rev01/OA/$lib ...
+    gdp update /VSM/$proj_name/rev01/dev --add /VSM/$proj_name/rev01/OA/$lib
+done
+
+# MANAGED 워크스페이스 생성...
+pushd managed
+gdp build workspace --content /VSM/$proj_name/rev01/dev --gdp-name $ws_name --location $(realpath .)
+popd
+
+# UNMANAGED 워크스페이스 생성...  ← 문제: 단순 디렉토리 복사
+pushd unmanaged
+cp -rf ../managed/$ws_name ./$ws_name    # oa/ 포함 전체 파일 복사
+popd
 ```
 
-### 현재
+문제점:
+- 라이브러리 목록 하드코딩 — 변경하려면 스크립트 편집 필요
+- UNMANAGED가 MANAGED의 `cp -rf`: `cdsinfo.tag`에 여전히 `DMTYPE p4`
+  → Virtuoso가 ICM 관리 라이브러리로 인식, UNMANAGED 테스트 의미 없음
+- 리플레이 생성과 별도로 실행
+- 병렬화 없음, flock 없음, DRY_RUN 없음
+- GDP 경로 설정 없음 (하드코딩 `/VSM/...`)
+
+### 현재 — 자동화, 병렬, 올바른 UNMANAGED 설정
 
 ```bash
-# perf_run_single.sh — 위치 독립적 조회
+# code/perf_init.sh (perf_main.sh에서 xargs -P로 호출)
+# 라이브러리 목록을 testtype에서 동적으로 구성:
+perf_libs() {
+    case "${testtype}" in
+        checkHier|replace|deleteAllMarker)  echo "${lib}" ;;
+        renameRefLib)   echo "${lib} ${lib}_ORIGIN ${lib}_TARGET" ;;
+        copyHierToEmpty) echo "${lib} ${lib}_CHIP ${lib}_COPY" ;;
+        ...
+    esac
+}
+IFS=' ' read -ra libs <<< "$(perf_libs "${testtype}" "${lib}")"
+# -common으로 지정한 라이브러리 추가
+for _cl in ${PERF_COMMON_LIBS:-}; do libs+=("${_cl}"); done
+```
+
+```
+UNMANAGED 설정 (올바른 방법):
+
+  1. [flock] gdp build workspace  →  MANAGED/<ws>/oa/  (DMTYPE p4)
+  2. cp cds.libicm  →  UNMANAGED/<ws>/cds.lib
+  3. mv MANAGED/<ws>/oa/  →  UNMANAGED/<ws>/oa/
+  4. sed -i 's/DMTYPE p4/DMTYPE none/g'  cdsinfo.tag   ← 패치
+  5. gdp rebuild workspace (MANAGED)  →  MANAGED/<ws>/oa/ 복원
+```
+
+`DMTYPE none`은 Virtuoso가 라이브러리를 순수 로컬로 취급하게 합니다 —
+unmanaged 테스트 케이스에서 올바른 동작입니다.
+
+---
+
+## 3. 워크스페이스 조회 — 하드코딩 vs 동적
+
+### Legacy — 하드코딩된 이름 변경 트릭
+
+```bash
+# legacy/2_perf/main.template (생성된 main.sh)
+# UNMANAGED 워크스페이스가 고정 경로에 있다고 가정
+if [[ " ${man_folders[*]} " == *" unmanaged "* ]]; then
+    if [ -d $(pwd)/unmanaged/cadence_perf_ws ]; then
+        echo "Moving unmanaged/cadence_perf_ws TO unmanaged/$ws_name"
+        mv unmanaged/cadence_perf_ws unmanaged/$ws_name   # ws_name으로 이름 변경
+    elif [ ! -d $(pwd)/unmanaged/cadence_perf_ws ]; then
+        echo "Please check the workspace in $(pwd)/unmanaged"
+        echo "It should have unmanaged/cadence_perf_ws"
+        exit 1
+    fi
+fi
+# 실행 후 다시 이름 변경:
+mv unmanaged/$ws_name unmanaged/cadence_perf_ws
+```
+
+UNMANAGED 워크스페이스 경로가 항상 `unmanaged/cadence_perf_ws`였습니다 — 실행 전후로
+이름을 변경해야 하는 단일 고정 위치. 병렬 실행이 불가능했습니다.
+
+### 현재 — GDP find + 경로 파생
+
+```bash
+# code/perf_run_single.sh
 ws_gdp_path=$(run_cmd "gdp find --type=workspace \":=${ws_name}\"")
 managed_ws=$(run_cmd "gdp list \"${ws_gdp_path}\" --columns=rootDir")
-
-# UNMANAGED는 MANAGED 부모에서 문자열 치환으로 파생
-managed_parent="$(dirname "${managed_ws}")"
 unmanaged_ws="${managed_parent/%WORKSPACES_MANAGED/WORKSPACES_UNMANAGED}/${ws_name}"
 ```
 
 ```
-gdp find --type=workspace ":=perf_checkHier_BM01_20260417_120000_user"
-  │
-  └─► /MEMORY/TEST/CAT/.../perf_checkHier_BM01_...  (GDP 경로)
-        │
-        └─► gdp list --columns=rootDir
-              │
-              └─► /home/user/project/CAT/WORKSPACES_MANAGED/perf_checkHier_BM01_...
-                    │
-                    부모 경로 치환:  WORKSPACES_MANAGED → WORKSPACES_UNMANAGED
-                    │
-                    └─► /home/user/project/CAT/WORKSPACES_UNMANAGED/perf_checkHier_BM01_...
+gdp find ":=perf_checkHier_BM01_20260417_120000_user"
+  └─► GDP 경로 → gdp list --columns=rootDir
+        └─► /project/CAT/WORKSPACES_MANAGED/perf_checkHier_BM01_...
+              └─► WORKSPACES_MANAGED → WORKSPACES_UNMANAGED 치환
+                    └─► /project/CAT/WORKSPACES_UNMANAGED/perf_checkHier_BM01_...
 ```
+
+여러 워크스페이스가 공존하며 병렬 실행 가능 — 이름 변경 트릭 불필요.
 
 ---
 
-## 6. 경쟁 조건 수정 — p4 Protect Table
+## 4. 경쟁 조건 — p4 Protect Table
 
-### 문제
+### Legacy — 병렬 init 없음 → 문제 없음
 
-`gdp build workspace`는 Perforce 서버의 protect table에 쓰기를 수행합니다.
-병렬 프로세스들이 동시에 이를 호출하면 다음 오류가 발생합니다:
+`ICM_createProj.sh`가 순차적으로 실행됨: 라이브러리 생성 하나, `gdp build workspace` 하나.
+동시성 없음, 충돌 없음.
+
+### 현재 — flock으로 위험 단계 직렬화
+
+Phase 2를 `xargs -P4`로 실행하면 여러 `perf_init.sh` 프로세스가
+동시에 `gdp build workspace`를 호출합니다. 이때 서버의 Perforce protect table에 쓰기가 발생하여:
 
 ```
 Cannot update the p4 protect table for <project>, see server logs for details
 ```
 
-### 해결 — .gdp_ws_lock에 flock 적용
-
-```
-병렬 perf_init.sh 프로세스 (xargs -P4):
-
-시간 ──────────────────────────────────────────────────────────►
-
-  BM01:  프로젝트/라이브러리 생성 ████  [flock: 획득] build ██ [해제]
-  BM02:  프로젝트/라이브러리 생성 ████  [flock: 대기 ─────────────────] [획득] build ██ [해제]
-  BM03:  프로젝트/라이브러리 생성 ████  [flock: 대기 ──────────────────────────────────] [획득] build
-
-  ┌────────────────────────────────────────────────────────────┐
-  │  gdp 프로젝트/라이브러리 생성: 완전 병렬               ✓   │
-  │  gdp build workspace: flock으로 직렬화                ✓   │
-  │  UNMANAGED 설정: 완전 병렬                             ✓   │
-  │  gdp rebuild workspace: 완전 병렬                     ✓   │
-  └────────────────────────────────────────────────────────────┘
-```
+해결책: 공유 잠금 파일에 `flock` 적용 — build 단계만 직렬화:
 
 ```bash
-# perf_init.sh — build 단계만 잠금 안에서 실행
+# code/perf_init.sh
 (
     flock 9
     cd "${script_dir}/WORKSPACES_MANAGED"
-    run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${ws_name}\" ..."
+    run_cmd "gdp build workspace --content \"${config}\" ..."
 ) 9>"${script_dir}/.gdp_ws_lock"
+# gdp rebuild는 protect table 쓰기 없음 → 병렬 실행
+```
 
-# gdp rebuild workspace는 protect table 쓰기 없음 → 잠금 밖에서 병렬 실행
-(cd "${managed_ws}" && run_cmd "gdp rebuild workspace .")
+```
+시간 ──────────────────────────────────────────────────────────►
+  BM01: 프로젝트/라이브러리 생성 ████  [LOCK] build ██ [UNLOCK]
+  BM02: 프로젝트/라이브러리 생성 ████  [대기 ──────────────────] [LOCK] build ██
+  BM03: 프로젝트/라이브러리 생성 ████  [대기 ───────────────────────────────────] [LOCK] build ██
+        ← 병렬 ─────────────►← 직렬화 →←──── 병렬 ────────────►
 ```
 
 ---
 
-## 7. GDP 폴더 자동 설정
+## 5. 세션 관리
+
+### Legacy — 세션 없음, 워크스페이스 사전 생성 필요
+
+```perl
+# main.pl: 세션 개념 없음
+# 워크스페이스는 ICM_createProj.sh로 별도 생성
+# main.pl이 생성한 main.sh는 고정 경로에 워크스페이스가 있다고 가정
+# 어떤 워크스페이스가 어떤 실행에 해당하는지 알 방법 없음
+# main.sh 실행 후 무엇이 생성됐는지 기록 없음
+```
+
+### 현재 — 세션 파일로 모든 것 추적
+
+```
+perf_session.txt
+────────────────────────────────────────────────────────────────────
+20260417_120000_username                    ← uniqueid (로그 디렉토리명)
+checkHier    BM01  perf_checkHier_BM01_20260417_120000_username
+checkHier    BM02  perf_checkHier_BM02_20260417_120000_username
+renameRefLib BM01  perf_renameRefLib_BM01_20260417_120000_username
+────────────────────────────────────────────────────────────────────
+```
+
+세션 파일은 Phase 2 (init) 완료 후 작성됩니다. Phase 3 (run)이 이를 읽습니다.
+이를 통해:
+- **re-init 없이 재실행**: `./perf_main.sh`만 실행 (세션 읽기)
+- **필터링 재실행**: `-lib BM01`, `-mode managed`, `-test checkHier`
+- **이름으로 teardown**: 각 워크스페이스 이름이 저장됨 — 추측 불필요
+
+---
+
+## 6. 리플레이 생성
+
+### Legacy — 테스트 타입별 파일 하나
+
+```perl
+# main.pl
+foreach my $key (@templates) {
+    system("./createReplay.pl -lib \"$library\" -cell \"$cell\" -template $key\n");
+}
+# 출력: replay.checkHier1.au, replay.renameRefLib1.au, ...
+# code/replay/로 복사 — managed와 unmanaged 모두 동일 파일 사용
+```
+
+`createReplay.pl`에 워크스페이스 모드 개념이 없었습니다.
+managed/unmanaged 여부와 관계없이 동일한 리플레이를 사용했습니다.
+
+### 현재 — 모드별 파일
+
+```bash
+# code/perf_generate_replay.sh
+perl createReplay.pl \
+    -lib "${lib}" -cell "${cell}" -template "${testtype}" \
+    -managed "${mode}" \    ← 신규: "managed" 또는 "unmanaged"
+    -result "${uniqueid}"   ← 신규: 결과 경로 식별자
+mv "replay.${testtype}1.au" "${testtype}_${lib}_${mode}.au"
+```
+
+```
+Phase 1 생성 결과 (콤보별):
+  checkHier_BM01_managed.au     ─► WORKSPACES_MANAGED/<ws>/에 복사
+  checkHier_BM01_unmanaged.au   ─► WORKSPACES_UNMANAGED/<ws>/에 복사
+```
+
+각 워크스페이스는 해당 모드에 맞게 생성된 리플레이 파일을 받습니다.
+
+---
+
+## 7. 병렬 실행
+
+### Legacy — 순차
+
+```bash
+# main.template (생성된 main.sh)
+for managed in ${man_folders[@]}; do
+    for replay in ${replay_files[@]}; do
+        (
+            cd $testdir || exit 1
+            vse_run -v $virtuoso_version \
+                -replay ../../code/replay/$replay \
+                -log ../../CDS_log/$replay"_"$managed".log"
+        )
+    done
+done
+# managed 루프가 외부 → 모든 unmanaged 테스트 후 모든 managed 테스트 (또는 반대)
+# 순차 — 병렬화 없음
+```
+
+### 현재 — 각 단계별 xargs -P
+
+```
+Phase 1 — 리플레이 생성 (순차 — 도구 제약)
+  BM01/managed ──► BM01/unmanaged ──► BM02/managed ──► BM02/unmanaged ──► ...
+
+Phase 2 — 워크스페이스 초기화 (병렬)
+  xargs -n3 -P4:  슬롯당 (testtype lib cell)
+  BM01 ──────────────────────────────────────────────────────►
+  BM02 ──────────────────────────────────────────────────────►
+  BM03 ──────────────────────────────────────────────────────►
+
+Phase 3 — 테스트 실행 (병렬)
+  xargs -n4 -P4:  슬롯당 (testtype lib mode ws_name)
+  checkHier/BM01/managed   ██████████████████████████
+  checkHier/BM01/unmanaged ██████████████████████████
+  checkHier/BM02/managed   ██████████████████████████
+  checkHier/BM02/unmanaged ██████████████████████████
+```
+
+---
+
+## 8. 상세 사용법 비교
 
 ### Legacy
 
 ```
-GDP_BASE와 PERF_GDP_BASE를 init 전에 수동으로 생성해야 했습니다.
-폴더가 없으면 init 시퀀스 깊은 곳에서 원인 불명의 gdp 오류가 발생했습니다.
+main.pl [옵션]
+  -lib      라이브러리 이름 (공백 구분)
+  -cell     셀 이름 (공백 구분, lib와 쌍으로)
+  -mode     테스트 타입 (기본값: 전체 템플릿)
+  -manage   managed / unmanaged / "unmanaged managed"
+  -ws       워크스페이스 이름
+  -proj     프로젝트 접두사
+  -id       고유 ID 파일
+  -version  Virtuoso 버전 (필수)
+  -genOnly  1 = 생성만 (기본값), 0 = 생성 + 실행
 ```
 
-### 현재 — ensure_gdp_folders()
-
-```mermaid
-flowchart TD
-    A[run_init_phases] --> B[ensure_gdp_folders]
-    B --> C{DRY_RUN >= 1?}
-    C -- 예 --> D["[DRY-RUN] 로그 후 건너뜀"]
-    C -- 아니오 --> E{gdp list GDP_BASE?}
-    E -- 존재 --> F[로그: 존재함]
-    E -- 없음 --> G[gdp create folder GDP_BASE]
-    F --> H{gdp list PERF_GDP_BASE?}
-    G --> H
-    H -- 존재 --> I[로그: 존재함]
-    H -- 없음 --> J[gdp create folder PERF_GDP_BASE]
-    I --> K[Phase 1 계속]
-    J --> K
-    D --> K
-```
-
-확인하는 폴더:
-- `GDP_BASE` = `${GDP_BASE}` (예: `/MEMORY/TEST/CAT/CAT_WORKING/<user>`)
-- `PERF_GDP_BASE` = `${GDP_BASE}/perf`
-
----
-
-## 8. 공통 라이브러리 (`-common`)
-
-### 문제
-
-테스트 타입과 관계없이 모든 워크스페이스에 포함되어야 하는 라이브러리가 있습니다.
-예를 들어 모든 테스트가 읽는 참조 라이브러리입니다.
-Legacy에는 이 메커니즘이 없어 각 init 스크립트에 수동으로 추가해야 했습니다.
+DRY_RUN 없음. `--version` 매번 필수. 세션 개념 없음.
+두 번 실행하려면 워크스페이스를 다시 설정해야 함.
 
 ### 현재
 
-```bash
-# REF_LIB를 모든 테스트 콤보에 추가
-./perf_main.sh -no-run -lib BM01,BM02 -test checkHier,renameRefLib -common REF_LIB
-```
-
-```
-perf_libs() 확장 결과 + -common 추가:
-
-  checkHier    / BM01  →  [ BM01 ]                            + [ REF_LIB ]
-  checkHier    / BM02  →  [ BM02 ]                            + [ REF_LIB ]
-  renameRefLib / BM01  →  [ BM01  BM01_ORIGIN  BM01_TARGET ]  + [ REF_LIB ]
-  renameRefLib / BM02  →  [ BM02  BM02_ORIGIN  BM02_TARGET ]  + [ REF_LIB ]
-                          └─── testtype별 확장 ──────────────┘   └─ 추가 ─┘
-```
-
-- 쉼표로 여러 개 지정 가능: `-common LIB_A,LIB_B`
-- 시작 시 `PERF_LIBS` 기준으로 유효성 검사 (`-lib`와 동일 규칙)
-- `PERF_COMMON_LIBS` 환경 변수로 자식 `perf_init.sh` 프로세스에 전달
-
----
-
-## 9. 상세 사용법
-
 ```
 ./perf_main.sh [옵션]
-
   -h           | --help              도움말 출력
   -lib           <lib[,lib,...]>     테스트할 라이브러리    (기본값: 전체 PERF_LIBS)
   -test          <test[,test,...]>   실행할 테스트 타입     (기본값: 전체 PERF_TESTS)
   -mode          <managed|unmanaged> 워크스페이스 모드      (기본값: 둘 다)
   -common        <lib[,lib,...]>     모든 콤보에 추가할 공통 라이브러리
-  -j           | --jobs <n>          병렬 잡 수             (기본값: 4)
+  -j           | --jobs <n>          병렬 워커 수           (기본값: 4)
   -d           | --dry-run [0|1|2]   Dry-run 레벨           (기본값: $DRY_RUN)
-  -gen-replay  | --gen-replay        Phase 1만 (리플레이 파일 생성)
-  -no-run      | --no-run            Init만 (테스트 실행 건너뜀)
-  -t           | --teardown          테스트 후 teardown; 세션 파일 삭제
-  -auto-init   | --auto-init         세션 없으면 자동 init (프롬프트 없음)
+  -gen-replay  | --gen-replay        Phase 1만 실행
+  -no-run      | --no-run            init만; 세션 저장
+  -t           | --teardown          teardown + 세션 파일 삭제
+  -auto-init   | --auto-init         세션 없으면 자동 init
 ```
 
-### 주요 워크플로우
+**일반적인 워크플로우:**
 
 ```bash
-# ── 리플레이 파일만 생성 (워크스페이스 설정 없음) ────────────────
-./perf_main.sh -gen-replay -lib BM01 -test checkHier
-
-# ── Step 1: 워크스페이스 설정 (한 번만) ──────────────────────────
+# Step 1: init (한 번만)
 ./perf_main.sh -no-run -lib BM01,BM02 -test checkHier,renameRefLib
 
-# ── Step 2: 테스트 실행 — 다양한 필터 ───────────────────────────
-./perf_main.sh                                   # 전체 세션 × 두 모드
-./perf_main.sh -lib BM01                         # BM01만 × 두 모드
-./perf_main.sh -test checkHier                   # checkHier × 두 모드
-./perf_main.sh -lib BM01 -test checkHier         # BM01 × checkHier × 두 모드
-./perf_main.sh -lib BM01 -mode managed           # BM01 × managed만
-./perf_main.sh -mode unmanaged                   # 전체 × unmanaged만
+# Step 2: 실행 (다양한 필터로 반복)
+./perf_main.sh                                   # 전체
+./perf_main.sh -lib BM01 -mode managed           # 필터
+./perf_main.sh -test checkHier                   # 필터
 
-# ── Step 3: 완료 후 teardown ─────────────────────────────────────
+# Step 3: teardown (완료 시)
 ./perf_main.sh -no-run -t
-
-# ── 원샷 (init → run → teardown) ────────────────────────────────
-./perf_main.sh -auto-init -t -lib BM01 -test checkHier -d 0
 ```
 
-### 옵션 조합표
+**옵션 조합표:**
 
 ```
 명령                                                     실행되는 테스트
@@ -466,37 +427,19 @@ perf_libs() 확장 결과 + -common 추가:
 ./perf_main.sh -mode unmanaged                           전체 세션 × unmanaged만
 ```
 
-### Dry-run (인프라 불필요)
-
-```bash
-# 실행될 모든 명령 출력 — 실제 실행 없음
-./perf_main.sh -d 2 -no-run -lib BM01 -test checkHier
-
-# 로컬 목업 워크스페이스로 스모크 테스트
-./perf_main.sh -d 1 -no-run -lib BM01 -test checkHier
-./perf_main.sh -d 1 -lib BM01 -test checkHier
-./perf_main.sh -d 1 -no-run -t   # 목업 워크스페이스 teardown
-```
-
-### VSE 모드 런타임 전환
-
-```bash
-VSE_MODE=sub ./perf_main.sh -lib BM01 -test checkHier   # 배치 제출 + bjobs 폴링
-VSE_MODE=run ./perf_main.sh -lib BM01 -test checkHier   # 동기 실행
-```
-
 ---
 
-## 10. 주요 파일
+## 9. 주요 파일 변경
 
-| 파일 | 역할 |
-|---|---|
-| `perf_main.sh` | 진입점 — 세션 라이프사이클, 단계 조율, 옵션 파싱 |
-| `code/env.sh` | `PERF_LIBS`, `PERF_TESTS`, `PERF_PREFIX`, `PERF_GDP_BASE`, `VSE_MODE`, `DRY_RUN` |
-| `code/common.sh` | `run_cmd()`, `run_vse()`, `log()`, `error_exit()`, `_mock_gdp_workspace()` |
-| `code/perf_generate_replay.sh` | Phase 1 — `<testtype>_<lib>_<mode>.au` 리플레이 파일 생성 (모드별 개별) |
-| `code/perf_init.sh` | Phase 2 — GDP 생성, build, MANAGED/UNMANAGED 설정, 심볼릭 링크 |
-| `code/perf_run_single.sh` | Phase 3 — `gdp find`, 워크스페이스 선택, `run_vse()` |
-| `code/perf_teardown.sh` | Phase 5 — `gdp find`, `gdp delete`, `safe_rm_rf` |
-| `code/summary.sh` | `CDS_log/<uniqueid>/*.log` 파싱 → pass/fail 요약 |
-| `perf_session.txt` | 활성 세션 (gitignore) — uniqueid + ws_name 항목 |
+| 파일 | Legacy | 현재 |
+|---|---|---|
+| `main.pl` | Perl: 리플레이 생성 → 템플릿 치환 → 실행 | `perf_main.sh`로 대체 |
+| `main.template` | 플레이스홀더가 있는 Bash 템플릿 | 대체됨 — 로직이 `perf_main.sh`에 통합 |
+| `perf_main.sh` | 존재하지 않음 | 전체 Bash 재작성: 세션 기반, 단계별, 병렬 |
+| `code/ICM_createProj.sh` | 수동: 하드코딩 라이브러리 목록, 순차, `cp -rf` UNMANAGED | `code/perf_init.sh`로 대체 |
+| `code/perf_init.sh` | 없음 | Phase 2: 동적 라이브러리, flock, 올바른 UNMANAGED 설정 |
+| `code/perf_run_single.sh` | 없음 | Phase 3: `gdp find`, 워크스페이스 선택, `run_vse()` |
+| `code/perf_teardown.sh` | `ICM_deleteProj.sh` (기본) | `gdp find` 동적 조회, not-found 처리 |
+| `code/perf_generate_replay.sh` | 없음 (`createReplay.pl` 인라인 호출) | Phase 1: `-managed`/`-result` 포함 `createReplay.pl` 래퍼 |
+| `code/env.sh` | 없음 — 생성된 main.sh에 변수 인라인 | 중앙 설정: `PERF_LIBS`, `PERF_TESTS`, `PERF_GDP_BASE`, `VSE_MODE` |
+| `code/common.sh` | 없음 | `run_cmd()`, `run_vse()`, `log()`, `_mock_gdp_workspace()` |

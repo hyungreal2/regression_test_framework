@@ -13,7 +13,7 @@
 
 | Area | Legacy | Current | Scope |
 |---|---|---|---|
-| Entry points | `init.sh`, `main.pl` (stubs) | `main.sh`, `perf_main.sh` | Both |
+| Entry points | `legacy/1_cico/main.sh` (sequential Bash), `main.pl` (Perl + template) | `main.sh`, `perf_main.sh` | Both |
 | Path resolution | Per-script `$(dirname $0)` | `script_dir` exported once | Both |
 | Error handling | Silent failures | `set -euo pipefail` + explicit messages | Both |
 | Dry-run support | None | 3-level `DRY_RUN` (0/1/2) | Both |
@@ -215,7 +215,7 @@ perf_main.sh flow:
 | File | Legacy | Current |
 |---|---|---|
 | `main.sh` | Missing (deleted) | Restored — structured Bash, `script_dir`, parallel xargs |
-| `perf_main.sh` | `main.pl` (Perl 1-liner) | Full Bash rewrite — session-based, phased, rich options |
+| `perf_main.sh` | `main.pl` (Perl: generate replays + fill template → run generated Bash) | Full Bash rewrite — session-based, phased, rich options |
 | `code/common.sh` | Not present | `run_cmd()`, `run_vse()`, `_mock_gdp_workspace()`, `safe_rm_rf()` |
 | `code/env.sh` | Duplicated inline per script | Centralised — all variables in one place |
 | `code/perf_init.sh` | `ICM_createProj.sh` (basic) | MANAGED + UNMANAGED, flock, symlinks, `-common` |
