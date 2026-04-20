@@ -104,8 +104,13 @@ column 1: testtype   column 2: lib   column 3: ws_name
 ║  Phase 1 — Generate Replays                 [SEQUENTIAL]          ║
 ║  ─────────────────────────────────────────────────────────        ║
 ║  Script: perf_generate_replay.sh                                  ║
-║  Input:  testtype, lib, cell                                      ║
-║  Output: GenerateReplayScript/<testtype>_<lib>.au                 ║
+║  Input:  testtype, lib, cell, mode (managed|unmanaged), uniqueid  ║
+║  Output: GenerateReplayScript/<testtype>_<lib>_<mode>.au          ║
+║          (one file per mode — managed and unmanaged each)         ║
+║                                                                   ║
+║  createReplay.pl is called with:                                  ║
+║    -managed <mode>    (managed | unmanaged)                       ║
+║    -result  <uniqueid>                                            ║
 ║                                                                   ║
 ║  Must run sequentially (createReplay.pl tool limitation).         ║
 ║  Can run standalone: perf_main.sh -gen-replay                     ║
@@ -168,7 +173,7 @@ init.sh BM03                                                                    
 Time ─────────────────────────────────────────────────────────►
 
 Phase 1 (sequential):
-  BM01 replay ──► BM02 replay ──► BM03 replay ──► BM04 replay
+  BM01/managed ──► BM01/unmanaged ──► BM02/managed ──► BM02/unmanaged ──► ...
 
 Phase 2 (parallel, flock at build):
   BM01: [create proj/lib ██████] [flock:HOLD][build ████][UNMANAGED ██]
@@ -217,7 +222,7 @@ WORKSPACES_MANAGED/<ws_name>/
 │
 ├── cdsLibMgr.il ──symlink──►  $CDS_LIB_MGR   ← added after gdp build
 ├── .cdsenv      ──symlink──►  code/.cdsenv    ← added after gdp build
-└── <testtype>_<lib>.au        ← replay file (copied from GenerateReplayScript/)
+└── <testtype>_<lib>.au        ← replay file (copied from GenerateReplayScript/<testtype>_<lib>_managed.au)
 
 
 WORKSPACES_UNMANAGED/<ws_name>/
@@ -488,7 +493,7 @@ VSE_MODE=run ./perf_main.sh -lib BM01 -test checkHier   # synchronous
 | `perf_main.sh` | Entry point — session lifecycle, phase orchestration, option parsing |
 | `code/env.sh` | `PERF_LIBS`, `PERF_TESTS`, `PERF_PREFIX`, `PERF_GDP_BASE`, `VSE_MODE`, `DRY_RUN` |
 | `code/common.sh` | `run_cmd()`, `run_vse()`, `log()`, `error_exit()`, `_mock_gdp_workspace()` |
-| `code/perf_generate_replay.sh` | Phase 1 — generate `<testtype>_<lib>.au` replay file |
+| `code/perf_generate_replay.sh` | Phase 1 — generate `<testtype>_<lib>_<mode>.au` replay file (one per mode) |
 | `code/perf_init.sh` | Phase 2 — GDP create, build, MANAGED/UNMANAGED setup, symlinks |
 | `code/perf_run_single.sh` | Phase 3 — `gdp find`, workspace select, `run_vse()` |
 | `code/perf_teardown.sh` | Phase 5 — `gdp find`, `gdp delete`, `safe_rm_rf` |

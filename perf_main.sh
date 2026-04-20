@@ -357,13 +357,15 @@ ensure_gdp_folders() {
 # Phase 1: Generate replays (sequential)
 #######################################
 generate_replays() {
-    local testtype lib cell
+    local testtype lib cell mode
 
-    log "--- Phase 1: Generate replays ---"
+    log "--- Phase 1: Generate replays (managed + unmanaged) ---"
     for combo in "${combos_init[@]}"; do
         read -r testtype lib cell <<< "${combo}"
-        bash "${script_dir}/code/perf_generate_replay.sh" \
-            "${testtype}" "${lib}" "${cell}" -d "${DRY_RUN}"
+        for mode in managed unmanaged; do
+            bash "${script_dir}/code/perf_generate_replay.sh" \
+                "${testtype}" "${lib}" "${cell}" "${mode}" "${uniqueid}" -d "${DRY_RUN}"
+        done
     done
 }
 
@@ -472,7 +474,9 @@ build_combos
 log "Init matrix: ${#combos_init[@]} workspace(s) (testtype×lib)"
 
 if [[ "${do_gen_replay}" == true ]]; then
-    # -gen-replay: Phase 1 only
+    # -gen-replay: Phase 1 only; uniqueid used as -result value for createReplay.pl
+    uniqueid="$(date +%Y%m%d_%H%M%S)_${USER_NAME}"
+    log "uniqueid: ${uniqueid}"
     generate_replays
     log "Replay generation complete."
 

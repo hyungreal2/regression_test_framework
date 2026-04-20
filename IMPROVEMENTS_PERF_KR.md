@@ -104,8 +104,13 @@ renameRefLib BM01  perf_renameRefLib_BM01_20260417_120000_username
 ║  Phase 1 — 리플레이 생성                        [순차]            ║
 ║  ─────────────────────────────────────────────────────────        ║
 ║  스크립트: perf_generate_replay.sh                                ║
-║  입력:    testtype, lib, cell                                     ║
-║  출력:    GenerateReplayScript/<testtype>_<lib>.au                ║
+║  입력:    testtype, lib, cell, mode (managed|unmanaged), uniqueid ║
+║  출력:    GenerateReplayScript/<testtype>_<lib>_<mode>.au         ║
+║          (모드별 개별 파일 — managed / unmanaged 각 1개)           ║
+║                                                                   ║
+║  createReplay.pl 호출 옵션:                                       ║
+║    -managed <mode>    (managed | unmanaged)                       ║
+║    -result  <uniqueid>                                            ║
 ║                                                                   ║
 ║  createReplay.pl 툴 제약으로 순차 실행 필요.                       ║
 ║  단독 실행 가능: perf_main.sh -gen-replay                         ║
@@ -168,7 +173,7 @@ init.sh BM03                                                                    
 시간 ─────────────────────────────────────────────────────────►
 
 Phase 1 (순차):
-  BM01 리플레이 ──► BM02 리플레이 ──► BM03 리플레이 ──► BM04 리플레이
+  BM01/managed ──► BM01/unmanaged ──► BM02/managed ──► BM02/unmanaged ──► ...
 
 Phase 2 (병렬, build 시 flock):
   BM01: [프로젝트/라이브러리 생성 ██████] [flock:획득][build ████][UNMANAGED ██]
@@ -217,7 +222,7 @@ WORKSPACES_MANAGED/<ws_name>/
 │
 ├── cdsLibMgr.il ──심볼릭──►  $CDS_LIB_MGR   ← gdp build 후 추가
 ├── .cdsenv      ──심볼릭──►  code/.cdsenv    ← gdp build 후 추가
-└── <testtype>_<lib>.au        ← 리플레이 파일 (GenerateReplayScript/에서 복사)
+└── <testtype>_<lib>.au        ← 리플레이 파일 (GenerateReplayScript/<testtype>_<lib>_managed.au에서 복사)
 
 
 WORKSPACES_UNMANAGED/<ws_name>/
@@ -489,7 +494,7 @@ VSE_MODE=run ./perf_main.sh -lib BM01 -test checkHier   # 동기 실행
 | `perf_main.sh` | 진입점 — 세션 라이프사이클, 단계 조율, 옵션 파싱 |
 | `code/env.sh` | `PERF_LIBS`, `PERF_TESTS`, `PERF_PREFIX`, `PERF_GDP_BASE`, `VSE_MODE`, `DRY_RUN` |
 | `code/common.sh` | `run_cmd()`, `run_vse()`, `log()`, `error_exit()`, `_mock_gdp_workspace()` |
-| `code/perf_generate_replay.sh` | Phase 1 — `<testtype>_<lib>.au` 리플레이 파일 생성 |
+| `code/perf_generate_replay.sh` | Phase 1 — `<testtype>_<lib>_<mode>.au` 리플레이 파일 생성 (모드별 개별) |
 | `code/perf_init.sh` | Phase 2 — GDP 생성, build, MANAGED/UNMANAGED 설정, 심볼릭 링크 |
 | `code/perf_run_single.sh` | Phase 3 — `gdp find`, 워크스페이스 선택, `run_vse()` |
 | `code/perf_teardown.sh` | Phase 5 — `gdp find`, `gdp delete`, `safe_rm_rf` |

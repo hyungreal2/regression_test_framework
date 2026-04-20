@@ -159,15 +159,17 @@ else
 fi
 
 #######################################
-# Copy replay file to both workspaces
+# Copy mode-specific replay files to each workspace
 #######################################
-replay_src="${script_dir}/GenerateReplayScript/${testtype}_${lib}.au"
-log "[INIT] Copying replay to workspaces"
+replay_managed="${script_dir}/GenerateReplayScript/${testtype}_${lib}_managed.au"
+replay_unmanaged="${script_dir}/GenerateReplayScript/${testtype}_${lib}_unmanaged.au"
+log "[INIT] Copying replay files to workspaces"
 if [[ "${DRY_RUN}" -lt 2 ]]; then
-    run_cmd "cp \"${replay_src}\" \"${managed_ws}/${testtype}_${lib}.au\""
-    run_cmd "cp \"${replay_src}\" \"${unmanaged_ws}/${testtype}_${lib}.au\""
+    run_cmd "cp \"${replay_managed}\"   \"${managed_ws}/${testtype}_${lib}.au\""
+    run_cmd "cp \"${replay_unmanaged}\" \"${unmanaged_ws}/${testtype}_${lib}.au\""
 else
-    log "[DRY-RUN:2] Would copy ${testtype}_${lib}.au to both workspaces"
+    log "[DRY-RUN:2] Would copy ${testtype}_${lib}_managed.au   → MANAGED workspace"
+    log "[DRY-RUN:2] Would copy ${testtype}_${lib}_unmanaged.au → UNMANAGED workspace"
 fi
 
 log "[INIT] Done: ${testtype}/${lib}"
