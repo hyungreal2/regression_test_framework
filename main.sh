@@ -142,6 +142,27 @@ validate_inputs() {
 }
 
 #######################################
+# Ensure GDP base folders exist
+#######################################
+ensure_gdp_folders() {
+    if [[ "${DRY_RUN}" -ge 1 ]]; then
+        log "[DRY-RUN] Would ensure GDP folders: ${GDP_BASE}, ${CICO_GDP_BASE}"
+        return
+    fi
+
+    local folder
+    for folder in "${GDP_BASE}" "${CICO_GDP_BASE}"; do
+        log "Checking GDP folder: ${folder}"
+        if gdp list "${folder}" > /dev/null 2>&1; then
+            log "  → exists: ${folder}"
+        else
+            log "  → not found, creating: ${folder}"
+            gdp create folder "${folder}"
+        fi
+    done
+}
+
+#######################################
 # Generate templates
 #######################################
 generate_templates() {
@@ -254,6 +275,7 @@ log "uniqueid: ${uniqueid}"
 log "replays_folder: ${replays_folder}"
 
 validate_inputs
+ensure_gdp_folders
 generate_templates
 get_tests
 create_regression_dir

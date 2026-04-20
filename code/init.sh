@@ -17,23 +17,23 @@ source "${script_dir}/code/common.sh"
 [[ -n "${uniquetestid:-}" ]] || error_exit "uniquetestid is not set (must be exported from caller)"
 
 proj_name="${PROJ_PREFIX}_${uniquetestid}"
-config="${GDP_BASE}/${proj_name}/rev01/dev"
+config="${CICO_GDP_BASE}/${proj_name}/rev01/dev"
 
 #######################################
 # GDP operations
 #######################################
 log "Creating project: ${proj_name}"
-#run_cmd "gdp create project --user=gdpxl_manager ${GDP_BASE}/${proj_name}"
-run_cmd "gdp create project ${GDP_BASE}/${proj_name}"
+#run_cmd "gdp create project --user=gdpxl_manager ${CICO_GDP_BASE}/${proj_name}"
+run_cmd "gdp create project ${CICO_GDP_BASE}/${proj_name}"
 
 #log "Assigning role projman: ${proj_name}"
-#run_cmd "gdp assign role --user=gdpxl_manager ${GDP_BASE}/${proj_name} ${USER} projman"
+#run_cmd "gdp assign role --user=gdpxl_manager ${CICO_GDP_BASE}/${proj_name} ${USER} projman"
 
 log "Creating variant: ${proj_name}/rev01"
-run_cmd "gdp create variant ${GDP_BASE}/${proj_name}/rev01"
+run_cmd "gdp create variant ${CICO_GDP_BASE}/${proj_name}/rev01"
 
 log "Creating libtype: ${proj_name}/rev01/oa"
-run_cmd "gdp create libtype ${GDP_BASE}/${proj_name}/rev01/oa --libspec oa"
+run_cmd "gdp create libtype ${CICO_GDP_BASE}/${proj_name}/rev01/oa --libspec oa"
 
 log "Creating config: ${config}"
 run_cmd "gdp create config ${config}"
@@ -42,7 +42,7 @@ run_cmd "gdp create config ${config}"
 # Libraries
 #######################################
 for lib in "$@"; do
-    oa_lib="${GDP_BASE}/${proj_name}/rev01/oa/${lib}"
+    oa_lib="${CICO_GDP_BASE}/${proj_name}/rev01/oa/${lib}"
 
     log "Building library: ${lib}"
 

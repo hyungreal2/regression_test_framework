@@ -35,7 +35,7 @@ source "${script_dir}/code/common.sh"
 project_name="${PROJ_PREFIX}_${uniquetestid}"
 workspace_name="${WS_PREFIX}_${uniquetestid}"
 
-project_gdp_path="${GDP_BASE}/${project_name}"
+project_gdp_path="${CICO_GDP_BASE}/${project_name}"
 project_depot_path="//depot${project_gdp_path}/..."
 
 #######################################
