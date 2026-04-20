@@ -146,16 +146,16 @@ validate_inputs() {
 #######################################
 generate_templates() {
     log "Removing date_virtuosoVer.txt"
-    run_cmd "rm -f code/date_virtuosoVer.txt"
+    run_cmd "rm -f \"${script_dir}/code/date_virtuosoVer.txt\""
 
     log "Removing previous replay folder: code/${replays_folder}"
-    run_cmd "rm -rf code/${replays_folder}"
+    run_cmd "rm -rf \"${script_dir}/code/${replays_folder}\""
 
     log "Generating replay templates (libname=${libname} cellname=${cellname:-none})"
     if [[ -n "${cellname}" ]]; then
-        run_cmd "python3 code/generate_templates.py --result_folder ${uniqueid} --libname ${libname} --results ${replays_folder} --cellname ${cellname}"
+        run_cmd "python3 \"${script_dir}/code/generate_templates.py\" --result_folder ${uniqueid} --libname ${libname} --results ${replays_folder} --cellname ${cellname}"
     else
-        run_cmd "python3 code/generate_templates.py --result_folder ${uniqueid} --libname ${libname} --results ${replays_folder}"
+        run_cmd "python3 \"${script_dir}/code/generate_templates.py\" --result_folder ${uniqueid} --libname ${libname} --results ${replays_folder}"
     fi
 }
 
@@ -192,18 +192,18 @@ create_regression_dir() {
     local dir
     num="000"
 
-    if [[ -f regression_num.txt ]]; then
-        num=$(<regression_num.txt)
+    if [[ -f "${script_dir}/regression_num.txt" ]]; then
+        num=$(<"${script_dir}/regression_num.txt")
     fi
 
     while true; do
         num=$(printf "%03d" $(( (10#${num} + 1) % 1000 )))
-        dir="regression_test_${num}"
+        dir="${script_dir}/regression_test_${num}"
 
         [[ ! -d "${dir}" ]] && break
     done
 
-    echo "${num}" > regression_num.txt
+    echo "${num}" > "${script_dir}/regression_num.txt"
     regression_dir="${dir}"
 
     log "Regression Directory: ${regression_dir}"
@@ -221,7 +221,7 @@ prepare_tests() {
         run_cmd "mkdir -p ${testdir}"
 
         log "Moving replay_${num}.il to ${testdir}/"
-        run_cmd "mv -f ./code/${replays_folder}/replay_${num}.il ${testdir}/"
+        run_cmd "mv -f \"${script_dir}/code/${replays_folder}/replay_${num}.il\" \"${testdir}/\""
     done
 }
 
@@ -232,7 +232,7 @@ run_tests() {
     log "Running tests in parallel (jobs=${jobs})"
 
     printf "%s\n" "${tests[@]}" | \
-	xargs -n1 -P"${jobs}" bash ./code/run_single_test.sh
+        xargs -n1 -P"${jobs}" bash "${script_dir}/code/run_single_test.sh"
     #printf "%s\n" "${tests[@]}" | \
         #xargs -n1 -P"${jobs}" -I{} \
         #bash ./code/run_single_test.sh {} "${libname}" "${regression_dir}"
@@ -258,7 +258,7 @@ generate_templates
 get_tests
 create_regression_dir
 prepare_tests
-mkdir -p CDS_log
+mkdir -p "${script_dir}/CDS_log"
 
 #######################################
 # Start background teardown worker

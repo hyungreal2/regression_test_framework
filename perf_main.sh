@@ -27,6 +27,7 @@ auto_init=false
 selected_libs=()
 selected_tests=()
 selected_modes=(managed unmanaged)
+common_libs=()
 teardown_worker_pid=""
 
 session_file="${script_dir}/perf_session.txt"
@@ -62,6 +63,8 @@ OPTIONS
                                    default: all  (${PERF_LIBS[*]})
   -test        <test[,test,...]> Comma-separated test types to run
                                    default: all  (${PERF_TESTS[*]})
+  -common      <lib[,lib,...]>      Comma-separated libraries added to ALL test combos
+                                   These are appended to the per-testtype library set
   -mode        <managed|unmanaged>
                                  Workspace mode to run
                                    default: both managed and unmanaged
@@ -181,6 +184,10 @@ while [[ $# -gt 0 ]]; do
             auto_init=true
             shift
             ;;
+        -common|--common)
+            IFS=',' read -ra common_libs <<< "$2"
+            shift 2
+            ;;
         *)
             error_exit "Unknown option: $1"
             ;;
@@ -188,6 +195,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 export DRY_RUN
+export PERF_COMMON_LIBS="${common_libs[*]:-}"
 
 #######################################
 # Helper: cell lookup
@@ -220,6 +228,14 @@ validate_inputs() {
             [[ "${st}" == "${pt}" ]] && { found=true; break; }
         done
         [[ "${found}" == true ]] || error_exit "Unknown test: ${st} (valid: ${PERF_TESTS[*]})"
+    done
+
+    for cl in "${common_libs[@]}"; do
+        found=false
+        for pl in "${PERF_LIBS[@]}"; do
+            [[ "${cl}" == "${pl}" ]] && { found=true; break; }
+        done
+        [[ "${found}" == true ]] || error_exit "Unknown common lib: ${cl} (valid: ${PERF_LIBS[*]})"
     done
 }
 

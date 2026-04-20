@@ -60,6 +60,12 @@ perf_libs() {
 
 IFS=' ' read -ra libs <<< "$(perf_libs "${testtype}" "${lib}")"
 
+if [[ -n "${PERF_COMMON_LIBS:-}" ]]; then
+    for _cl in ${PERF_COMMON_LIBS}; do
+        libs+=("${_cl}")
+    done
+fi
+
 # Export for gdp workspace mock (DRY_RUN=1)
 export MOCK_GDP_LIBS="${libs[*]}"
 export MOCK_GDP_CELL="${cell}"

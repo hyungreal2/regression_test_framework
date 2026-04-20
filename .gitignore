@@ -2,6 +2,7 @@
 # Sensitive config
 # ----------------------------------------
 code/env.csh
+code/env_sample.sh
 
 # ----------------------------------------
 # Runtime outputs

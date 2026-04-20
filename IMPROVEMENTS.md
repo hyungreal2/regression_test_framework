@@ -13,6 +13,8 @@
 | Perf workflow | Single-shot script | Session-based init / run / teardown separation |
 | Workspace lookup | Fixed relative paths | `gdp find` dynamic lookup |
 | Race condition | Unhandled | `flock` on `gdp build workspace` |
+| GDP folder setup | Manual prerequisite | `ensure_gdp_folders()` auto-creates GDP_BASE / PERF_GDP_BASE |
+| Common libraries | Not supported | `-common LIB` adds shared libraries to all test combos |
 | Log management | Scattered | Centralised `log/` directory |
 | Error handling | Silent failures | Fail-fast with explicit messages |
 
@@ -254,3 +256,38 @@ Current (parallel init):
 | `code/perf_run_single.sh` | Not present | Dynamic workspace lookup, `run_vse()` |
 | `code/teardown_worker.sh` | Not present | Background teardown queue |
 | `.gitignore` | Minimal | Runtime outputs, logs, legacy/ excluded |
+
+---
+
+## 9. GDP Folder Auto-Setup
+
+```
+Legacy:
+  GDP_BASE and PERF_GDP_BASE had to exist before running init.
+  Missing folders caused opaque gdp errors.
+
+Current — ensure_gdp_folders() in perf_main.sh:
+  Before Phase 1 / Phase 2, checks each folder with gdp list.
+  If not found → gdp create folder (creates it automatically).
+  Skipped at DRY_RUN >= 1 (no real GDP calls).
+```
+
+---
+
+## 10. Common Libraries (`-common`)
+
+```
+Legacy:
+  No way to share a library across multiple test types.
+  Each test combo was fully independent.
+
+Current:
+  perf_main.sh -common LIB1,LIB2
+
+  checkHier/BM01 → libs: [BM01, LIB1, LIB2]
+  checkHier/BM02 → libs: [BM02, LIB1, LIB2]
+  renameRefLib/BM01 → libs: [BM01, BM01_ORIGIN, BM01_TARGET, LIB1, LIB2]
+
+  Validated against PERF_LIBS at startup (same as -lib).
+  Appended in perf_init.sh after perf_libs() expands the per-testtype set.
+```
