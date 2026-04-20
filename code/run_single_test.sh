@@ -14,7 +14,7 @@ test_id="$1"
 [[ -n "${uniqueid:-}"       ]] || error_exit "uniqueid is not exported from caller"
 
 num=$(format_num "${test_id}")
-testdir="$(pwd)/${regression_dir}/test_${num}"
+testdir="${regression_dir}/test_${num}"
 
 #######################################
 # uniquetestid per test (핵심!)
@@ -55,8 +55,8 @@ log "[TEST ${num}] uniquetestid=${uniquetestid}"
     cd "${workspace_name}"
 
     log "[TEST ${num}] Running virtuoso replay (replay_${num}.il)"
-    run_cmd "mkdir -p ../../../CDS_log/${uniqueid}"
-    run_vse "../replay_${num}.il" "../../../CDS_log/${uniqueid}/CDS_${num}.log"
+    run_cmd "mkdir -p \"${script_dir}/CDS_log/${uniqueid}\""
+    run_vse "${testdir}/replay_${num}.il" "${script_dir}/CDS_log/${uniqueid}/CDS_${num}.log"
 )
 
 log "[TEST ${num}] DONE"
