@@ -19,7 +19,7 @@
 | Race condition | Not applicable (sequential) | `flock` serialises `gdp build workspace` |
 | Session management | None — workspaces must pre-exist | `perf_session.txt` tracks workspace names |
 | GDP folder setup | Manual prerequisite | `ensure_gdp_folders()` auto-creates |
-| Replay generation | `createReplay.pl` (no mode/result args) | `createReplay.pl -managed <mode> -result <uniqueid>` |
+| Replay generation | `createReplay.pl` (no mode/result args) | `createReplay.pl -manage <mode> -result <uniqueid>` |
 | Replay output naming | `replay.<testtype>1.au` (single file) | `<testtype>_<lib>_<mode>.au` (per mode) |
 | Run-time filtering | Fixed at template-fill time | `-lib`, `-test`, `-mode` filter at any run |
 | Dry-run | None | 3-level `DRY_RUN` |
@@ -309,9 +309,9 @@ The same replay was used regardless of managed/unmanaged context.
 # code/perf_generate_replay.sh
 perl createReplay.pl \
     -lib "${lib}" -cell "${cell}" -template "${testtype}" \
-    -managed "${mode}" \    ← new: "managed" or "unmanaged"
+    -manage "${mode}" \     ← new: "managed" or "unmanaged"
     -result "${uniqueid}"   ← new: result path identifier
-mv "replay.${testtype}1.au" "${testtype}_${lib}_${mode}.au"
+mv "replay.${testtype}_${lib}_${mode}.au" "${testtype}_${lib}_${mode}.au"
 ```
 
 ```
@@ -442,6 +442,6 @@ Command                                                  Tests executed
 | `code/perf_init.sh` | Not present | Phase 2: dynamic libs, flock, correct UNMANAGED setup |
 | `code/perf_run_single.sh` | Not present | Phase 3: `gdp find`, workspace select, `run_vse()` |
 | `code/perf_teardown.sh` | `ICM_deleteProj.sh` (basic) | `gdp find` dynamic lookup, graceful not-found |
-| `code/perf_generate_replay.sh` | Not present (createReplay.pl called inline) | Phase 1: wraps createReplay.pl with `-managed`/`-result` |
+| `code/perf_generate_replay.sh` | Not present (createReplay.pl called inline) | Phase 1: wraps createReplay.pl with `-manage`/`-result` |
 | `code/env.sh` | Not present — all vars inline in generated main.sh | Central: `PERF_LIBS`, `PERF_TESTS`, `PERF_GDP_BASE`, `VSE_MODE` |
 | `code/common.sh` | Not present | `run_cmd()`, `run_vse()`, `log()`, `_mock_gdp_workspace()` |

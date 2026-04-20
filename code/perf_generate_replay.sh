@@ -45,10 +45,10 @@ log "[REPLAY] Generating ${testtype}_${lib}_${mode}.au (cell=${cell}, result=${u
 (
     cd "${replay_dir}"
 
-    run_cmd "perl createReplay.pl -lib \"${lib}\" -cell \"${cell}\" -template ${testtype} -managed \"${mode}\" -result \"${uniqueid}\""
+    run_cmd "perl createReplay.pl -lib \"${lib}\" -cell \"${cell}\" -template ${testtype} -manage \"${mode}\" -result \"${uniqueid}\""
 
-    # createReplay.pl outputs replay.<testtype>1.au → rename to <testtype>_<lib>_<mode>.au
-    local_out="replay.${testtype}1.au"
+    # createReplay.pl outputs replay.<testtype>_<lib>_<mode>.au → rename to <testtype>_<lib>_<mode>.au
+    local_out="replay.${testtype}_${lib}_${mode}.au"
     if [[ "${DRY_RUN}" -lt 2 ]]; then
         [[ -f "${local_out}" ]] || error_exit "Expected output not found: ${local_out}"
         mv "${local_out}" "${testtype}_${lib}_${mode}.au"
