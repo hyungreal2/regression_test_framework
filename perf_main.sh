@@ -230,13 +230,6 @@ validate_inputs() {
         [[ "${found}" == true ]] || error_exit "Unknown test: ${st} (valid: ${PERF_TESTS[*]})"
     done
 
-    for cl in "${common_libs[@]}"; do
-        found=false
-        for pl in "${PERF_LIBS[@]}"; do
-            [[ "${cl}" == "${pl}" ]] && { found=true; break; }
-        done
-        [[ "${found}" == true ]] || error_exit "Unknown common lib: ${cl} (valid: ${PERF_LIBS[*]})"
-    done
 }
 
 #######################################
