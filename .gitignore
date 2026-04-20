@@ -36,7 +36,6 @@ WORKSPACES_MANAGED/
 WORKSPACES_UNMANAGED/
 result/
 .gdp_ws_lock
-perf_session.txt
 
 # GenerateReplayScript: not managed in this repo (local reference only)
 GenerateReplayScript/

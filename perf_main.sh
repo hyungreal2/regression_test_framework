@@ -30,13 +30,11 @@ selected_modes=(managed unmanaged)
 common_libs=()
 teardown_worker_pid=""
 
-session_file="${script_dir}/perf_session.txt"
+active_ws=()   # "testtype lib ws_name" — populated by scan_workspaces()
 uniqueid=""
-session_ws=()   # entries: "testtype lib ws_name"
 
 #######################################
-# Trap: ensure any background work
-# is always waited on exit
+# Trap
 #######################################
 _cleanup() {
     if [[ -n "${teardown_worker_pid}" ]]; then
@@ -53,9 +51,10 @@ print_help() {
 Usage: $(basename "$0") [options]
 
 DESCRIPTION
-  Performance regression test runner with session-based workspace management.
-  By default, init is skipped and the existing session is reused. If no session
-  exists, an interactive prompt asks whether to run init first.
+  Performance regression test runner.
+  Workspaces are tracked by directory — no session file needed.
+  Each library/test combination can have at most one workspace at a time.
+  Re-running init for an existing combo skips it with a message.
 
 OPTIONS
   -h         | --help            Print this help message
@@ -63,7 +62,7 @@ OPTIONS
                                    default: all  (${PERF_LIBS[*]})
   -test        <test[,test,...]> Comma-separated test types to run
                                    default: all  (${PERF_TESTS[*]})
-  -common      <lib[,lib,...]>      Comma-separated libraries added to ALL test combos
+  -common      <lib[,lib,...]>   Comma-separated libraries added to ALL test combos
                                    These are appended to the per-testtype library set
   -mode        <managed|unmanaged>
                                  Workspace mode to run
@@ -75,60 +74,54 @@ OPTIONS
                                    2 = skip all commands (print only)
   -gen-replay | --gen-replay     Generate replay files only (Phase 1); no init or run
   -no-run    | --no-run          Run init phases only; skip test execution
-                                   Saves session to ${session_file}
-  -t         | --teardown        Run teardown after tests
-                                   Removes session file when done
-  -auto-init | --auto-init       If no session exists, run init automatically
-                                   without prompting (useful for scripted runs)
+  -t         | --teardown        Run teardown; -lib/-test filters apply
+                                   Can be used standalone: -no-run -t [-lib ...] [-test ...]
+  -auto-init | --auto-init       If no workspaces found, run init automatically
+                                   without prompting
 
-SESSION
-  The active session is stored in:
-    ${session_file}
+WORKSPACE TRACKING
+  Active workspaces live under:
+    ${script_dir}/WORKSPACES_MANAGED/
 
-  Format (one entry per line):
-    Line 1   : uniqueid (used for log/result directories)
-    Line 2+  : testtype lib ws_name (one workspace per line)
+  Each lib/test combination can exist at most once. If a workspace already
+  exists for a combo, init will skip it with a message.
 
-  Session lifecycle:
-    init only   perf_main.sh -no-run         → creates session file
-    run         perf_main.sh                 → reads session file
-    run+cleanup perf_main.sh -t              → reads, then removes session file
-    teardown    perf_main.sh -no-run -t      → removes session file (no run)
+  To list active workspaces:
+    ls ${script_dir}/WORKSPACES_MANAGED/
 
 OPTION COMBINATIONS
-  The -lib, -test, and -mode options can be combined freely at run time
-  to select a subset of the initialized workspaces.
+  -lib, -test, and -mode apply to run AND teardown.
 
-  Command                                    Tests run
-  ─────────────────────────────────────────  ──────────────────────────────────
-  $(basename "$0")                                        all session entries × managed + unmanaged
-  $(basename "$0") -lib BM02 -test checkHier              checkHier/BM02 × managed + unmanaged  (2)
-  $(basename "$0") -lib BM02 -test checkHier -mode managed  checkHier/BM02/managed only          (1)
-  $(basename "$0") -mode managed                          all session entries × managed only
-
-  Note: -lib and -test filter the run against the current session.
-  The session must already contain the requested lib/test combination
-  (i.e. it was included when -no-run was executed).
+  Command                                              Tests run
+  ───────────────────────────────────────────────────  ──────────────────────────────────
+  $(basename "$0")                                                  all workspaces × managed + unmanaged
+  $(basename "$0") -lib BM02 -test checkHier                        checkHier/BM02 × managed + unmanaged  (2)
+  $(basename "$0") -lib BM02 -test checkHier -mode managed          checkHier/BM02/managed only            (1)
+  $(basename "$0") -mode managed                                    all workspaces × managed only
+  $(basename "$0") -no-run -t -lib BM01                             teardown BM01 workspaces only
+  $(basename "$0") -no-run -t                                       teardown all workspaces
 
 WORKFLOW EXAMPLES
-  # Generate replay files only (no workspace setup)
+  # Generate replay files only
   $(basename "$0") -gen-replay -lib BM01 -test checkHier
 
-  # Step 1: Set up workspaces (do once)
-  $(basename "$0") -no-run -lib BM01 -test checkHier
+  # Step 1: Set up workspaces (skips combos that already exist)
+  $(basename "$0") -no-run -lib BM01,BM02 -test checkHier,renameRefLib
 
-  # Step 2: Run tests (repeat as needed)
+  # Step 2: Run tests (repeat with different filters)
   $(basename "$0")
   $(basename "$0") -lib BM01 -test checkHier
   $(basename "$0") -lib BM01 -test checkHier -mode managed
 
-  # Step 3: Tear down workspaces when done
+  # Step 3: Tear down specific workspaces
+  $(basename "$0") -no-run -t -lib BM01 -test checkHier
+  # Or tear down all
   $(basename "$0") -no-run -t
 
-  # Run everything in one shot (init → run → teardown)
+  # One shot: init → run → teardown
   $(basename "$0") -auto-init -t
 
-  # Dry-run to preview commands without executing
+  # Dry-run preview
   $(basename "$0") -d 2
 EOF
 }
@@ -229,19 +222,19 @@ validate_inputs() {
         done
         [[ "${found}" == true ]] || error_exit "Unknown test: ${st} (valid: ${PERF_TESTS[*]})"
     done
-
 }
 
 #######################################
-# Build combos_init (for generate + init phases only)
+# Build combos_init
 #######################################
 build_combos() {
     local testtype lib cell
+    local active_libs active_tests
 
     if [[ ${#selected_libs[@]} -eq 0 ]];  then active_libs=("${PERF_LIBS[@]}");  else active_libs=("${selected_libs[@]}");  fi
     if [[ ${#selected_tests[@]} -eq 0 ]]; then active_tests=("${PERF_TESTS[@]}"); else active_tests=("${selected_tests[@]}"); fi
 
-    combos_init=()  # "testtype lib cell"  — Phase 1 generate + Phase 2 init
+    combos_init=()
 
     for testtype in "${active_tests[@]}"; do
         for lib in "${active_libs[@]}"; do
@@ -252,81 +245,65 @@ build_combos() {
 }
 
 #######################################
-# Session: read from file into memory
+# Scan WORKSPACES_MANAGED for existing
+# workspaces matching -lib / -test filters.
+# Populates active_ws ("testtype lib ws_name").
 #######################################
-_read_session() {
-    local lines=()
-    mapfile -t lines < "${session_file}"
-    uniqueid="${lines[0]}"
-    session_ws=()
-    local i
-    for (( i=1; i<${#lines[@]}; i++ )); do
-        [[ -n "${lines[$i]}" ]] && session_ws+=("${lines[$i]}")
-    done
-    log "Session loaded: uniqueid=${uniqueid}, ${#session_ws[@]} workspace(s)"
-}
+scan_workspaces() {
+    local ws_base="${script_dir}/WORKSPACES_MANAGED"
+    active_ws=()
 
-#######################################
-# Session: save to file
-# Format:
-#   line 1  : uniqueid
-#   line 2+ : testtype lib ws_name
-#######################################
-save_session() {
-    local testtype lib cell
-    {
-        echo "${uniqueid}"
-        for combo in "${combos_init[@]}"; do
-            read -r testtype lib cell <<< "${combo}"
-            echo "${testtype} ${lib} ${PERF_PREFIX}_${testtype}_${lib}_${uniqueid}"
+    [[ -d "${ws_base}" ]] || return
+
+    local dname rest tt ll al at lib_ok test_ok
+    for dname in "${ws_base}"/*/; do
+        [[ -d "${dname}" ]] || continue
+        dname="$(basename "${dname}")"
+
+        # Must start with PERF_PREFIX_
+        rest="${dname#${PERF_PREFIX}_}"
+        [[ "${rest}" == "${dname}" ]] && continue
+
+        # Match against known testtype_lib_ combinations
+        local matched=false
+        for tt in "${PERF_TESTS[@]}"; do
+            for ll in "${PERF_LIBS[@]}"; do
+                if [[ "${rest}" == "${tt}_${ll}_"* ]]; then
+                    matched=true
+                    break 2
+                fi
+            done
         done
-    } > "${session_file}"
-    log "Session saved: ${session_file}"
-    _read_session
-}
+        [[ "${matched}" == true ]] || continue
 
-#######################################
-# Session: remove file
-#######################################
-remove_session() {
-    if [[ -f "${session_file}" ]]; then
-        rm -f "${session_file}"
-        log "Session removed: ${session_file}"
-    fi
-}
+        # Apply -lib filter
+        lib_ok=true
+        if [[ ${#selected_libs[@]} -gt 0 ]]; then
+            lib_ok=false
+            for al in "${selected_libs[@]}"; do
+                [[ "${ll}" == "${al}" ]] && { lib_ok=true; break; }
+            done
+        fi
+        [[ "${lib_ok}" == true ]] || continue
 
-#######################################
-# Session: load or prompt init
-#######################################
-load_or_init_session() {
-    if [[ -f "${session_file}" ]]; then
-        _read_session
-        return
-    fi
+        # Apply -test filter
+        test_ok=true
+        if [[ ${#selected_tests[@]} -gt 0 ]]; then
+            test_ok=false
+            for at in "${selected_tests[@]}"; do
+                [[ "${tt}" == "${at}" ]] && { test_ok=true; break; }
+            done
+        fi
+        [[ "${test_ok}" == true ]] || continue
 
-    local answer
-    if [[ "${auto_init}" == true ]]; then
-        log "No session found. --auto-init: running init automatically."
-        answer="y"
-    else
-        echo ""
-        echo "No active session found (${session_file} does not exist)."
-        echo -n "Run init to set up the environment? [y/N] "
-        read -r answer
-    fi
+        active_ws+=("${tt} ${ll} ${dname}")
+    done
 
-    if [[ "${answer}" =~ ^[Yy]$ ]]; then
-        run_init_phases
-    else
-        error_exit "No session. Run with -no-run to initialise the environment first."
-    fi
+    log "Found ${#active_ws[@]} workspace(s) in WORKSPACES_MANAGED (after filter)"
 }
 
 #######################################
 # Ensure GDP base folders exist
-# Checks GDP_BASE and PERF_GDP_BASE in order;
-# creates any that are missing.
-# Skipped at DRY_RUN >= 1 (no real GDP calls).
 #######################################
 ensure_gdp_folders() {
     if [[ "${DRY_RUN}" -ge 1 ]]; then
@@ -364,10 +341,27 @@ generate_replays() {
 
 #######################################
 # Phase 2: Init workspaces (parallel)
+# Skips combos where a workspace already exists.
 #######################################
 init_workspaces() {
-    log "--- Phase 2: Init workspaces (jobs=${jobs}) ---"
-    printf "%s\n" "${combos_init[@]}" | \
+    local testtype lib cell run_combos=()
+
+    for combo in "${combos_init[@]}"; do
+        read -r testtype lib cell <<< "${combo}"
+        if compgen -G "${script_dir}/WORKSPACES_MANAGED/${PERF_PREFIX}_${testtype}_${lib}_*" > /dev/null 2>&1; then
+            log "[SKIP] Workspace already exists for ${testtype}/${lib}"
+        else
+            run_combos+=("${combo}")
+        fi
+    done
+
+    if [[ ${#run_combos[@]} -eq 0 ]]; then
+        log "All requested workspaces already exist. Nothing to init."
+        return
+    fi
+
+    log "--- Phase 2: Init workspaces (${#run_combos[@]} new, jobs=${jobs}) ---"
+    printf "%s\n" "${run_combos[@]}" | \
         xargs -n3 -P"${jobs}" bash -c "
             bash \"${script_dir}/code/perf_init.sh\" \"\$1\" \"\$2\" \"\$3\" \"${uniqueid}\" -d \"${DRY_RUN}\"
         " _
@@ -375,37 +369,18 @@ init_workspaces() {
 
 #######################################
 # Phase 3: Run tests (parallel)
-# Combos built from session_ws × selected_modes.
-# Passes ws_name explicitly so perf_run_single
-# does not need to reconstruct it from uniqueid.
 #######################################
 run_tests() {
     local testtype lib ws_name combos_run=()
-    local lib_match test_match al at
 
-    for entry in "${session_ws[@]}"; do
+    scan_workspaces
+
+    if [[ ${#active_ws[@]} -eq 0 ]]; then
+        error_exit "No workspaces found matching the specified filters. Run init first with -no-run."
+    fi
+
+    for entry in "${active_ws[@]}"; do
         read -r testtype lib ws_name <<< "${entry}"
-
-        # Filter by -lib (if specified)
-        lib_match=true
-        if [[ ${#selected_libs[@]} -gt 0 ]]; then
-            lib_match=false
-            for al in "${selected_libs[@]}"; do
-                [[ "${lib}" == "${al}" ]] && { lib_match=true; break; }
-            done
-        fi
-        [[ "${lib_match}" == true ]] || continue
-
-        # Filter by -test (if specified)
-        test_match=true
-        if [[ ${#selected_tests[@]} -gt 0 ]]; then
-            test_match=false
-            for at in "${selected_tests[@]}"; do
-                [[ "${testtype}" == "${at}" ]] && { test_match=true; break; }
-            done
-        fi
-        [[ "${test_match}" == true ]] || continue
-
         for mode in "${selected_modes[@]}"; do
             combos_run+=("${testtype} ${lib} ${mode} ${ws_name}")
         done
@@ -420,16 +395,23 @@ run_tests() {
 
 #######################################
 # Phase 5: Teardown (parallel)
-# ws_names read directly from session_ws.
+# Respects -lib / -test filters via scan_workspaces().
 #######################################
 teardown_workspaces() {
     local ws_names=()
 
-    for entry in "${session_ws[@]}"; do
+    scan_workspaces
+
+    if [[ ${#active_ws[@]} -eq 0 ]]; then
+        log "No workspaces found matching the specified filters. Nothing to teardown."
+        return
+    fi
+
+    for entry in "${active_ws[@]}"; do
         ws_names+=("$(awk '{print $3}' <<< "${entry}")")
     done
 
-    log "--- Phase 5: Teardown (jobs=${jobs}) ---"
+    log "--- Phase 5: Teardown (${#ws_names[@]} workspace(s), jobs=${jobs}) ---"
     printf "%s\n" "${ws_names[@]}" | \
         xargs -n1 -P"${jobs}" bash -c "
             bash \"${script_dir}/code/perf_teardown.sh\" \"\$1\" -d \"${DRY_RUN}\"
@@ -444,8 +426,7 @@ run_init_phases() {
     uniqueid="$(date +%Y%m%d_%H%M%S)_${USER_NAME}"
     log "uniqueid: ${uniqueid}"
 
-    run_cmd "mkdir -p WORKSPACES_MANAGED WORKSPACES_UNMANAGED"
-    run_cmd "mkdir -p result/${uniqueid} CDS_log/${uniqueid}"
+    run_cmd "mkdir -p \"${script_dir}/WORKSPACES_MANAGED\" \"${script_dir}/WORKSPACES_UNMANAGED\""
 
     if [[ "${DRY_RUN}" -lt 2 ]]; then
         echo "${uniqueid}" > "${script_dir}/code/date_virtuosoVer.txt"
@@ -454,7 +435,30 @@ run_init_phases() {
     ensure_gdp_folders
     generate_replays
     init_workspaces
-    save_session
+}
+
+#######################################
+# Ensure workspaces exist (or init them)
+#######################################
+ensure_workspaces() {
+    scan_workspaces
+    [[ ${#active_ws[@]} -gt 0 ]] && return
+
+    local answer
+    if [[ "${auto_init}" == true ]]; then
+        log "No workspaces found. --auto-init: running init automatically."
+        answer="y"
+    else
+        echo ""
+        echo "No active workspaces found in WORKSPACES_MANAGED/."
+        echo -n "Run init to set up the environment? [y/N] "
+        read -r answer
+    fi
+
+    [[ "${answer}" =~ ^[Yy]$ ]] || \
+        error_exit "No workspaces. Run with -no-run to initialise the environment first."
+
+    run_init_phases
 }
 
 #######################################
@@ -467,7 +471,6 @@ build_combos
 log "Init matrix: ${#combos_init[@]} workspace(s) (testtype×lib)"
 
 if [[ "${do_gen_replay}" == true ]]; then
-    # -gen-replay: Phase 1 only; uniqueid used as -result value for createReplay.pl
     uniqueid="$(date +%Y%m%d_%H%M%S)_${USER_NAME}"
     log "uniqueid: ${uniqueid}"
     generate_replays
@@ -479,7 +482,11 @@ elif [[ "${do_run}" == false && "${do_teardown}" == false ]]; then
     log "Init complete. Run without -no-run to execute tests."
 
 elif [[ "${do_run}" == true ]]; then
-    load_or_init_session
+    ensure_workspaces
+
+    uniqueid="$(date +%Y%m%d_%H%M%S)_${USER_NAME}"
+    log "Run uniqueid: ${uniqueid}"
+    run_cmd "mkdir -p \"${script_dir}/result/${uniqueid}\" \"${script_dir}/CDS_log/${uniqueid}\""
 
     run_tests
 
@@ -489,15 +496,11 @@ elif [[ "${do_run}" == true ]]; then
 
     if [[ "${do_teardown}" == true ]]; then
         teardown_workspaces
-        remove_session
     fi
 
 elif [[ "${do_run}" == false && "${do_teardown}" == true ]]; then
-    # -no-run -t: teardown only
-    [[ -f "${session_file}" ]] || error_exit "No session found. Cannot teardown without an active session."
-    _read_session
+    # -no-run -t: teardown only, with optional -lib/-test filters
     teardown_workspaces
-    remove_session
 fi
 
 log "perf_main.sh DONE"
