@@ -131,12 +131,20 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
     # UNMANAGED: cds.lib = MANAGED's cds.libicm (no cds.libicm in UNMANAGED)
     if [[ -e "${managed_ws}/cds.libicm" ]]; then
         run_cmd "cp \"${managed_ws}/cds.libicm\" \"${unmanaged_ws}/cds.lib\""
+
+        # Patch paths: WORKSPACES_MANAGED → WORKSPACES_UNMANAGED
+        log "[INIT] Patching cds.lib: WORKSPACES_MANAGED → WORKSPACES_UNMANAGED"
+        sed -i "s|WORKSPACES_MANAGED|WORKSPACES_UNMANAGED|g" "${unmanaged_ws}/cds.lib"
     fi
 
     # mv oa MANAGED → UNMANAGED
     if [[ -d "${managed_ws}/oa" ]]; then
         log "[INIT] Moving oa: MANAGED → UNMANAGED"
         run_cmd "mv \"${managed_ws}/oa\" \"${unmanaged_ws}/oa\""
+
+        # Grant write permission to user and group (synced files are r--r--r--)
+        log "[INIT] Granting ug+w on UNMANAGED oa"
+        run_cmd "chmod -R ug+w \"${unmanaged_ws}/oa\""
 
         # UNMANAGED: patch cdsinfo.tag — DMTYPE p4 → DMTYPE none
         log "[INIT] Patching cdsinfo.tag: DMTYPE p4 → DMTYPE none (UNMANAGED)"
@@ -145,12 +153,9 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
             sed -i 's/DMTYPE p4/DMTYPE none/g' "${tag}"
         done < <(find "${unmanaged_ws}/oa" -name "cdsinfo.tag" -print0)
 
-        # rebuild MANAGED to restore oa
-        log "[INIT] Rebuilding MANAGED workspace to restore oa"
-        (
-            cd "${managed_ws}" || exit 1
-            run_cmd "gdp rebuild workspace ."
-        )
+        # Restore MANAGED oa via force-sync
+        log "[INIT] Restoring MANAGED oa: xlp4 sync -f"
+        run_cmd "xlp4 -c \"${ws_name}\" -q sync -f"
     else
         log "[INIT] No oa dir in managed_ws (skipped at dry-run level)"
     fi
