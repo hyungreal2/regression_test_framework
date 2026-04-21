@@ -368,6 +368,29 @@ init_workspaces() {
 }
 
 #######################################
+# Copy fresh replay files to existing workspaces
+# Called at run time after generate_replays() so
+# the .au files contain the current run uniqueid.
+#######################################
+copy_replays_to_workspaces() {
+    local testtype lib ws_name managed_ws unmanaged_ws replay_managed replay_unmanaged
+
+    log "--- Copying fresh replay files to workspaces ---"
+    for entry in "${active_ws[@]}"; do
+        read -r testtype lib ws_name <<< "${entry}"
+        managed_ws="${script_dir}/WORKSPACES_MANAGED/${ws_name}"
+        unmanaged_ws="${script_dir}/WORKSPACES_UNMANAGED/${ws_name}"
+        replay_managed="${script_dir}/GenerateReplayScript/${testtype}_${lib}_managed.au"
+        replay_unmanaged="${script_dir}/GenerateReplayScript/${testtype}_${lib}_unmanaged.au"
+
+        log "[REPLAY] → MANAGED:   ${ws_name}"
+        run_cmd "cp \"${replay_managed}\" \"${managed_ws}/${testtype}_${lib}.au\""
+        log "[REPLAY] → UNMANAGED: ${ws_name}"
+        run_cmd "cp \"${replay_unmanaged}\" \"${unmanaged_ws}/${testtype}_${lib}.au\""
+    done
+}
+
+#######################################
 # Phase 3: Run tests (parallel)
 #######################################
 run_tests() {
@@ -482,11 +505,14 @@ elif [[ "${do_run}" == false && "${do_teardown}" == false ]]; then
     log "Init complete. Run without -no-run to execute tests."
 
 elif [[ "${do_run}" == true ]]; then
-    ensure_workspaces
+    ensure_workspaces  # populates active_ws
 
     uniqueid="$(date +%Y%m%d_%H%M%S)_${USER_NAME}"
     log "Run uniqueid: ${uniqueid}"
     run_cmd "mkdir -p \"${script_dir}/result/${uniqueid}\" \"${script_dir}/CDS_log/${uniqueid}\""
+
+    generate_replays            # Phase 1: regenerate with current uniqueid
+    copy_replays_to_workspaces  # push fresh .au files into each workspace
 
     run_tests
 
