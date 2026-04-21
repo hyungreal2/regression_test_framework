@@ -101,7 +101,7 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
         flock 9
         log "[INIT] Lock acquired for gdp build workspace: ${ws_name}"
         cd "${script_dir}/WORKSPACES_MANAGED" || exit 1
-        run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${ws_name}\" --location \"$(pwd)\""
+        build_gdp_workspace "${ws_name}" "${config}" "$(pwd)"
     ) 9>"${script_dir}/.gdp_ws_lock"
 
     #######################################

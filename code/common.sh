@@ -126,6 +126,40 @@ run_vse() {
 }
 
 #######################################
+# GDP workspace build with retry
+# Usage: build_gdp_workspace <ws_name> <config> [location]
+# - Runs gdp build workspace; after each attempt sleeps 10s and
+#   verifies the workspace exists via gdp find.
+# - Retries up to GDP_WS_MAX_ATTEMPTS times (default 5).
+# - At DRY_RUN>=1 delegates to run_cmd without retry.
+#######################################
+build_gdp_workspace() {
+    local ws_name="$1" config="$2" location="${3:-}"
+    local cmd="gdp build workspace --content \"${config}\" --gdp-name \"${ws_name}\""
+    [[ -n "${location}" ]] && cmd="${cmd} --location \"${location}\""
+
+    if [[ "${DRY_RUN:-0}" -ge 1 ]]; then
+        run_cmd "${cmd}"
+        return
+    fi
+
+    local max_attempts="${GDP_WS_MAX_ATTEMPTS:-5}"
+    local attempt=0
+    while [[ ${attempt} -lt ${max_attempts} ]]; do
+        attempt=$(( attempt + 1 ))
+        log "[WS] gdp build workspace attempt ${attempt}/${max_attempts}: ${ws_name}"
+        eval "${cmd}" || true
+        sleep 10
+        if gdp find --type=workspace ":=${ws_name}" > /dev/null 2>&1; then
+            log "[WS] Workspace confirmed: ${ws_name}"
+            return 0
+        fi
+        log "[WS] Workspace not found after attempt ${attempt}, retrying..."
+    done
+    error_exit "gdp build workspace failed after ${max_attempts} attempts: ${ws_name}"
+}
+
+#######################################
 # Safe rm
 #######################################
 safe_rm_rf() {
