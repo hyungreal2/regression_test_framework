@@ -56,6 +56,7 @@ Usage: $(basename "$0") [options]
 
 Options:
   -h     | --help             Print this help message
+  -lib   | --library <name>   Library name           (default: ${libname})
   -ws    | --ws_name <name>   Workspace name         (default: ${WS_PREFIX})
   -proj  | --proj_prefix <p>  Project prefix         (default: ${PROJ_PREFIX})
   -cell  | --cell <name>      Cell name              (default: ${cellname})
@@ -75,6 +76,10 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
             print_help
             exit 0
+            ;;
+        -lib|--library)
+            libname="$2"
+            shift 2
             ;;
         -ws|--ws_name)
             WS_PREFIX="$2"
