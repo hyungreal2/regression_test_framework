@@ -115,6 +115,10 @@ while [[ $# -gt 0 ]]; do
         -j|--jobs)
             jobs="$2"
             shift 2
+            if (( jobs > MAX_JOBS )); then
+                log "WARNING: -j ${jobs} exceeds MAX_JOBS (${MAX_JOBS}); clamping to ${MAX_JOBS}"
+                jobs=${MAX_JOBS}
+            fi
             ;;
         -t|--teardown)
             do_teardown=true

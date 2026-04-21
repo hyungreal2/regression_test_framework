@@ -32,6 +32,9 @@ CDS_LIB_MGR="/appl/LINUX/ICM/gdpxl.latest/SKILL/cdsLibMgr.il"
 # Dry-run level: 0=run all, 1=skip gdp/xlp4/rm, 2=skip all
 DRY_RUN=${DRY_RUN:-0}
 
+# Maximum parallel jobs (hard cap applied to -j)
+MAX_JOBS=${MAX_JOBS:-32}
+
 # VSE execution mode: "run" (vse_run, synchronous) or "sub" (vse_sub + bwait)
 VSE_MODE="${VSE_MODE:-run}"
 

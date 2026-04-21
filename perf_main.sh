@@ -161,6 +161,10 @@ while [[ $# -gt 0 ]]; do
             [[ "${2:-}" =~ ^[0-9]+$ ]] || error_exit "-j requires a positive integer"
             jobs="$2"
             shift 2
+            if (( jobs > MAX_JOBS )); then
+                log "WARNING: -j ${jobs} exceeds MAX_JOBS (${MAX_JOBS}); clamping to ${MAX_JOBS}"
+                jobs=${MAX_JOBS}
+            fi
             ;;
         -gen-replay|--gen-replay)
             do_gen_replay=true
