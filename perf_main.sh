@@ -518,8 +518,8 @@ elif [[ "${do_run}" == true ]]; then
     run_tests
 
     log "All tests finished."
-    log "Generating summary for result/${uniqueid}"
-    bash "${script_dir}/code/summary.sh" -d "${DRY_RUN}" "${uniqueid}"
+    log "Generating perf summary for CDS_log/${uniqueid}"
+    bash "${script_dir}/code/perf_summary.sh" -d "${DRY_RUN}" "${uniqueid}"
 
     if [[ "${do_teardown}" == true ]]; then
         teardown_workspaces

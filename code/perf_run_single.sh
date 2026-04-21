@@ -65,11 +65,22 @@ fi
 # Run VSE inside workspace
 #######################################
 log "[RUN] Running VSE (mode=${VSE_MODE:-run}) in ${ws_dir}"
+
+t_start=$(date +%s)
+
 (
     cd "${ws_dir}" || exit 1
 
     run_cmd "mkdir -p \"${script_dir}/CDS_log/${uniqueid}\""
     run_vse "./${testtype}_${lib}.au" "${script_dir}/CDS_log/${uniqueid}/${testtype}_${lib}_${mode}.log"
 )
+
+t_end=$(date +%s)
+elapsed=$(( t_end - t_start ))
+log "[RUN] Elapsed: ${elapsed}s (${testtype}/${lib}/${mode})"
+
+# Append to shared timing file (atomic single-line append)
+printf "%s\t%s\t%s\t%d\n" "${testtype}" "${lib}" "${mode}" "${elapsed}" \
+    >> "${script_dir}/CDS_log/${uniqueid}/timing.tsv"
 
 log "[RUN] Done: ${testtype}/${lib}/${mode}"
