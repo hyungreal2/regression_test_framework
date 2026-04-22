@@ -150,7 +150,7 @@ build_gdp_workspace() {
         log "[WS] gdp build workspace attempt ${attempt}/${max_attempts}: ${ws_name}"
         eval "${cmd}" || true
         sleep 10
-        if gdp find --type=workspace ":=${ws_name}" > /dev/null 2>&1; then
+        if [[ -n "$(gdp find --type=workspace ":=${ws_name}" 2>/dev/null)" ]]; then
             log "[WS] Workspace confirmed: ${ws_name}"
             return 0
         fi

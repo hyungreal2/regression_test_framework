@@ -163,7 +163,7 @@ ensure_gdp_folders() {
     local folder
     for folder in "${GDP_BASE}" "${CICO_GDP_BASE}"; do
         log "Checking GDP folder: ${folder}"
-        if gdp list "${folder}" > /dev/null 2>&1; then
+        if [[ -n "$(gdp list "${folder}" 2>/dev/null)" ]]; then
             log "  → exists: ${folder}"
         else
             log "  → not found, creating: ${folder}"
