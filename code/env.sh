@@ -39,6 +39,13 @@ MAX_JOBS=${MAX_JOBS:-32}
 VSE_MODE="${VSE_MODE:-run}"
 
 #######################################
+# Functional test config
+#######################################
+FUNC_WS_PREFIX="func_ws_${USER_NAME}"
+FUNC_PROJ_PREFIX="func_${USER_NAME}"
+FUNC_GDP_BASE="${GDP_BASE}/func"
+
+#######################################
 # Perf test config
 #######################################
 PERF_PREFIX="perf"

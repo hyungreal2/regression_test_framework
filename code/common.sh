@@ -178,3 +178,7 @@ safe_rm_rf() {
 format_num() {
     printf "%03d" "$1"
 }
+
+format_num_width() {
+    printf "%0${2}d" "$1"
+}

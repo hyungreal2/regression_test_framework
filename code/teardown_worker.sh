@@ -11,8 +11,9 @@ source "${script_dir}/code/common.sh"
 #######################################
 queue_file="$1"
 done_flag="$2"
+teardown_script="${3:-${script_dir}/code/teardown.sh}"
 
-log "[WORKER] started (queue=${queue_file})"
+log "[WORKER] started (queue=${queue_file} teardown=${teardown_script})"
 
 #######################################
 # Process queue until main is done
@@ -27,7 +28,7 @@ while true; do
 
         export uniquetestid
         log "[WORKER] tearing down uniquetestid=${uniquetestid}"
-        bash "${script_dir}/code/teardown.sh" -d "${DRY_RUN:-0}"
+        bash "${teardown_script}" -d "${DRY_RUN:-0}"
 
     elif [[ -f "${done_flag}" ]]; then
         log "[WORKER] queue empty and main done. Exiting."
