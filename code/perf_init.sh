@@ -97,7 +97,7 @@ done
 #######################################
 log "[INIT] Creating MANAGED workspace: ${ws_name}"
 if [[ "${DRY_RUN}" -lt 2 ]]; then
-    run_cmd "gdp create workspace --content \"${config}\" --gdp-name \"${ws_name}\" --location \"${script_dir}/WORKSPACES_MANAGED\""
+    run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${ws_name}\" --location \"${script_dir}/WORKSPACES_MANAGED\""
 
     #######################################
     # Symlinks in MANAGED workspace
@@ -107,7 +107,7 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
     run_cmd "ln -sf \"${CDS_LIB_MGR}\" \"${managed_ws_build}/\""
     run_cmd "ln -sf \"${script_dir}/code/.cdsenv\" \"${managed_ws_build}/.cdsenv\""
 else
-    log "[DRY-RUN:2] Would: gdp create workspace --gdp-name ${ws_name}"
+    log "[DRY-RUN:2] Would: gdp build workspace --gdp-name ${ws_name}"
 fi
 
 #######################################

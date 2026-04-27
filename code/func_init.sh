@@ -35,6 +35,6 @@ done
 workspace_name="${FUNC_WS_PREFIX}_${uniquetestid}"
 
 log "Creating workspace: ${workspace_name}"
-run_cmd "gdp create workspace --content \"${config}\" --gdp-name \"${workspace_name}\" --location \"$(pwd)\""
+run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${workspace_name}\" --location \"$(pwd)\""
 
 log "func_init completed (uniquetestid=${uniquetestid})"
