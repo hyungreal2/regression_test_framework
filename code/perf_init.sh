@@ -76,7 +76,7 @@ log "[INIT] ${testtype}/${lib}/${cell} → ws=${ws_name}"
 # GDP: create project / variant / libtype / config
 #######################################
 log "[INIT] Creating GDP project: ${proj_path}"
-run_cmd "gdp create project ${proj_path}"
+create_gdp_project "${proj_path}"
 run_cmd "gdp create variant ${proj_path}/rev01"
 run_cmd "gdp create libtype ${proj_path}/rev01/oa --libspec oa"
 run_cmd "gdp create config ${config}"
@@ -97,12 +97,7 @@ done
 #######################################
 log "[INIT] Creating MANAGED workspace: ${ws_name}"
 if [[ "${DRY_RUN}" -lt 2 ]]; then
-    (
-        flock 9
-        log "[INIT] Lock acquired for gdp create workspace: ${ws_name}"
-        cd "${script_dir}/WORKSPACES_MANAGED" || exit 1
-        create_gdp_workspace "${ws_name}" "${config}" "$(pwd)"
-    ) 9>"${script_dir}/.gdp_ws_lock"
+    create_gdp_workspace "${ws_name}" "${config}" "${script_dir}/WORKSPACES_MANAGED"
 
     #######################################
     # Symlinks in MANAGED workspace

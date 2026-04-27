@@ -24,7 +24,7 @@ config="${CICO_GDP_BASE}/${proj_name}/rev01/dev"
 #######################################
 log "Creating project: ${proj_name}"
 #run_cmd "gdp create project --user=gdpxl_manager ${CICO_GDP_BASE}/${proj_name}"
-run_cmd "gdp create project ${CICO_GDP_BASE}/${proj_name}"
+create_gdp_project "${CICO_GDP_BASE}/${proj_name}"
 
 #log "Assigning role projman: ${proj_name}"
 #run_cmd "gdp assign role --user=gdpxl_manager ${CICO_GDP_BASE}/${proj_name} ${USER} projman"
@@ -58,11 +58,6 @@ done
 workspace_name="${WS_PREFIX}_${uniquetestid}"
 
 log "Creating workspace: ${workspace_name}"
-
-(
-    flock 9
-    log "Lock acquired for gdp create workspace: ${workspace_name}"
-    create_gdp_workspace "${workspace_name}" "${config}" "$(pwd)"
-) 9>"${script_dir}/.gdp_ws_lock"
+create_gdp_workspace "${workspace_name}" "${config}" "$(pwd)"
 
 log "Init completed (uniquetestid=${uniquetestid})"

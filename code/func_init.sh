@@ -13,7 +13,7 @@ proj_name="${FUNC_PROJ_PREFIX}_${uniquetestid}"
 config="${FUNC_GDP_BASE}/${proj_name}/rev01/dev"
 
 log "Creating project: ${proj_name}"
-run_cmd "gdp create project ${FUNC_GDP_BASE}/${proj_name}"
+create_gdp_project "${FUNC_GDP_BASE}/${proj_name}"
 
 log "Creating variant: ${proj_name}/rev01"
 run_cmd "gdp create variant ${FUNC_GDP_BASE}/${proj_name}/rev01"
@@ -35,10 +35,6 @@ done
 workspace_name="${FUNC_WS_PREFIX}_${uniquetestid}"
 
 log "Creating workspace: ${workspace_name}"
-(
-    flock 9
-    log "Lock acquired for gdp create workspace: ${workspace_name}"
-    create_gdp_workspace "${workspace_name}" "${config}" "$(pwd)"
-) 9>"${script_dir}/.gdp_ws_lock"
+create_gdp_workspace "${workspace_name}" "${config}" "$(pwd)"
 
 log "func_init completed (uniquetestid=${uniquetestid})"

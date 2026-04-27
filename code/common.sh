@@ -160,6 +160,39 @@ create_gdp_workspace() {
 }
 
 #######################################
+# GDP project creation with retry
+# Usage: create_gdp_project <proj_path>
+# - Runs gdp create project; after each attempt sleeps 10s and
+#   verifies the project exists via gdp list.
+# - Retries up to GDP_PROJ_MAX_ATTEMPTS times (default 5).
+# - At DRY_RUN>=1 delegates to run_cmd without retry.
+#######################################
+create_gdp_project() {
+    local proj_path="$1"
+    local cmd="gdp create project ${proj_path}"
+
+    if [[ "${DRY_RUN:-0}" -ge 1 ]]; then
+        run_cmd "${cmd}"
+        return
+    fi
+
+    local max_attempts="${GDP_PROJ_MAX_ATTEMPTS:-5}"
+    local attempt=0
+    while [[ ${attempt} -lt ${max_attempts} ]]; do
+        attempt=$(( attempt + 1 ))
+        log "[PROJ] gdp create project attempt ${attempt}/${max_attempts}: ${proj_path}"
+        eval "${cmd}" || true
+        sleep 10
+        if [[ -n "$(gdp list "${proj_path}" 2>/dev/null)" ]]; then
+            log "[PROJ] Project confirmed: ${proj_path}"
+            return 0
+        fi
+        log "[PROJ] Project not found after attempt ${attempt}, retrying..."
+    done
+    error_exit "gdp create project failed after ${max_attempts} attempts: ${proj_path}"
+}
+
+#######################################
 # Safe rm
 #######################################
 safe_rm_rf() {
