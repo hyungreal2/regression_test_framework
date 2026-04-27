@@ -370,7 +370,7 @@ prepare_tests() {
     for i in "${tests[@]}"; do
         local num
         num=$(format_num_width "${i}" "${pad_width}")
-        local testdir="${regression_dir}/test_${num}"
+        local testdir="${regression_dir}/${mode}/test_${num}"
 
         log "Preparing test ${num}: ${testdir}"
         run_cmd "mkdir -p \"${testdir}\""
