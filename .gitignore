@@ -49,3 +49,8 @@ legacy/
 __pycache__/
 *.pyc
 *.pyo
+
+# Editor
+*.swp
+*.swo
+*~
