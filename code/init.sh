@@ -57,12 +57,12 @@ done
 #######################################
 workspace_name="${WS_PREFIX}_${uniquetestid}"
 
-log "Building workspace: ${workspace_name}"
+log "Creating workspace: ${workspace_name}"
 
 (
     flock 9
-    log "Lock acquired for gdp build workspace: ${workspace_name}"
-    build_gdp_workspace "${workspace_name}" "${config}" "$(pwd)"
+    log "Lock acquired for gdp create workspace: ${workspace_name}"
+    create_gdp_workspace "${workspace_name}" "${config}" "$(pwd)"
 ) 9>"${script_dir}/.gdp_ws_lock"
 
 log "Init completed (uniquetestid=${uniquetestid})"

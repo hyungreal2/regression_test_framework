@@ -95,13 +95,13 @@ done
 # flock: serialise p4 protect table updates
 # across parallel perf_init.sh processes
 #######################################
-log "[INIT] Building MANAGED workspace: ${ws_name}"
+log "[INIT] Creating MANAGED workspace: ${ws_name}"
 if [[ "${DRY_RUN}" -lt 2 ]]; then
     (
         flock 9
-        log "[INIT] Lock acquired for gdp build workspace: ${ws_name}"
+        log "[INIT] Lock acquired for gdp create workspace: ${ws_name}"
         cd "${script_dir}/WORKSPACES_MANAGED" || exit 1
-        build_gdp_workspace "${ws_name}" "${config}" "$(pwd)"
+        create_gdp_workspace "${ws_name}" "${config}" "$(pwd)"
     ) 9>"${script_dir}/.gdp_ws_lock"
 
     #######################################
@@ -112,7 +112,7 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
     run_cmd "ln -sf \"${CDS_LIB_MGR}\" \"${managed_ws_build}/\""
     run_cmd "ln -sf \"${script_dir}/code/.cdsenv\" \"${managed_ws_build}/.cdsenv\""
 else
-    log "[DRY-RUN:2] Would: gdp build workspace --gdp-name ${ws_name}"
+    log "[DRY-RUN:2] Would: gdp create workspace --gdp-name ${ws_name}"
 fi
 
 #######################################

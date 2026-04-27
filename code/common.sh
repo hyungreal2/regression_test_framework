@@ -71,7 +71,7 @@ run_cmd() {
         1)
             case "${first_word}" in
                 gdp|xlp4|rm|vse_sub|vse_run)
-                    if [[ "${cmd}" == *"gdp build workspace"* ]]; then
+                    if [[ "${cmd}" == *"gdp create workspace"* ]]; then
                         local gdp_name
                         gdp_name=$(grep -oP '(?<=--gdp-name\s)\S+' <<< "${cmd}" | tr -d "\"'" || true)
                         if [[ -n "${gdp_name}" ]]; then
@@ -126,16 +126,16 @@ run_vse() {
 }
 
 #######################################
-# GDP workspace build with retry
-# Usage: build_gdp_workspace <ws_name> <config> [location]
-# - Runs gdp build workspace; after each attempt sleeps 10s and
+# GDP workspace creation with retry
+# Usage: create_gdp_workspace <ws_name> <config> [location]
+# - Runs gdp create workspace; after each attempt sleeps 10s and
 #   verifies the workspace exists via gdp find.
 # - Retries up to GDP_WS_MAX_ATTEMPTS times (default 5).
 # - At DRY_RUN>=1 delegates to run_cmd without retry.
 #######################################
-build_gdp_workspace() {
+create_gdp_workspace() {
     local ws_name="$1" config="$2" location="${3:-}"
-    local cmd="gdp build workspace --content \"${config}\" --gdp-name \"${ws_name}\""
+    local cmd="gdp create workspace --content \"${config}\" --gdp-name \"${ws_name}\""
     [[ -n "${location}" ]] && cmd="${cmd} --location \"${location}\""
 
     if [[ "${DRY_RUN:-0}" -ge 1 ]]; then
@@ -147,7 +147,7 @@ build_gdp_workspace() {
     local attempt=0
     while [[ ${attempt} -lt ${max_attempts} ]]; do
         attempt=$(( attempt + 1 ))
-        log "[WS] gdp build workspace attempt ${attempt}/${max_attempts}: ${ws_name}"
+        log "[WS] gdp create workspace attempt ${attempt}/${max_attempts}: ${ws_name}"
         eval "${cmd}" || true
         sleep 10
         if [[ -n "$(gdp find --type=workspace ":=${ws_name}" 2>/dev/null)" ]]; then
@@ -156,7 +156,7 @@ build_gdp_workspace() {
         fi
         log "[WS] Workspace not found after attempt ${attempt}, retrying..."
     done
-    error_exit "gdp build workspace failed after ${max_attempts} attempts: ${ws_name}"
+    error_exit "gdp create workspace failed after ${max_attempts} attempts: ${ws_name}"
 }
 
 #######################################
