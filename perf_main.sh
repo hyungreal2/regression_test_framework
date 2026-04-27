@@ -40,6 +40,7 @@ _cleanup() {
     if [[ -n "${teardown_worker_pid}" ]]; then
         wait "${teardown_worker_pid}" 2>/dev/null || true
     fi
+    rm -f "${script_dir}/.gdp_ws_lock" 2>/dev/null || true
 }
 trap '_cleanup' EXIT INT TERM
 

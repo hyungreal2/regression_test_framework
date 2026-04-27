@@ -97,7 +97,7 @@ done
 #######################################
 log "[INIT] Creating MANAGED workspace: ${ws_name}"
 if [[ "${DRY_RUN}" -lt 2 ]]; then
-    create_gdp_workspace "${ws_name}" "${config}" "${script_dir}/WORKSPACES_MANAGED"
+    run_cmd "gdp create workspace --content \"${config}\" --gdp-name \"${ws_name}\" --location \"${script_dir}/WORKSPACES_MANAGED\""
 
     #######################################
     # Symlinks in MANAGED workspace

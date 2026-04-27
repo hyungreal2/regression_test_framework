@@ -58,6 +58,6 @@ done
 workspace_name="${WS_PREFIX}_${uniquetestid}"
 
 log "Creating workspace: ${workspace_name}"
-create_gdp_workspace "${workspace_name}" "${config}" "$(pwd)"
+run_cmd "gdp create workspace --content \"${config}\" --gdp-name \"${workspace_name}\" --location \"$(pwd)\""
 
 log "Init completed (uniquetestid=${uniquetestid})"
