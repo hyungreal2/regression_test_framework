@@ -25,7 +25,7 @@ readonly FUNC_VALID_MODES=(
     copyHierToEmpty copyHierToNonEmpty
 )
 readonly FUNC_VALID_PREFIXES=(oo ox xo xx)
-readonly FUNC_DATA_DIR="${script_dir}/code/func"
+readonly FUNC_DATA_DIR="${script_dir}/code"
 
 #######################################
 # Defaults
