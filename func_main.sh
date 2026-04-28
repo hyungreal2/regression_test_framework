@@ -314,7 +314,7 @@ generate_templates() {
 #######################################
 get_tests() {
     local list_file="${FUNC_DATA_DIR}/list_${mode}${prefix:+_${prefix}}"
-    total_lines=$(grep -c '' "${list_file}")
+    total_lines=$(grep -c '.' "${list_file}")
     pad_width=${#total_lines}
 
     local effective_min="${min:-1}"
