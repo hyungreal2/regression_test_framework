@@ -25,8 +25,10 @@ parser.add_argument('--list',      '-l', metavar="FILE",      default="list",
 parser.add_argument('--workspace', '-w', metavar="DIRECTORY",
     default=os.path.dirname(os.path.abspath(__file__)),
     help="Workspace directory. Default is the script's directory")
-parser.add_argument('--results',   '-r', metavar="DIRECTORY", default="replay_files",
+parser.add_argument('--results',       '-r', metavar="DIRECTORY", default="replay_files",
     help="Output directory for generated replay files. Default is replay_files")
+parser.add_argument('--result_folder',       metavar="DIRECTORY", default=None,
+    help="Alias for --results (reserved, not currently used)")
 args = parser.parse_args()
 
 WORKSPACE     = args.workspace

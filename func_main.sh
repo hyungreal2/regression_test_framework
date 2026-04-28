@@ -283,14 +283,14 @@ ensure_gdp_folders() {
 #######################################
 generate_templates() {
     local list_file="${FUNC_DATA_DIR}/list_${mode}${prefix:+_${prefix}}"
-    local template_src="${FUNC_DATA_DIR}/template.il"
-    local template_mode="${FUNC_DATA_DIR}/template_${mode}.il"
+    local template_src="${FUNC_DATA_DIR}/func_template.il"
+    local template_mode="${FUNC_DATA_DIR}/func_template_${mode}.il"
     local func_replays="${FUNC_DATA_DIR}/func_replay_files_${uniqueid}"
 
-    [[ -f "${list_file}" ]]    || error_exit "List file not found: ${list_file}"
+    [[ -f "${list_file}" ]]   || error_exit "List file not found: ${list_file}"
     [[ -f "${template_src}" ]] || error_exit "Template file not found: ${template_src}"
 
-    log "Generating template_${mode}.il from template.il"
+    log "Generating func_template_${mode}.il from func_template.il"
     run_cmd "sed 's/mode *= *\"[^\"]*\"/mode = \"${mode}\"/g' \
         \"${template_src}\" > \"${template_mode}\""
 

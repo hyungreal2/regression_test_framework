@@ -18,7 +18,7 @@ parser.add_argument('--toLib',     '-toLib',    metavar="TOLIB",    default=None
 parser.add_argument('--fromCell',  '-fromCell', metavar="FROMCELL", default=None)
 
 parser.add_argument('--template', '-t', metavar="FILE", default=None,
-                    help="Test template file. Default is template_<mode>.il")
+                    help="Test template file. Default is func_template_<mode>.il")
 parser.add_argument('--control',  '-c', metavar="FILE", default=None,
                     help="Control file. Default is control")
 parser.add_argument('--list',     '-l', metavar="FILE", default=None,
@@ -62,8 +62,8 @@ elif mode in ("copyHierToEmpty", "copyHierToNonEmpty"):
 WORKSPACE     = args.workspace
 result_folder = args.results
 
-template_file = args.template or f"template_{mode}.il"
-control_file  = args.control  or "control"
+template_file = args.template or f"func_template_{mode}.il"
+control_file  = args.control  or "func_control"
 list_file     = args.list     or f"list_{mode}{f'_{args.prefix}' if args.prefix else ''}"
 
 # ─── Read files ───────────────────────────────────────────────────────────────

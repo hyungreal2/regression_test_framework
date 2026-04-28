@@ -13,8 +13,16 @@ rm -f  "${script_dir}/regression_num.txt"
 # Log directory
 rm -rf "${script_dir}/CDS_log"
 
+# Generated mode-specific templates
+rm -f  "${script_dir}"/code/func_template_*.il
+
 # Generated replay files
 rm -rf "${script_dir}/code/replay_files"
+rm -rf "${script_dir}"/code/replay_files_*/
+rm -rf "${script_dir}"/code/func_replay_files_*/
+
+# Functional test regression directories
+rm -rf "${script_dir}"/regression_func_*/
 
 # Temp file
 rm -f  "${script_dir}/code/date_virtuosoVer.txt"
