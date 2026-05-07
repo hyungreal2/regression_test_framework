@@ -16,7 +16,7 @@ source "${script_dir}/code/common.sh"
 
 test_id="$1"
 num=$(format_num_width "${test_id}" "${pad_width}")
-testdir="${regression_dir}/${mode}/test_${num}"
+testdir="${regression_dir}/test_${num}"
 
 #######################################
 # Per-test uniquetestid: uniqueid + num + PID

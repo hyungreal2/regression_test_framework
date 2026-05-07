@@ -352,7 +352,7 @@ create_regression_dir() {
 prepare_tests() {
     for i in "${tests[@]}"; do
         num=$(format_num_width "${i}" "${pad_width}")
-        local testdir="${regression_dir}/${mode}/test_${num}"  # FUNC: mode subdir
+        local testdir="${regression_dir}/test_${num}"
 
         log "Preparing test ${num}: ${testdir}"
         run_cmd "mkdir -p \"${testdir}\""
