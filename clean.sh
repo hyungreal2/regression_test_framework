@@ -9,6 +9,7 @@ echo "Cleaning outputs in ${script_dir}..."
 # Regression test directories
 rm -rf "${script_dir}"/regression_test_*/
 rm -f  "${script_dir}/regression_num.txt"
+rm -f  "${script_dir}"/regression_num_*.txt
 
 # Log directory
 rm -rf "${script_dir}/CDS_log"
@@ -19,10 +20,6 @@ rm -f  "${script_dir}"/code/func_template_*.il
 # Generated replay files
 rm -rf "${script_dir}/code/replay_files"
 rm -rf "${script_dir}"/code/replay_files_*/
-rm -rf "${script_dir}"/code/func_replay_files_*/
-
-# Functional test regression directories
-rm -rf "${script_dir}"/regression_func_*/
 
 # Temp file
 rm -f  "${script_dir}/code/date_virtuosoVer.txt"
