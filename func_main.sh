@@ -16,9 +16,9 @@ logfile="${script_dir}/log/func_main.log.$(date +%Y%m%d_%H%M%S).txt"
 exec > >(tee "${logfile}") 2>&1
 log "Logging to ${logfile}"
 
-#######################################
-# Constants
-#######################################
+# ─────────────────────────────────────────────────────────────────────────────
+# FUNC: mode constants
+# ─────────────────────────────────────────────────────────────────────────────
 readonly FUNC_VALID_MODES=(
     checkHier renameRefLib changeRefLib
     replace deleteAllMarkers
@@ -26,36 +26,37 @@ readonly FUNC_VALID_MODES=(
 )
 readonly FUNC_VALID_PREFIXES=(oo ox xo xx)
 readonly FUNC_DATA_DIR="${script_dir}/code"
+# ─────────────────────────────────────────────────────────────────────────────
 
 #######################################
 # Defaults
 #######################################
-mode=""
-prefix=""
-libname=""
-cellname=""
-fromLib="All"
-toLib=""
-fromCell=""
-
-min=""
-max=""
+max=""              # FUNC: determined from list file, not MAX_CASES
 cases=""
-min_set=false
+libname=""          # FUNC: required per mode (no env default)
+cellname=""         # FUNC: required per mode (no env default)
 max_set=false
 cases_set=false
-
 jobs=4
 do_teardown=false
 teardown_worker_pid=""
 main_done_flag=""
+# FUNC: additions
+mode=""
+prefix=""
+fromLib="All"
+toLib=""
+fromCell=""
+min=""
+min_set=false
 
 #######################################
-# Trap: clean up worker + lock on exit
+# Trap: ensure worker is always cleaned
+# up on exit (normal, error, or signal)
 #######################################
 _cleanup() {
     if [[ -n "${main_done_flag}" && ! -f "${main_done_flag}" ]]; then
-        log "TRAP: signaling teardown worker (flag=${main_done_flag})"
+        log "TRAP: signaling teardown worker (main_done_flag=${main_done_flag})"
         touch "${main_done_flag}" 2>/dev/null || true
     fi
     if [[ -n "${teardown_worker_pid}" ]]; then
@@ -72,52 +73,28 @@ print_help() {
     cat <<EOF
 Usage: $(basename "$0") [options]
 
-DESCRIPTION
-  Functional test runner.
-  Each test creates its own GDP workspace, runs a Virtuoso replay,
-  then queues the workspace for background teardown.
+Options:
+  -h     | --help             Print this help message
+  -mode  <mode>               Test mode (required)
+                                ${FUNC_VALID_MODES[*]}
+  -prefix <prefix>            Variant prefix (optional)
+                                ${FUNC_VALID_PREFIXES[*]}
+  -lib   | --library <name>   Library name
+  -cell  | --cell <name>      Cell name
+  -fromLib <name>             Source library name  (default: All)
+  -toLib <name>               Destination library name
+  -fromCell <name>            Source cell name
+  -m  | --min <n>             Minimum test number  (default: 1)
+  -M  | --max <n>             Maximum test number  (default: lines in list file)
+  -c  | --cases <list>        Tests: comma-sep or ranges (e.g. 1,3,5-9)
+  -j  | --jobs <n>            Parallel jobs         (default: ${jobs})
+  -d  | --dry-run [n]         Dry-run level 0/1/2   (default: 2)
+  -t  | --teardown            Run teardown after all tests
 
-  Test cases are driven by a list file:
-    ${FUNC_DATA_DIR}/list_<mode>[_<prefix>]
-
-OPTIONS
-  -h  | --help               Print this help message
-  -mode  <mode>              Test mode (required)
-                               ${FUNC_VALID_MODES[*]}
-  -prefix <prefix>           Variant prefix (optional)
-                               ${FUNC_VALID_PREFIXES[*]}
-  -lib   | --library <name>  Library name
-                               (required for: checkHier, renameRefLib,
-                                changeRefLib, replace, deleteAllMarkers)
-  -cell  | --cell <name>     Cell name
-                               (required for: checkHier, renameRefLib,
-                                replace, deleteAllMarkers)
-  -fromLib <name>            Source library name
-                               (required for: renameRefLib, changeRefLib,
-                                copyHierToEmpty, copyHierToNonEmpty)
-                               (default "All" for changeRefLib)
-  -toLib <name>              Destination library name
-                               (required for: renameRefLib, changeRefLib,
-                                copyHierToEmpty, copyHierToNonEmpty)
-  -fromCell <name>           Source cell name
-                               (required for: copyHierToEmpty, copyHierToNonEmpty)
-  -m  | --min <n>            Minimum test number   (default: 1)
-  -M  | --max <n>            Maximum test number   (default: lines in list file)
-  -c  | --cases <list>       Specific cases: comma-sep or ranges (e.g. 1,3,5-9)
-  -j  | --jobs <n>           Parallel jobs         (default: ${jobs})
-  -d  | --dry-run [0|1|2]    Dry-run level
-                               0 = run everything
-                               1 = skip gdp / xlp4 / rm / vse (mock workspaces)
-                               2 = skip all commands (print only)
-  -t  | --teardown           Run teardown after all tests
-
-EXAMPLES
+Examples:
   $(basename "$0") -mode checkHier -lib ESD01 -cell FULLCHIP
-  $(basename "$0") -mode checkHier -prefix oo -lib ESD01 -cell FULLCHIP
-  $(basename "$0") -mode renameRefLib -lib ESD01 -cell FULLCHIP -fromLib ESD01 -toLib ESD_TEST
   $(basename "$0") -mode replace -lib ESD01 -cell FULLCHIP -c 1,3,5-9
   $(basename "$0") -mode copyHierToEmpty -fromLib SrcLib -fromCell myCell -toLib DstLib -t
-  $(basename "$0") -mode checkHier -lib ESD01 -cell FULLCHIP -d 2
 EOF
 }
 
@@ -127,134 +104,125 @@ EOF
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help)
-            print_help; exit 0 ;;
-        -mode|--mode)
-            mode="$2"; shift 2 ;;
-        -prefix|--prefix)
-            prefix="$2"; shift 2 ;;
+            print_help
+            exit 0
+            ;;
         -lib|--library)
-            libname="$2"; shift 2 ;;
+            libname="$2"
+            shift 2
+            ;;
         -cell|--cell)
-            cellname="$2"; shift 2 ;;
-        -fromLib)
-            fromLib="$2"; shift 2 ;;
-        -toLib)
-            toLib="$2"; shift 2 ;;
-        -fromCell)
-            fromCell="$2"; shift 2 ;;
-        -m|--min)
-            min="$2"; min_set=true; shift 2 ;;
+            cellname="$2"
+            shift 2
+            ;;
+        -d|--dry-run)
+            if [[ "${2:-}" =~ ^[012]$ ]]; then
+                DRY_RUN="$2"
+                shift 2
+            else
+                DRY_RUN=2
+                shift
+            fi
+            ;;
         -M|--max)
-            max="$2"; max_set=true; shift 2 ;;
+            max="$2"
+            max_set=true
+            shift 2
+            ;;
         -c|--cases)
-            cases="$2"; cases_set=true; shift 2 ;;
+            cases="$2"
+            cases_set=true
+            shift 2
+            ;;
         -j|--jobs)
             [[ "${2:-}" =~ ^[0-9]+$ ]] || error_exit "-j requires a positive integer"
-            jobs="$2"; shift 2
+            jobs="$2"
+            shift 2
             if (( jobs > MAX_JOBS )); then
                 log "WARNING: -j ${jobs} exceeds MAX_JOBS (${MAX_JOBS}); clamping to ${MAX_JOBS}"
                 jobs=${MAX_JOBS}
             fi
             ;;
-        -d|--dry-run)
-            if [[ "${2:-}" =~ ^[012]$ ]]; then DRY_RUN="$2"; shift 2
-            else DRY_RUN=2; shift; fi ;;
         -t|--teardown)
-            do_teardown=true; shift ;;
+            do_teardown=true
+            shift
+            ;;
+        # ── FUNC: additions ───────────────────────────────────────────────────
+        -mode|--mode)       mode="$2";     shift 2 ;;
+        -prefix|--prefix)   prefix="$2";   shift 2 ;;
+        -fromLib)           fromLib="$2";  shift 2 ;;
+        -toLib)             toLib="$2";    shift 2 ;;
+        -fromCell)          fromCell="$2"; shift 2 ;;
+        -m|--min)           min="$2"; min_set=true; shift 2 ;;
+        # ─────────────────────────────────────────────────────────────────────
         *)
-            error_exit "Unknown option: $1" ;;
+            error_exit "Unknown option: $1"
+            ;;
     esac
 done
 
 export DRY_RUN
 
-#######################################
-# Validate: mode
-#######################################
-validate_mode() {
-    [[ -n "${mode}" ]] || error_exit "-mode is required. Valid modes: ${FUNC_VALID_MODES[*]}"
-
+# ─────────────────────────────────────────────────────────────────────────────
+# FUNC: mode validation helpers (called from validate_inputs)
+# ─────────────────────────────────────────────────────────────────────────────
+_validate_mode() {
+    [[ -n "${mode}" ]] || error_exit "-mode is required. Valid: ${FUNC_VALID_MODES[*]}"
     local m found=false
     for m in "${FUNC_VALID_MODES[@]}"; do
         [[ "${mode}" == "${m}" ]] && { found=true; break; }
     done
-    [[ "${found}" == true ]] || \
-        error_exit "Invalid mode: '${mode}'. Valid modes: ${FUNC_VALID_MODES[*]}"
-
+    [[ "${found}" == true ]] || error_exit "Invalid mode '${mode}'. Valid: ${FUNC_VALID_MODES[*]}"
     if [[ -n "${prefix}" ]]; then
         found=false
         local p
         for p in "${FUNC_VALID_PREFIXES[@]}"; do
             [[ "${prefix}" == "${p}" ]] && { found=true; break; }
         done
-        [[ "${found}" == true ]] || \
-            error_exit "Invalid prefix: '${prefix}'. Valid prefixes: ${FUNC_VALID_PREFIXES[*]}"
+        [[ "${found}" == true ]] || error_exit "Invalid prefix '${prefix}'. Valid: ${FUNC_VALID_PREFIXES[*]}"
     fi
 }
 
-#######################################
-# Validate: mode-specific required args
-#######################################
-validate_mode_args() {
-    _require() { [[ -n "${2}" ]] || error_exit "$1 is required for mode '${mode}'"; }
-
+_validate_mode_args() {
+    _req() { [[ -n "${2}" ]] || error_exit "$1 is required for mode '${mode}'"; }
     case "${mode}" in
         checkHier|replace|deleteAllMarkers)
-            _require "-lib"  "${libname}"
-            _require "-cell" "${cellname}"
-            ;;
+            _req "-lib" "${libname}"; _req "-cell" "${cellname}" ;;
         renameRefLib)
-            _require "-lib"     "${libname}"
-            _require "-cell"    "${cellname}"
-            _require "-fromLib" "${fromLib}"
-            _require "-toLib"   "${toLib}"
-            ;;
+            _req "-lib" "${libname}"; _req "-cell" "${cellname}"
+            _req "-fromLib" "${fromLib}"; _req "-toLib" "${toLib}" ;;
         changeRefLib)
-            _require "-lib"   "${libname}"
-            _require "-toLib" "${toLib}"
-            ;;
+            _req "-lib" "${libname}"; _req "-toLib" "${toLib}" ;;
         copyHierToEmpty|copyHierToNonEmpty)
-            _require "-fromLib"  "${fromLib}"
-            _require "-fromCell" "${fromCell}"
-            _require "-toLib"    "${toLib}"
-            ;;
+            _req "-fromLib" "${fromLib}"; _req "-fromCell" "${fromCell}"
+            _req "-toLib" "${toLib}" ;;
     esac
 }
+# ─────────────────────────────────────────────────────────────────────────────
 
 #######################################
-# Validate: min/max/cases
+# Validate inputs
 #######################################
-validate_range_args() {
-    if [[ "${max_set}" == true && "${cases_set}" == true ]]; then
+validate_inputs() {
+    _validate_mode       # FUNC
+    _validate_mode_args  # FUNC
+
+    if [[ ${max_set} == true && ${cases_set} == true ]]; then
         error_exit "--max and --cases cannot be used together."
     fi
-    if [[ "${min_set}" == true && "${cases_set}" == true ]]; then
+    if [[ ${min_set} == true && ${cases_set} == true ]]; then  # FUNC
         error_exit "--min and --cases cannot be used together."
     fi
-    if [[ "${min_set}" == true ]]; then
-        [[ "${min}" =~ ^[0-9]+$ ]] || error_exit "--min must be a positive integer."
+    if [[ ${max_set} == true ]]; then
+        [[ ${max} =~ ^[0-9]+$ ]] || error_exit "--max must be a positive integer."
     fi
-    if [[ "${max_set}" == true ]]; then
-        [[ "${max}" =~ ^[0-9]+$ ]] || error_exit "--max must be a positive integer."
+    if [[ ${min_set} == true ]]; then  # FUNC
+        [[ ${min} =~ ^[0-9]+$ ]] || error_exit "--min must be a positive integer."
     fi
-    if [[ "${cases_set}" == true ]]; then
-        [[ "${cases}" =~ ^[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*$ ]] || \
+    if [[ ${cases_set} == true ]]; then
+        [[ ${cases} =~ ^[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*$ ]] || \
             error_exit "--cases format invalid (e.g. 1,3,5-9)"
     fi
-}
-
-#######################################
-# Expected row count per mode
-# (used by func_summary.sh to detect failures)
-#######################################
-get_expected_rows() {
-    case "$1" in
-        checkHier)        echo 6 ;;
-        renameRefLib)     echo 4 ;;
-        replace)          echo 8 ;;
-        deleteAllMarkers) echo 6 ;;
-        *)                echo 0 ;;
-    esac
 }
 
 #######################################
@@ -267,7 +235,7 @@ ensure_gdp_folders() {
     fi
 
     local folder
-    for folder in "${GDP_BASE}" "${FUNC_GDP_BASE}"; do
+    for folder in "${GDP_BASE}" "${FUNC_GDP_BASE}"; do  # FUNC: FUNC_GDP_BASE not CICO_GDP_BASE
         log "Checking GDP folder: ${folder}"
         if [[ -n "$(gdp list "${folder}" 2>/dev/null)" ]]; then
             log "  → exists: ${folder}"
@@ -279,40 +247,41 @@ ensure_gdp_folders() {
 }
 
 #######################################
-# Generate replay files from list file
+# Generate templates
 #######################################
 generate_templates() {
+    # FUNC: list file and template are mode-specific
     local list_file="${FUNC_DATA_DIR}/list_${mode}${prefix:+_${prefix}}"
     local template_src="${FUNC_DATA_DIR}/func_template.il"
     local template_mode="${FUNC_DATA_DIR}/func_template_${mode}.il"
-    local func_replays="${FUNC_DATA_DIR}/func_replay_files_${uniqueid}"
 
-    [[ -f "${list_file}" ]]   || error_exit "List file not found: ${list_file}"
-    [[ -f "${template_src}" ]] || error_exit "Template file not found: ${template_src}"
+    [[ -f "${list_file}" ]]    || error_exit "List file not found: ${list_file}"
+    [[ -f "${template_src}" ]] || error_exit "Template not found: ${template_src}"
 
+    # FUNC: patch mode variable into template
     log "Generating func_template_${mode}.il from func_template.il"
     run_cmd "sed 's/mode *= *\"[^\"]*\"/mode = \"${mode}\"/g' \
         \"${template_src}\" > \"${template_mode}\""
 
-    log "Removing previous replay folder: ${func_replays}"
-    run_cmd "rm -rf \"${func_replays}\""
+    log "Removing previous replay folder: code/${replays_folder}"
+    run_cmd "rm -rf \"${script_dir}/code/${replays_folder}\""
 
-    local python_args="--mode ${mode} --workspace \"${FUNC_DATA_DIR}\" --results func_replay_files_${uniqueid}"
-    [[ -n "${prefix}"   ]] && python_args+=" --prefix ${prefix}"
-    [[ -n "${libname}"  ]] && python_args+=" --libname ${libname}"
-    [[ -n "${cellname}" ]] && python_args+=" --cellname ${cellname}"
-    [[ -n "${fromLib}"  ]] && python_args+=" --fromLib ${fromLib}"
-    [[ -n "${toLib}"    ]] && python_args+=" --toLib ${toLib}"
-    [[ -n "${fromCell}" ]] && python_args+=" --fromCell ${fromCell}"
-
-    log "Generating replay files (mode=${mode})"
-    run_cmd "python3 \"${script_dir}/code/generate_templates.py\" ${python_args}"
+    log "Generating replay templates (mode=${mode})"
+    local py_args="--mode ${mode} --workspace \"${FUNC_DATA_DIR}\" --results ${replays_folder}"
+    [[ -n "${prefix}"   ]] && py_args+=" --prefix ${prefix}"
+    [[ -n "${libname}"  ]] && py_args+=" --libname ${libname}"
+    [[ -n "${cellname}" ]] && py_args+=" --cellname ${cellname}"
+    [[ -n "${fromLib}"  ]] && py_args+=" --fromLib ${fromLib}"
+    [[ -n "${toLib}"    ]] && py_args+=" --toLib ${toLib}"
+    [[ -n "${fromCell}" ]] && py_args+=" --fromCell ${fromCell}"
+    run_cmd "python3 \"${script_dir}/code/generate_templates.py\" ${py_args}"
 }
 
 #######################################
-# Determine test numbers from list file
+# Determine tests
 #######################################
 get_tests() {
+    # FUNC: total from list file, not MAX_CASES
     local list_file="${FUNC_DATA_DIR}/list_${mode}${prefix:+_${prefix}}"
     total_lines=$(grep -c '.' "${list_file}")
     pad_width=${#total_lines}
@@ -321,20 +290,20 @@ get_tests() {
     local effective_max="${max:-${total_lines}}"
 
     if [[ "${min_set}" == true ]]; then
-        (( effective_min <= total_lines )) || \
-            error_exit "--min (${effective_min}) exceeds list file length (${total_lines})."
+        (( 10#${effective_min} <= 10#${total_lines} )) || \
+            error_exit "--min (${effective_min}) exceeds list length (${total_lines})."
     fi
     if [[ "${max_set}" == true ]]; then
-        (( effective_max <= total_lines )) || \
-            error_exit "--max (${effective_max}) exceeds list file length (${total_lines})."
-        (( effective_min <= effective_max )) || \
+        (( 10#${effective_max} <= 10#${total_lines} )) || \
+            error_exit "--max (${effective_max}) exceeds list length (${total_lines})."
+        (( 10#${effective_min} <= 10#${effective_max} )) || \
             error_exit "--min (${effective_min}) must be <= --max (${effective_max})."
     fi
 
     declare -A seen=()
     tests=()
 
-    if [[ "${cases_set}" == true ]]; then
+    if [[ ${cases_set} == true ]]; then
         IFS=',' read -ra tokens <<< "${cases}"
         for token in "${tokens[@]}"; do
             if [[ "${token}" =~ ^([0-9]+)-([0-9]+)$ ]]; then
@@ -356,35 +325,47 @@ get_tests() {
 # Create regression directory
 #######################################
 create_regression_dir() {
+    # FUNC: uniqueid-based naming (not counter)
     regression_dir="${script_dir}/regression_func_${uniqueid}"
-    log "Regression directory: ${regression_dir}"
+    log "Regression Directory: ${regression_dir}"
     run_cmd "mkdir -p \"${regression_dir}\""
 }
 
 #######################################
-# Distribute replay files to test dirs
+# Prepare test directories
 #######################################
 prepare_tests() {
-    local func_replays="${FUNC_DATA_DIR}/func_replay_files_${uniqueid}"
-
     for i in "${tests[@]}"; do
-        local num
         num=$(format_num_width "${i}" "${pad_width}")
-        local testdir="${regression_dir}/${mode}/test_${num}"
+        local testdir="${regression_dir}/${mode}/test_${num}"  # FUNC: mode subdir
 
         log "Preparing test ${num}: ${testdir}"
         run_cmd "mkdir -p \"${testdir}\""
-        run_cmd "mv -f \"${func_replays}/replay_${num}.il\" \"${testdir}/\""
+
+        log "Moving replay_${num}.il to ${testdir}/"
+        run_cmd "mv -f \"${script_dir}/code/${replays_folder}/replay_${num}.il\" \"${testdir}/\""
     done
 }
 
 #######################################
-# Run all tests in parallel
+# Run tests
 #######################################
 run_tests() {
     log "Running tests in parallel (jobs=${jobs})"
+
     printf "%s\n" "${tests[@]}" | \
-        xargs -n1 -P"${jobs}" bash "${script_dir}/code/func_run_single.sh"
+        xargs -n1 -P"${jobs}" bash "${script_dir}/code/func_run_single.sh"  # FUNC: func_run_single
+}
+
+# FUNC: expected rows per mode (for func_summary.sh pass/fail detection)
+get_expected_rows() {
+    case "$1" in
+        checkHier)        echo 6 ;;
+        renameRefLib)     echo 4 ;;
+        replace)          echo 8 ;;
+        deleteAllMarkers) echo 6 ;;
+        *)                echo 0 ;;
+    esac
 }
 
 #######################################
@@ -392,30 +373,26 @@ run_tests() {
 #######################################
 log "START (dry-run=${DRY_RUN})"
 
-validate_mode
-validate_mode_args
-validate_range_args
-
 #######################################
 # Generate unique ID
 #######################################
-uniqueid="$(date +%Y%m%d_%H%M%S)_${USER_NAME}_${mode}"
+uniqueid="$(date +%Y%m%d_%H%M%S)_${USER_NAME}_${mode}"  # FUNC: mode not libname
 [[ -n "${prefix}" ]] && uniqueid="${uniqueid}_${prefix}"
+replays_folder="replay_files_${uniqueid}"
 export uniqueid
 log "uniqueid: ${uniqueid}"
+log "replays_folder: ${replays_folder}"
 
+validate_inputs
 ensure_gdp_folders
 generate_templates
 get_tests
 log "Tests to run: ${#tests[@]} (pad_width=${pad_width})"
-
 create_regression_dir
 prepare_tests
-run_cmd "mkdir -p \"${script_dir}/CDS_log/${uniqueid}\""
+mkdir -p "${script_dir}/CDS_log/${uniqueid}"
 
-#######################################
-# Export vars for func_run_single.sh
-#######################################
+# FUNC: export mode-specific vars for func_run_single.sh
 export mode prefix libname cellname fromLib toLib fromCell
 export regression_dir pad_width
 
@@ -427,14 +404,15 @@ main_done_flag="${regression_dir}/main_done.flag"
 
 if [[ "${do_teardown}" == true ]]; then
     touch "${teardown_queue_file}"
-    log "Starting background teardown worker (func_teardown.sh)"
+    log "Starting background teardown worker"
     bash "${script_dir}/code/teardown_worker.sh" \
         "${teardown_queue_file}" "${main_done_flag}" \
-        "${script_dir}/code/func_teardown.sh" &
+        "${script_dir}/code/func_teardown.sh" &  # FUNC: func_teardown.sh
     teardown_worker_pid=$!
     export teardown_queue_file
 fi
 
+export libname regression_dir
 run_tests
 
 log "All tests finished."
@@ -442,20 +420,17 @@ log "All tests finished."
 #######################################
 # Summary
 #######################################
+log "Generating summary for result/${uniqueid}"
 expected_row=$(get_expected_rows "${mode}")
-log "Generating func summary (mode=${mode} expected_row=${expected_row})"
 bash "${script_dir}/code/func_summary.sh" \
-    -d "${DRY_RUN}" "${mode}" "${uniqueid}" "${expected_row}"
+    -d "${DRY_RUN}" "${mode}" "${uniqueid}" "${expected_row}"  # FUNC: func_summary.sh
 
-#######################################
-# Signal teardown worker
-#######################################
 if [[ "${do_teardown}" == true ]]; then
     log "Signaling teardown worker: main done"
     touch "${main_done_flag}"
     log "Waiting for teardown worker to finish (pid=${teardown_worker_pid})"
     wait "${teardown_worker_pid}"
-    teardown_worker_pid=""
+    teardown_worker_pid=""  # prevent _cleanup from wait-ing again
     log "Teardown worker finished."
 fi
 
