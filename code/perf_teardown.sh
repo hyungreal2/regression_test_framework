@@ -107,6 +107,6 @@ run_cmd "gdp delete \"${proj_path}\" --recursive --force --proceed"
 # Obliterate depot
 #######################################
 log "[TEARDOWN] Obliterating depot: ${proj_depot_path}"
-run_cmd "xlp4 obliterate -y \"${proj_depot_path}\""
+run_cmd "xlp4 obliterate -y \"${proj_depot_path}\" > /dev/null"
 
 log "[TEARDOWN] Done: ${ws_name}"

@@ -105,6 +105,6 @@ run_cmd "gdp delete \"${project_gdp_path}\" --recursive --force --proceed"
 #######################################
 log "Obliterating depot: ${project_depot_path}"
 #run_cmd "xlp4 --user gdpxl_manager obliterate -y \"${project_depot_path}\""
-run_cmd "xlp4 obliterate -y \"${project_depot_path}\""
+run_cmd "xlp4 obliterate -y \"${project_depot_path}\" > /dev/null"
 
 log "Teardown completed"
