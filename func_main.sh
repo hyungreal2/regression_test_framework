@@ -325,8 +325,23 @@ get_tests() {
 # Create regression directory
 #######################################
 create_regression_dir() {
-    # FUNC: uniqueid-based naming (not counter)
-    regression_dir="${script_dir}/regression_func_${uniqueid}"
+    local dir
+    local num_file="${script_dir}/regression_num_${mode}.txt"
+    num="000"
+
+    if [[ -f "${num_file}" ]]; then
+        num=$(<"${num_file}")
+    fi
+
+    while true; do
+        num=$(printf "%03d" $(( (10#${num} + 1) % 1000 )))
+        dir="${script_dir}/regression_test_${mode}_${num}"
+        [[ ! -d "${dir}" ]] && break
+    done
+
+    echo "${num}" > "${num_file}"
+    regression_dir="${dir}"
+
     log "Regression Directory: ${regression_dir}"
     run_cmd "mkdir -p \"${regression_dir}\""
 }
