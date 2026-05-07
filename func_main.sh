@@ -391,7 +391,7 @@ log "START (dry-run=${DRY_RUN})"
 #######################################
 # Generate unique ID
 #######################################
-uniqueid="$(date +%Y%m%d_%H%M%S)_${USER_NAME}_${mode}"  # FUNC: mode not libname
+uniqueid="${mode}_$(date +%Y%m%d_%H%M%S)_${USER_NAME}"  # FUNC: mode_date_user
 [[ -n "${prefix}" ]] && uniqueid="${uniqueid}_${prefix}"
 replays_folder="replay_files_${uniqueid}"
 export uniqueid
