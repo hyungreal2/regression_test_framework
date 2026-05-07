@@ -306,7 +306,7 @@ generate_templates() {
     [[ -n "${fromCell}" ]] && python_args+=" --fromCell ${fromCell}"
 
     log "Generating replay files (mode=${mode})"
-    run_cmd "python3 \"${script_dir}/code/func_generate_templates.py\" ${python_args}"
+    run_cmd "python3 \"${script_dir}/code/generate_templates.py\" ${python_args}"
 }
 
 #######################################

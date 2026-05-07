@@ -105,6 +105,7 @@ run_cmd() {
 #######################################
 run_vse() {
     local replay="$1" logfile="$2"
+    local seen_run=0
     if [[ "${VSE_MODE:-run}" == "sub" ]]; then
         local vse_out job_id stat
         vse_out=$(run_cmd "vse_sub -v ${VSE_VERSION} -env ${ICM_ENV} -replay ${replay} -log ${logfile}")
@@ -112,8 +113,12 @@ run_vse() {
         log "Submitted job: ${job_id}. Polling every 10s..."
         # bwait -w "ended(${job_id})"  # disabled: pending verification
         while true; do
-            stat=$(bjobs -noheader -o stat "${job_id}" 2>/dev/null | awk '{print $1}')
-            log "  job ${job_id} stat=${stat:-unknown}"
+            #stat=$(bjobs -noheader -o stat "${job_id}" 2>/dev/null | awk '{print $1}')
+            stat=$(mjobs -noheader -o stat "${job_id}" 2>/dev/null | tail -1)
+	    if [ "${stat}" = "RUN" ] && [ "${seen_run}" -eq 0 ]; then
+            	log "  job ${job_id} stat=${stat:-unknown}"
+		seen_run=1
+	    fi
             case "${stat}" in
                 DONE) log "Job ${job_id} finished: DONE"; break ;;
                 EXIT) log "Job ${job_id} finished: EXIT"; break ;;
