@@ -83,8 +83,14 @@ if [[ -n "${ws_gdp_path}" ]]; then
     log "Unlocking .gdpxl permissions: ${ws_local_path}/.gdpxl"
     run_cmd "chmod -R u+w \"${ws_local_path}/.gdpxl\" || true"
 
-    log "Removing local workspace: ${ws_local_path}"
-    safe_rm_rf "${ws_local_path}"
+    if [[ "${DRY_RUN:-0}" -ge 2 ]]; then
+        log "[DRY-RUN] Would move ${ws_local_path} to trash"
+    elif [[ -d "${ws_local_path}/.gdpxl" ]]; then
+        warn "Teardown may have failed: .gdpxl still present in ${ws_local_path}"
+    else
+        log "Workspace teardown verified; moving to trash: ${ws_local_path}"
+        safe_mv_to_trash "${ws_local_path}"
+    fi
 fi
 
 #######################################

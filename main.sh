@@ -43,6 +43,7 @@ _cleanup() {
     if [[ -n "${teardown_worker_pid}" ]]; then
         wait "${teardown_worker_pid}" 2>/dev/null || true
     fi
+    flush_trash || true
     rm -f "${script_dir}/.gdp_ws_lock" 2>/dev/null || true
 }
 trap '_cleanup' EXIT INT TERM
@@ -133,6 +134,13 @@ done
 export DRY_RUN WS_PREFIX PROJ_PREFIX
 
 #######################################
+# Start condition
+#######################################
+if [[ "${DRY_RUN}" -lt 2 ]]; then
+    [[ -n "${ICM_SkillRoot:-}" ]] || error_exit "ICM_SkillRoot is not set (required for GDP/Virtuoso)"
+fi
+
+#######################################
 # Validate inputs
 #######################################
 validate_inputs() {
@@ -184,9 +192,9 @@ generate_templates() {
 
     log "Generating replay templates (libname=${libname} cellname=${cellname:-none})"
     if [[ -n "${cellname}" ]]; then
-        run_cmd "python3 \"${script_dir}/code/generate_templates.py\" --result_folder ${uniqueid} --libname ${libname} --results ${replays_folder} --cellname ${cellname}"
+        run_cmd "python3 \"${script_dir}/code/generate_templates.py\" --result_folder ${result_folder_id} --libname ${libname} --results ${replays_folder} --cellname ${cellname}"
     else
-        run_cmd "python3 \"${script_dir}/code/generate_templates.py\" --result_folder ${uniqueid} --libname ${libname} --results ${replays_folder}"
+        run_cmd "python3 \"${script_dir}/code/generate_templates.py\" --result_folder ${result_folder_id} --libname ${libname} --results ${replays_folder}"
     fi
 }
 
@@ -284,6 +292,12 @@ export uniqueid
 log "uniqueid: ${uniqueid}"
 log "replays_folder: ${replays_folder}"
 
+get_tool_versions
+result_folder_id="${uniqueid}"
+[[ -n "${gdpver:-}" ]] && result_folder_id="${result_folder_id}_${gdpver}"
+[[ -n "${gdmver:-}" ]] && result_folder_id="${result_folder_id}_${gdmver}"
+log "result_folder_id: ${result_folder_id}"
+
 validate_inputs
 ensure_gdp_folders
 generate_templates
@@ -313,10 +327,27 @@ run_tests
 log "All tests finished."
 
 #######################################
+# Detect tests with missing CDS log
+#######################################
+if [[ "${DRY_RUN}" -eq 0 ]]; then
+    _missing=()
+    for _t in "${tests[@]}"; do
+        _n=$(format_num "${_t}")
+        [[ -f "${script_dir}/CDS_log/${uniqueid}/CDS_${_n}.log" ]] || _missing+=("${_n}")
+    done
+    if [[ ${#_missing[@]} -gt 0 ]]; then
+        warn "Tests with no CDS log (Virtuoso did not run): ${_missing[*]}"
+    else
+        log "All ${#tests[@]} tests produced a CDS log."
+    fi
+fi
+
+#######################################
 # Summary
 #######################################
-log "Generating summary for result/${uniqueid}"
-bash "${script_dir}/code/summary.sh" -d "${DRY_RUN}" "${uniqueid}"
+log "Generating summary for CDS_log/${uniqueid}"
+bash "${script_dir}/code/summary.sh" -d "${DRY_RUN}" \
+    --logdir "${script_dir}/CDS_log/${uniqueid}" "${uniqueid}"
 
 if [[ "${do_teardown}" == true ]]; then
     log "Signaling teardown worker: main done"

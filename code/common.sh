@@ -152,6 +152,8 @@ create_gdp_project() {
     while [[ ${attempt} -lt ${max_attempts} ]]; do
         attempt=$(( attempt + 1 ))
         log "[PROJ] gdp create project attempt ${attempt}/${max_attempts}: ${proj_path}"
+        local _ts; _ts=$(date +%H:%M:%S)
+        echo "[RUN][${_ts}][create_gdp_project] ${cmd}" >&2
         eval "${cmd}" || true
         sleep 10
         if [[ -n "$(gdp list "${proj_path}" 2>/dev/null)" ]]; then
@@ -185,4 +187,58 @@ format_num() {
 
 format_num_width() {
     printf "%0${2}d" "$1"
+}
+
+#######################################
+# Move a directory to .trash/ for
+# deferred deletion.
+# Only call after verifying .gdpxl is
+# gone (successful GDP workspace delete).
+#######################################
+safe_mv_to_trash() {
+    local target="$1"
+    [[ -n "${target}" ]]     || error_exit "safe_mv_to_trash: empty path"
+    [[ "${target}" != "/" ]] || error_exit "safe_mv_to_trash: refuse to trash /"
+    if [[ ! -e "${target}" ]]; then
+        log "safe_mv_to_trash: ${target} not found, skipping"
+        return
+    fi
+    local trash_dir="${script_dir}/.trash"
+    mkdir -p "${trash_dir}"
+    local dest="${trash_dir}/$(basename "${target}")_$(date +%s)"
+    run_cmd "mv \"${target}\" \"${dest}\""
+}
+
+#######################################
+# Delete the .trash/ staging area.
+# Call at the end of each main script.
+#######################################
+flush_trash() {
+    local trash_dir="${script_dir}/.trash"
+    [[ -d "${trash_dir}" ]] || return
+    log "Flushing trash: ${trash_dir}"
+    run_cmd "rm -rf \"${trash_dir}\""
+}
+
+#######################################
+# Detect GDP/GDM tool versions from env.
+# Sets globals: gdpver  gdmver
+# Sources: ICM_SkillRoot, CDS_GDM_SHLIB_LOCATION
+#######################################
+get_tool_versions() {
+    gdpver=""
+    gdmver=""
+    if [[ -n "${ICM_SkillRoot:-}" ]]; then
+        gdpver=$(basename "${ICM_SkillRoot}")
+    fi
+    if [[ -n "${CDS_GDM_SHLIB_LOCATION:-}" ]]; then
+        local _so="${CDS_GDM_SHLIB_LOCATION}/libgdmp4_sh.so"
+        if [[ -f "${_so}" ]]; then
+            local _change
+            _change=$(strings "${_so}" 2>/dev/null \
+                | grep '\$Change:' | grep -oP '\d{5,}' | head -1 || true)
+            [[ -n "${_change}" ]] && gdmver="gdmp4.${_change}"
+        fi
+    fi
+    log "Tool versions — gdpver=${gdpver:-n/a}  gdmver=${gdmver:-n/a}"
 }

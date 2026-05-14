@@ -71,17 +71,23 @@ regression_dir="${positional_args[0]:-${regression_dir:-}}"
 [[ -d "${regression_dir}" ]] || error_exit "Directory not found: ${regression_dir}"
 
 #######################################
-# Collect uniquetestids
+# Collect uniquetestids from workspace dirs
+# (workspace name = ${FUNC_WS_PREFIX}_${uniquetestid})
 #######################################
 log "Starting teardown for all tests in ${regression_dir} (jobs=${jobs})"
 
 uid_list=()
 for testdir in "${regression_dir}"/test_*/; do
-    if [[ ! -f "${testdir}/uniquetestid.txt" ]]; then
-        warn "No uniquetestid.txt in ${testdir}, skipping"
-        continue
-    fi
-    uid_list+=("$(<"${testdir}/uniquetestid.txt")")
+    [[ -d "${testdir}" ]] || continue
+    _found=false
+    for ws_dir in "${testdir}"/${FUNC_WS_PREFIX}_*/; do
+        [[ -d "${ws_dir}" ]] || continue
+        _ws=$(basename "${ws_dir}")
+        uid_list+=("${_ws#${FUNC_WS_PREFIX}_}")
+        _found=true
+        break
+    done
+    [[ "${_found}" == true ]] || warn "No workspace dir (${FUNC_WS_PREFIX}_*) in ${testdir}, skipping"
 done
 
 [[ ${#uid_list[@]} -gt 0 ]] || { log "No tests to tear down."; exit 0; }
@@ -99,3 +105,4 @@ log "All teardowns completed."
 
 log "Removing regression directory: ${regression_dir}"
 safe_rm_rf "${regression_dir}"
+flush_trash

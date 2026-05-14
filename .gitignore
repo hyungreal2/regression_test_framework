@@ -45,6 +45,9 @@ result/
 # GenerateReplayScript: not managed in this repo (local reference only)
 GenerateReplayScript/
 
+# Deferred-deletion staging area (workspace trash bin)
+.trash/
+
 # ----------------------------------------
 # Legacy reference files (local only, not tracked)
 legacy/

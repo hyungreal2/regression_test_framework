@@ -77,8 +77,14 @@ if [[ -n "${ws_gdp_path}" ]]; then
     log "[TEARDOWN] Unlocking .gdpxl: ${managed_ws}/.gdpxl"
     run_cmd "chmod -R u+w \"${managed_ws}/.gdpxl\" || true"
 
-    log "[TEARDOWN] Removing MANAGED workspace: ${managed_ws}"
-    safe_rm_rf "${managed_ws}"
+    if [[ "${DRY_RUN:-0}" -ge 2 ]]; then
+        log "[DRY-RUN] Would move ${managed_ws} to trash"
+    elif [[ -d "${managed_ws}/.gdpxl" ]]; then
+        warn "[TEARDOWN] Teardown may have failed: .gdpxl still present in ${managed_ws}"
+    else
+        log "[TEARDOWN] Workspace teardown verified; moving to trash: ${managed_ws}"
+        safe_mv_to_trash "${managed_ws}"
+    fi
 else
     log "[TEARDOWN] Workspace not found via gdp find: ${ws_name} (may already be deleted)"
 fi

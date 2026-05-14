@@ -40,6 +40,7 @@ _cleanup() {
     if [[ -n "${teardown_worker_pid}" ]]; then
         wait "${teardown_worker_pid}" 2>/dev/null || true
     fi
+    flush_trash || true
     rm -f "${script_dir}/.gdp_ws_lock" 2>/dev/null || true
 }
 trap '_cleanup' EXIT INT TERM
@@ -194,6 +195,13 @@ done
 
 export DRY_RUN
 export PERF_COMMON_LIBS="${common_libs[*]:-}"
+
+#######################################
+# Start condition
+#######################################
+if [[ "${DRY_RUN}" -lt 2 ]]; then
+    [[ -n "${ICM_SkillRoot:-}" ]] || error_exit "ICM_SkillRoot is not set (required for GDP/Virtuoso)"
+fi
 
 #######################################
 # Helper: cell lookup

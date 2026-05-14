@@ -9,6 +9,7 @@ source "${script_dir}/code/common.sh"
 #######################################
 # Parse args
 #######################################
+logdir_override=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -d|--dry-run)
@@ -19,6 +20,10 @@ while [[ $# -gt 0 ]]; do
                 DRY_RUN=2
                 shift
             fi
+            ;;
+        --logdir)
+            logdir_override="$2"
+            shift 2
             ;;
         -*)
             error_exit "Unknown option: $1"
@@ -32,19 +37,25 @@ done
 export DRY_RUN
 
 #######################################
-# Resolve time_version
+# Resolve time_version and logdir
 #######################################
-if [[ $# -lt 1 ]]; then
-    [ -d "result" ] || error_exit "result/ directory not found"
-    time_version=$(ls -t result/ | head -1)
-    [[ -n "${time_version}" ]] || error_exit "No directories found under result/"
-    log "No argument given. Using latest: ${time_version}"
+if [[ -n "${logdir_override}" ]]; then
+    time_version="${1:-}"
+    [[ -n "${time_version}" ]] || error_exit "Usage: $0 [opts] --logdir <dir> <time_version>"
+    logdir="${logdir_override}"
 else
-    time_version="$1"
+    if [[ $# -lt 1 ]]; then
+        [ -d "result" ] || error_exit "result/ directory not found"
+        time_version=$(ls -t result/ | head -1)
+        [[ -n "${time_version}" ]] || error_exit "No directories found under result/"
+        log "No argument given. Using latest: ${time_version}"
+    else
+        time_version="$1"
+    fi
+    logdir="result/${time_version}"
 fi
 
 summary_name="${2:-summary.txt}"
-logdir="result/${time_version}"
 summary_file="${logdir}/${summary_name}"
 
 [ -d "${logdir}" ] || error_exit "Directory ${logdir} not found"

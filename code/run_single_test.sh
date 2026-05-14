@@ -22,8 +22,6 @@ testdir="${regression_dir}/test_${num}"
 uniquetestid="${num}_$(date +%Y%m%d_%H%M%S)_$$"
 export uniquetestid
 
-echo "${uniquetestid}" > "${testdir}/uniquetestid.txt"
-
 log "[TEST ${num}] uniquetestid=${uniquetestid}"
 
 (
