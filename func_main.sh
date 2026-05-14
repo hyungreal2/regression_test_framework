@@ -471,7 +471,7 @@ expected_row=$(get_expected_rows "${mode}")
 bash "${script_dir}/code/func_summary.sh" \
     -d "${DRY_RUN}" "${mode}" "${uniqueid}" "${expected_row}"  # FUNC: func_summary.sh
 bash "${script_dir}/code/summary.sh" \
-    -d "${DRY_RUN}" --logdir "${script_dir}/CDS_log/${uniqueid}" "${uniqueid}"
+    -d "${DRY_RUN}" --logdir "${script_dir}/result/${result_folder_id}" "${result_folder_id}"
 
 if [[ "${do_teardown}" == true ]]; then
     log "Signaling teardown worker: main done"

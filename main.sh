@@ -347,7 +347,7 @@ fi
 #######################################
 log "Generating summary for CDS_log/${uniqueid}"
 bash "${script_dir}/code/summary.sh" -d "${DRY_RUN}" \
-    --logdir "${script_dir}/CDS_log/${uniqueid}" "${uniqueid}"
+    --logdir "${script_dir}/result/${result_folder_id}" "${result_folder_id}"
 
 if [[ "${do_teardown}" == true ]]; then
     log "Signaling teardown worker: main done"
