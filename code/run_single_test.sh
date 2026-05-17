@@ -24,6 +24,7 @@ export uniquetestid
 
 log "[TEST ${num}] uniquetestid=${uniquetestid}"
 
+_test_rc=0
 (
     cd "${testdir}" || exit 1
 
@@ -55,11 +56,15 @@ log "[TEST ${num}] uniquetestid=${uniquetestid}"
     log "[TEST ${num}] Running virtuoso replay (replay_${num}.il)"
     run_cmd "mkdir -p \"${script_dir}/CDS_log/${uniqueid}\""
     run_vse "${testdir}/replay_${num}.il" "${script_dir}/CDS_log/${uniqueid}/CDS_${num}.log"
-)
+) || _test_rc=$?
 
-log "[TEST ${num}] DONE"
+log "[TEST ${num}] DONE (rc=${_test_rc})"
 
+# Queue teardown unconditionally: workspace cleanup must happen
+# even if the test itself failed after workspace creation.
 if [[ -n "${teardown_queue_file:-}" ]]; then
     log "[TEST ${num}] Queuing teardown: ${uniquetestid}"
     echo "${uniquetestid}" >> "${teardown_queue_file}"
 fi
+
+exit "${_test_rc}"

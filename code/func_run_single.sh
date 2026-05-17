@@ -51,6 +51,7 @@ export MOCK_GDP_CELL="${cellname:-mock_cell}"
 
 workspace_name="${FUNC_WS_PREFIX}_${uniquetestid}"
 
+_test_rc=0
 (
     cd "${testdir}" || exit 1
 
@@ -81,14 +82,16 @@ workspace_name="${FUNC_WS_PREFIX}_${uniquetestid}"
     run_cmd "mkdir -p \"${script_dir}/CDS_log/${uniqueid}\""
     run_vse "${testdir}/replay_${num}.il" \
         "${script_dir}/CDS_log/${uniqueid}/CDS_${mode}_${num}.log"
-)
+) || _test_rc=$?
 
-log "[TEST ${num}] DONE"
+log "[TEST ${num}] DONE (rc=${_test_rc})"
 
 #######################################
-# Queue teardown
+# Queue teardown unconditionally
 #######################################
 if [[ -n "${teardown_queue_file:-}" ]]; then
     log "[TEST ${num}] Queuing teardown: ${uniquetestid}"
     echo "${uniquetestid}" >> "${teardown_queue_file}"
 fi
+
+exit "${_test_rc}"

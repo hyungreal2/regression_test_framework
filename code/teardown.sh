@@ -94,6 +94,21 @@ if [[ -n "${ws_gdp_path}" ]]; then
 fi
 
 #######################################
+# DRY_RUN=1: clean up mock workspace
+# (gdp find was skipped, so ws_gdp_path
+#  is empty; remove the local directory
+#  that _mock_gdp_workspace() created)
+#######################################
+if [[ "${DRY_RUN:-0}" -eq 1 && -n "${regression_dir:-}" ]]; then
+    _num=$(cut -d'_' -f1 <<< "${uniquetestid}")
+    _mock_ws="${regression_dir}/test_${_num}/${workspace_name}"
+    if [[ -d "${_mock_ws}" ]]; then
+        log "DRY_RUN=1: removing mock workspace: ${_mock_ws}"
+        safe_mv_to_trash "${_mock_ws}"
+    fi
+fi
+
+#######################################
 # Delete client
 #######################################
 log "Deleting p4 client: ${workspace_name}"
