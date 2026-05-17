@@ -217,7 +217,9 @@ flush_trash() {
     local trash_dir="${script_dir}/.trash"
     [[ -d "${trash_dir}" ]] || return
     log "Flushing trash: ${trash_dir}"
-    run_cmd "rm -rf \"${trash_dir}\""
+    # Bypass run_cmd: trash cleanup is a local op, not an ICM/GDP command;
+    # rm is in the DRY_RUN=1 skip list but .trash/ must always be deleted.
+    rm -rf "${trash_dir}"
 }
 
 #######################################
