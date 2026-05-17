@@ -58,14 +58,20 @@ fi
 summary_name="${2:-summary.txt}"
 summary_file="${logdir}/${summary_name}"
 
-[ -d "${logdir}" ] || error_exit "Directory ${logdir} not found"
-
 #######################################
 # DRY_RUN=2: skip all
 #######################################
 if [[ "${DRY_RUN}" -ge 2 ]]; then
     log "[DRY-RUN:2] Would write summary to ${summary_file}"
     exit 0
+fi
+
+if [[ ! -d "${logdir}" ]]; then
+    if [[ "${DRY_RUN}" -ge 1 ]]; then
+        log "[DRY-RUN:1] logdir not found (Virtuoso skipped): ${logdir}"
+        exit 0
+    fi
+    error_exit "Directory ${logdir} not found"
 fi
 
 #######################################

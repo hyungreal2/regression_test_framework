@@ -312,6 +312,8 @@ mkdir -p "${script_dir}/CDS_log"
 teardown_queue_file="${regression_dir}/teardown_queue.txt"
 main_done_flag="${regression_dir}/main_done.flag"
 
+export libname regression_dir
+
 if [[ "${do_teardown}" == true ]]; then
     touch "${teardown_queue_file}"
     log "Starting background teardown worker"
@@ -321,7 +323,6 @@ if [[ "${do_teardown}" == true ]]; then
     export teardown_queue_file
 fi
 
-export libname regression_dir
 run_tests
 
 log "All tests finished."
