@@ -40,11 +40,10 @@ _mock_vse_run() {
     echo "[MOCK:1][${ts}][${caller}] vse_run: parsing mkdir from $(basename "${replay_file}")" >&2
     [[ -f "${replay_file}" ]] || { echo "[MOCK:1][${ts}][${caller}] replay not found: ${replay_file}" >&2; return; }
 
-    python3 - "${replay_file}" "${result_folder_id:-}" <<'PYEOF'
+    python3 - "${replay_file}" <<'PYEOF'
 import sys, re, os
 
 replay_file = sys.argv[1]
-result_folder_id = sys.argv[2] if len(sys.argv) > 2 else ""
 
 with open(replay_file) as f:
     lines = f.readlines()
@@ -65,7 +64,7 @@ for s in skill_lines:
         sv[m.group(1)] = m.group(2)
 
 def eval_strcat(args_str):
-    """Evaluate SKILL strcat() argument list into a plain string."""
+    """Evaluate SKILL strcat() args — literal strings and variable refs only."""
     result, s, i = "", args_str.strip(), 0
     while i < len(s):
         if s[i] in ' \t':
@@ -75,10 +74,9 @@ def eval_strcat(args_str):
             result += s[i+1:j]
             i = j + 1
         else:
-            m = re.match(r'([A-Za-z_]\w*)(\s*\([^)]*\))?', s[i:])
+            m = re.match(r'([A-Za-z_]\w*)', s[i:])
             if m:
-                name, is_func = m.group(1), bool(m.group(2) and m.group(2).strip())
-                result += result_folder_id if is_func else sv.get(name, result_folder_id)
+                result += sv.get(m.group(1), "")
                 i += len(m.group(0))
             else:
                 i += 1
