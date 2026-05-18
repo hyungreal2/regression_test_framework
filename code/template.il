@@ -6,24 +6,21 @@
 \i code_path = "../../../code/"
 \i result_path = "../../../result/"
 \i load( strcat( code_path "validate.il" ))
-\i load( strcat( code_path "date_virtuosoVer.il"))
-\i
+\i load( strcat( code_path "virtuosoVer.il"))
+\i load( strcat( code_path "mgHierParse.il"))
+\i 
 \i ;; create result folder and get test case number
-\i system(strcat("mkdir -p " result_path date_virtuosoVer(code_path) ))
+\i unique_result_folder = strcat( result_path CDS_PV_REG_RES_NO)
+\i system(strcat("mkdir -p " unique_result_folder  ))
 \i user_name = getShellEnvVar("USER")
-\i inport = infile("../uniqueid.txt")
-\i gets(CDS_PV_REG_NO inport)
-\i CDS_PV_REG_NO = substring(CDS_PV_REG_NO 1 strlen(CDS_PV_REG_NO)-1)
-\i close(inport)
-\i fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/test_" CDS_PV_REG_NO "_" date_virtuosoVer(code_path) ".log") "w")
-\i fprintf(fd strcat("Start Time: " getCurrentTime() "\n"))
-\i
-\i ;;; Test Scenario::Begin
+\i fd=outfile(strcat( unique_result_folder "/test_" CDS_PV_REGGRESION_NO "_" virtuosoVer() ".log") "w")
+\i fprintf(fd strcat("Start Time: " getCurrentTime() "\n"))   
+\i 
+\i ;;; Test Scenario::Begin 
 \i ;;; Test Scenario::End
-\i
+\i  
 \i fprintf(fd strcat("End Time: " getCurrentTime() "\n"))
 \i close(fd)
 \i exit()
 \i geSaveAllForm->none->value= t
 \i hiFormDone(geSaveAllForm)
-\i hiDBoxUser(ICM_intHierQuestion nil 2)
