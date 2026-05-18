@@ -42,6 +42,9 @@ WORKSPACES_UNMANAGED/
 result/
 .gdp_ws_lock
 
+# Accumulated perf metrics (trend data, managed outside git)
+perf_metrics/
+
 # GenerateReplayScript: not managed in this repo (local reference only)
 GenerateReplayScript/
 

@@ -52,4 +52,4 @@ PERF_PREFIX="perf"
 PERF_GDP_BASE="${GDP_BASE}/perf"
 PERF_LIBS=(BM01 BM02 BM03)
 PERF_CELLS=(VP_FULLCHIP FULLCHIP XE_FULLCHIP_BASE)
-PERF_TESTS=(checkHier renameRefLib replace deleteAllMarker copyHierToEmpty copyHierToNonEmpty)
+PERF_TESTS=(checkHier renameRefLib replace deleteAllMarker copyHierToEmpty copyHierToNonEmpty changeRefLib)
