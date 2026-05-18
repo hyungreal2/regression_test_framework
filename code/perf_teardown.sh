@@ -79,7 +79,7 @@ if [[ -n "${ws_gdp_path}" ]]; then
 
     if [[ "${DRY_RUN:-0}" -ge 2 ]]; then
         log "[DRY-RUN] Would move ${managed_ws} to trash"
-    elif [[ -n "$(gdp list "${proj_path}/**/*:workspace" 2>/dev/null)" ]]; then
+    elif [[ -n "$(gdp list "${proj_path}:workspace" 2>/dev/null)" ]]; then
         warn "[TEARDOWN] Teardown may have failed: workspace still registered in GDP: ${proj_path}"
     else
         log "[TEARDOWN] Workspace teardown verified (GDP record removed); moving to trash: ${managed_ws}"
