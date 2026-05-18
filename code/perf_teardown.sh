@@ -79,10 +79,10 @@ if [[ -n "${ws_gdp_path}" ]]; then
 
     if [[ "${DRY_RUN:-0}" -ge 2 ]]; then
         log "[DRY-RUN] Would move ${managed_ws} to trash"
-    elif [[ -d "${managed_ws}/.gdpxl" ]]; then
-        warn "[TEARDOWN] Teardown may have failed: .gdpxl still present in ${managed_ws}"
+    elif [[ -n "$(gdp list "${ws_gdp_path}:workspace" 2>/dev/null)" ]]; then
+        warn "[TEARDOWN] Teardown may have failed: workspace still registered in GDP: ${ws_gdp_path}"
     else
-        log "[TEARDOWN] Workspace teardown verified; moving to trash: ${managed_ws}"
+        log "[TEARDOWN] Workspace teardown verified (GDP record removed); moving to trash: ${managed_ws}"
         safe_mv_to_trash "${managed_ws}"
     fi
 else
