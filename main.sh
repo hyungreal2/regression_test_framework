@@ -296,6 +296,7 @@ get_tool_versions
 result_folder_id="${uniqueid}"
 [[ -n "${gdpver:-}" ]] && result_folder_id="${result_folder_id}_${gdpver}"
 [[ -n "${gdmver:-}" ]] && result_folder_id="${result_folder_id}_${gdmver}"
+export result_folder_id
 log "result_folder_id: ${result_folder_id}"
 
 validate_inputs

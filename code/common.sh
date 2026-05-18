@@ -32,6 +32,77 @@ error_exit() {
 #   cds.lib, cds.libicm, oa/<lib>/<cell>/, oa/<lib>/cdsinfo.tag
 # Reads MOCK_GDP_LIBS (space-separated) and MOCK_GDP_CELL from env.
 #######################################
+_mock_vse_run() {
+    local replay_file="$1"
+    local ts="$2"
+    local caller="$3"
+
+    echo "[MOCK:1][${ts}][${caller}] vse_run: parsing mkdir from $(basename "${replay_file}")" >&2
+    [[ -f "${replay_file}" ]] || { echo "[MOCK:1][${ts}][${caller}] replay not found: ${replay_file}" >&2; return; }
+
+    python3 - "${replay_file}" "${result_folder_id:-}" <<'PYEOF'
+import sys, re, os
+
+replay_file = sys.argv[1]
+result_folder_id = sys.argv[2] if len(sys.argv) > 2 else ""
+
+with open(replay_file) as f:
+    lines = f.readlines()
+
+def strip_i(line):
+    line = line.strip()
+    if line.startswith(r'\i'):
+        line = line[2:].lstrip()
+    return line
+
+skill_lines = [strip_i(l) for l in lines]
+
+# Pass 1: literal string assignments  varname = "value"
+sv = {}
+for s in skill_lines:
+    m = re.match(r'^([A-Za-z_]\w*)\s*=\s*"([^"]*)"$', s)
+    if m:
+        sv[m.group(1)] = m.group(2)
+
+def eval_strcat(args_str):
+    """Evaluate SKILL strcat() argument list into a plain string."""
+    result, s, i = "", args_str.strip(), 0
+    while i < len(s):
+        if s[i] in ' \t':
+            i += 1
+        elif s[i] == '"':
+            j = s.index('"', i + 1)
+            result += s[i+1:j]
+            i = j + 1
+        else:
+            m = re.match(r'([A-Za-z_]\w*)(\s*\([^)]*\))?', s[i:])
+            if m:
+                name, is_func = m.group(1), bool(m.group(2) and m.group(2).strip())
+                result += result_folder_id if is_func else sv.get(name, result_folder_id)
+                i += len(m.group(0))
+            else:
+                i += 1
+    return result
+
+# Pass 2: strcat assignments  varname = strcat(...)
+for s in skill_lines:
+    m = re.match(r'^([A-Za-z_]\w*)\s*=\s*strcat\s*\((.+)\)\s*$', s)
+    if m:
+        sv[m.group(1)] = eval_strcat(m.group(2))
+
+# Pass 3: system(strcat("mkdir -p " ...)) → mkdir
+for s in skill_lines:
+    m = re.match(r'^system\s*\(\s*strcat\s*\((.+)\)\s*\)\s*$', s)
+    if m:
+        cmd = eval_strcat(m.group(1))
+        if cmd.startswith("mkdir -p "):
+            dirpath = cmd[len("mkdir -p "):].strip()
+            sys.stderr.write(f"[MOCK:1] mkdir -p {dirpath}\n")
+            sys.stderr.flush()
+            os.makedirs(dirpath, exist_ok=True)
+PYEOF
+}
+
 _mock_gdp_workspace() {
     local ws_dir="$1"
     local ts="$2"
@@ -81,6 +152,14 @@ run_cmd() {
                         fi
                     elif [[ "${cmd}" == *"gdp rebuild workspace"* ]]; then
                         _mock_gdp_workspace "." "${ts}" "${caller}"
+                    elif [[ "${first_word}" == "vse_run" || "${first_word}" == "vse_sub" ]]; then
+                        local _replay_file=""
+                        [[ "${cmd}" =~ -replay[[:space:]]+([^[:space:]]+) ]] && _replay_file="${BASH_REMATCH[1]}"
+                        if [[ -n "${_replay_file}" ]]; then
+                            _mock_vse_run "${_replay_file}" "${ts}" "${caller}"
+                        else
+                            echo "[SKIP:1][${ts}][${caller}] ${cmd}" >&2
+                        fi
                     else
                         echo "[SKIP:1][${ts}][${caller}] ${cmd}" >&2
                     fi
