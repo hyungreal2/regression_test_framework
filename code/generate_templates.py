@@ -103,24 +103,22 @@ if not mode:
 # Create a the result folder if not exist
 os.makedirs(os.path.join(WORKSPACE, result_folder), exist_ok=True)
 
-# Parse control file: mapping from command name -> code
+# Parse control file: Start/End block format
 control_map = {}
+current_name, current_lines = None, []
 for cline in control_lines:
     cline = cline.strip()
-    if not cline or "->" not in cline:
+    if not cline:
         continue
-    idx = cline.rfind("->")
-    code = cline[:idx].strip()
-    name = cline[idx+2:].strip()
-    # Normalize name: ensure single space after commas
-    name = re.sub(r'\s*,\s*', ', ', name)
-    control_map[name] = code
-
-# Debug: print control map
-print("Control map keys:")
-for k in sorted(control_map.keys()):
-    print(f"  '{k}' => '{control_map[k][:60]}...'")
-print()
+    if cline.startswith("=== Start :"):
+        current_name = re.sub(r'\s*,\s*', ', ', cline.split(":", 1)[1].strip())
+        current_lines = []
+    elif cline.startswith("=== End"):
+        if current_name:
+            control_map[current_name] = ' "\\n" '.join(current_lines)
+        current_name = None
+    elif current_name:
+        current_lines.append(cline)
 
 
 def replace_names(code, line_num, cell_name=None):
