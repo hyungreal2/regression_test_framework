@@ -156,11 +156,11 @@ for mode in "${run_modes[@]}"; do
             fi
             ;;
         changeLibRef)
-            if [[ -z "${libname}" || -z "${toLib}" ]]; then
-                warn "Skipping ${mode}: -lib and -toLib are required"
+            if [[ -z "${libname}" || -z "${cellname}" || -z "${toLib}" ]]; then
+                warn "Skipping ${mode}: -lib, -cell, and -toLib are required"
                 skip=true
             else
-                mode_args+=(-lib "${libname}" -toLib "${toLib}")
+                mode_args+=(-lib "${libname}" -cell "${cellname}" -toLib "${toLib}")
             fi
             ;;
         copyHierToEmpty|copyHierToNonEmpty)

@@ -61,6 +61,7 @@ if mode:
         require_arg("cellname", args.cellname)
     elif mode == "changeLibRef":
         require_arg("libname",  args.libname)
+        require_arg("cellname", args.cellname)
         require_arg("toLib",    args.toLib)
     elif mode in ("replace", "deleteAllMarkers"):
         require_arg("libname",  args.libname)

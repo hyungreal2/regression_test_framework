@@ -200,7 +200,7 @@ _validate_mode_args() {
             _req "-lib" "${libname}"; _req "-cell" "${cellname}"
             _req "-fromLib" "${fromLib}"; _req "-toLib" "${toLib}" ;;
         changeLibRef)
-            _req "-lib" "${libname}"; _req "-toLib" "${toLib}" ;;
+            _req "-lib" "${libname}"; _req "-cell" "${cellname}"; _req "-toLib" "${toLib}" ;;
         copyHierToEmpty|copyHierToNonEmpty)
             _req "-fromLib" "${fromLib}"; _req "-fromCell" "${fromCell}"
             _req "-toLib" "${toLib}" ;;
