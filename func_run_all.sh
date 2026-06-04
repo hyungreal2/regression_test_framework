@@ -9,7 +9,7 @@ source "${script_dir}/code/env.sh"
 source "${script_dir}/code/common.sh"
 
 readonly FUNC_VALID_MODES=(
-    checkHier renameRefLib changeRefLib
+    checkHier renameRefLib changeLibRef
     replace deleteAllMarkers
     copyHierToEmpty copyHierToNonEmpty
 )
@@ -155,7 +155,7 @@ for mode in "${run_modes[@]}"; do
                             -fromLib "${fromLib}" -toLib "${toLib}")
             fi
             ;;
-        changeRefLib)
+        changeLibRef)
             if [[ -z "${libname}" || -z "${toLib}" ]]; then
                 warn "Skipping ${mode}: -lib and -toLib are required"
                 skip=true

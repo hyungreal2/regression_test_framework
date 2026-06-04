@@ -20,7 +20,7 @@ log "Logging to ${logfile}"
 # FUNC: mode constants
 # ─────────────────────────────────────────────────────────────────────────────
 readonly FUNC_VALID_MODES=(
-    checkHier renameRefLib changeRefLib
+    checkHier renameRefLib changeLibRef
     replace deleteAllMarkers
     copyHierToEmpty copyHierToNonEmpty
 )
@@ -199,7 +199,7 @@ _validate_mode_args() {
         renameRefLib)
             _req "-lib" "${libname}"; _req "-cell" "${cellname}"
             _req "-fromLib" "${fromLib}"; _req "-toLib" "${toLib}" ;;
-        changeRefLib)
+        changeLibRef)
             _req "-lib" "${libname}"; _req "-toLib" "${toLib}" ;;
         copyHierToEmpty|copyHierToNonEmpty)
             _req "-fromLib" "${fromLib}"; _req "-fromCell" "${fromCell}"

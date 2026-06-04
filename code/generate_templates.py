@@ -27,7 +27,7 @@ parser.add_argument('--result_folder', '-u', metavar="DATE", default="datetime.n
                     help="Location of the workspace.")
 # ── Func mode args ────────────────────────────────────────────────────────────
 parser.add_argument('--mode', '-M', metavar="MODE", default=None,
-                    choices=["checkHier", "renameRefLib", "changeRefLib",
+                    choices=["checkHier", "renameRefLib", "changeLibRef",
                              "replace", "deleteAllMarkers",
                              "copyHierToEmpty", "copyHierToNonEmpty"],
                     help="Func test mode. If not given, runs as cico mode.")
@@ -59,7 +59,7 @@ if mode:
         require_arg("fromLib",  args.fromLib)
         require_arg("toLib",    args.toLib)
         require_arg("cellname", args.cellname)
-    elif mode == "changeRefLib":
+    elif mode == "changeLibRef":
         require_arg("libname",  args.libname)
         require_arg("toLib",    args.toLib)
     elif mode in ("replace", "deleteAllMarkers"):
@@ -130,7 +130,7 @@ def replace_names(code, line_num, cell_name=None):
             code = code.replace('"RowNo"',    f'"Row_{line_num}"')
             code = code.replace('"libname"',  f'"{args.libname}"')
             code = code.replace('"cellname"', f'"{args.cellname}"')
-        elif mode in ("renameRefLib", "changeRefLib"):
+        elif mode in ("renameRefLib", "changeLibRef"):
             code = code.replace('RowNo_libname_cellname',
                                 f'Row_{line_num}_{args.libname}_{args.cellname}')
             code = code.replace('"libname"',  f'"{args.libname}"')

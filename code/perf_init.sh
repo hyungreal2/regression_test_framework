@@ -49,7 +49,7 @@ perf_libs() {
             echo "${l}" ;;
         renameRefLib)
             echo "${l} ${l}_ORIGIN ${l}_TARGET" ;;
-        changeRefLib)
+        changeLibRef)
             echo "${l} ${l}_ORIGIN ${l}_TARGET ${l}_MIX" ;;
         copyHierToEmpty)
             echo "${l} ${l}_CHIP ${l}_COPY" ;;

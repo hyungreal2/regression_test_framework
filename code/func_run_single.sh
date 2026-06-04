@@ -32,7 +32,7 @@ log "[TEST ${num}] uniquetestid=${uniquetestid}"
 # the workspace based on mode
 #######################################
 case "${mode}" in
-    checkHier|renameRefLib|changeRefLib|replace|deleteAllMarkers)
+    checkHier|renameRefLib|changeLibRef|replace|deleteAllMarkers)
         [[ -n "${libname:-}" ]] || error_exit "[TEST ${num}] libname required for mode=${mode}"
         init_libs=("${libname}")
         ;;
