@@ -67,8 +67,8 @@ _test_rc=0
     log "[TEST ${num}] Linking cdsLibMgr.il → ${workspace_name}"
     run_cmd "ln -sf \"${CDS_LIB_MGR}\" \"${workspace_name}\""
 
-    log "[TEST ${num}] Linking .cdsenv → ${workspace_name}/.cdsenv"
-    run_cmd "ln -sf \"${script_dir}/code/.cdsenv\" \"${workspace_name}/.cdsenv\""
+    #log "[TEST ${num}] Linking .cdsenv → ${workspace_name}/.cdsenv"
+    #run_cmd "ln -sf \"${script_dir}/code/.cdsenv\" \"${workspace_name}/.cdsenv\""
 
     #######################################
     # Enter workspace and run Virtuoso

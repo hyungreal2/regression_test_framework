@@ -53,6 +53,7 @@ total_count=0
         (( total_count++ )) || true
         testname=$(basename "${logfile}" .log)
 
+        echo "Expected row: ${expected_row}"
         if (( expected_row > 0 )) && \
            [[ "$(grep -c 'Row_' "${logfile}" 2>/dev/null || echo 0)" -ne "${expected_row}" ]]; then
             result="FAIL"

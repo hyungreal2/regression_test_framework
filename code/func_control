@@ -1,3 +1,4 @@
+
 === Start : auto checkout on, auto checkin off
 ddAutoCtlSetVars(0 0 3 0)
 checkinStatus = nil
@@ -293,7 +294,7 @@ rval1=hierValidation(preICMChangeN preHierVerInfo checkInstCellList 1 "RowNo" "l
 fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check in PASS" else "Check in FAIL")) 
 hiCloseWindow(geGetCellViewWindow(cvId))
 
-cond(( checkoutStatus == t && checkinStatus == nil ddAutoCtlSetVars(0 0 3 0) ) ( checkoutStatus == nil && checkinStatus == t ddAutoCtlSetVars(0 0 0 3) ) ( checkoutStatus == nil && checkinStatus == nil ddAutoCtlSetVars(0 0 0 0) ) ( checkoutStatus == t && checkinStatus == t ddAutoCtlSetVars(0 0 3 3) ))
+;;; cond(( checkoutStatus == t && checkinStatus == nil ddAutoCtlSetVars(0 0 3 0) ) ( checkoutStatus == nil && checkinStatus == t ddAutoCtlSetVars(0 0 0 3) ) ( checkoutStatus == nil && checkinStatus == nil ddAutoCtlSetVars(0 0 0 0) ) ( checkoutStatus == t && checkinStatus == t ddAutoCtlSetVars(0 0 3 3) ))
 === End 
 
 

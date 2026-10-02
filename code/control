@@ -262,3 +262,4 @@ rval1=Validate(id "gdmStateCI" "1")
 fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Cancel PASS" else "Cancel FAIL"))
 === End
 
+

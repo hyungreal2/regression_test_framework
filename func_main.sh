@@ -384,10 +384,11 @@ run_tests() {
 # FUNC: expected rows per mode (for func_summary.sh pass/fail detection)
 get_expected_rows() {
     case "$1" in
-        checkHier)        echo 6 ;;
-        renameRefLib)     echo 4 ;;
-        replace)          echo 8 ;;
-        deleteAllMarkers) echo 6 ;;
+        checkHier)        echo 12 ;;
+        renameRefLib)     echo 6 ;;
+        replace)          echo 11 ;;
+        changeLibRef)     echo 4 ;;
+        deleteAllMarkers) echo 12 ;;
         *)                echo 0 ;;
     esac
 }
