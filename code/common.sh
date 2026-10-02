@@ -203,7 +203,7 @@ run_vse() {
             sleep 10
         done
     else
-        run_cmd "vse_run -v ${VSE_VERSION} -replay ${replay} -log ${logfile}"
+        run_cmd "vse_run -v ${VSE_VERSION} -nograph -replay ${replay} -log ${logfile}"
     fi
 }
 
