@@ -1,5 +1,5 @@
 # CAT — 성능 테스트 프레임워크 개선 내용
-## `legacy/2_perf/main.pl` → `perf_main.sh`
+## `legacy.old:2_perf/main.pl` → `perf_main.sh`
 
 > English version: [IMPROVEMENTS_PERF.md](IMPROVEMENTS_PERF.md)
 > 통합 문서: [IMPROVEMENTS_KR.md](IMPROVEMENTS_KR.md)
@@ -50,7 +50,7 @@ main.pl
 ```
 
 ```perl
-# legacy/2_perf/main.pl (핵심 부분)
+# legacy.old:2_perf/main.pl (핵심 부분)
 chdir "GenerateReplayScript";
 system("\\rm replay*.au");
 foreach my $key (@templates) {
@@ -103,7 +103,7 @@ flowchart LR
 ### Legacy — 수동, 순차, rebuild 없음
 
 ```bash
-# legacy/2_perf/code/ICM_createProj.sh (main.pl 전에 수동으로 실행해야 함)
+# legacy.old:2_perf/code/ICM_createProj.sh (main.pl 전에 수동으로 실행해야 함)
 # 라이브러리 목록 스크립트에 하드코딩:
 libs=(DRAMLIB BM01 BM01_CHIP BM01_COPY BM01_ORIGIN BM01_TARGET BM02 ...)
 
@@ -175,7 +175,7 @@ unmanaged 테스트 케이스에서 올바른 동작입니다.
 ### Legacy — 하드코딩된 이름 변경 트릭
 
 ```bash
-# legacy/2_perf/main.template (생성된 main.sh)
+# legacy.old:2_perf/main.template (생성된 main.sh)
 # UNMANAGED 워크스페이스가 고정 경로에 있다고 가정
 if [[ " ${man_folders[*]} " == *" unmanaged "* ]]; then
     if [ -d $(pwd)/unmanaged/cadence_perf_ws ]; then

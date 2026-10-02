@@ -13,7 +13,7 @@
 
 | Area | Legacy | Current | Scope |
 |---|---|---|---|
-| Entry points | `legacy/1_cico/main.sh` (sequential Bash), `main.pl` (Perl + template) | `main.sh`, `perf_main.sh` | Both |
+| Entry points | `legacy.old:1_cico/main.sh` (sequential Bash), `main.pl` (Perl + template) | `main.sh`, `perf_main.sh` | Both |
 | Path resolution | Per-script `$(dirname $0)` | `script_dir` exported once | Both |
 | Error handling | Silent failures | `set -euo pipefail` + explicit messages | Both |
 | Dry-run support | None | 3-level `DRY_RUN` (0/1/2) | Both |
@@ -222,4 +222,4 @@ perf_main.sh flow:
 | `code/perf_teardown.sh` | `ICM_deleteProj.sh` | `gdp find` dynamic lookup, graceful not-found |
 | `code/perf_run_single.sh` | Not present | Dynamic workspace lookup, `run_vse()` |
 | `code/teardown_worker.sh` | Not present | Background teardown queue for regression tests |
-| `.gitignore` | Minimal | Runtime outputs, logs, `GenerateReplayScript/`, `legacy/` excluded |
+| `.gitignore` | Minimal | Runtime outputs, logs, `GenerateReplayScript/`, `reference/` excluded |

@@ -1,5 +1,5 @@
 # CAT — Performance Test Framework Improvements
-## `legacy/2_perf/main.pl` → `perf_main.sh`
+## `legacy.old:2_perf/main.pl` → `perf_main.sh`
 
 > Korean version: [IMPROVEMENTS_PERF_KR.md](IMPROVEMENTS_PERF_KR.md)
 > Combined overview: [IMPROVEMENTS.md](IMPROVEMENTS.md)
@@ -50,7 +50,7 @@ main.pl
 ```
 
 ```perl
-# legacy/2_perf/main.pl (key section)
+# legacy.old:2_perf/main.pl (key section)
 chdir "GenerateReplayScript";
 system("\\rm replay*.au");
 foreach my $key (@templates) {
@@ -103,7 +103,7 @@ flowchart LR
 ### Legacy — Manual, Sequential, No Rebuild
 
 ```bash
-# legacy/2_perf/code/ICM_createProj.sh (must be run manually before main.pl)
+# legacy.old:2_perf/code/ICM_createProj.sh (must be run manually before main.pl)
 # Library list HARDCODED in script:
 libs=(DRAMLIB BM01 BM01_CHIP BM01_COPY BM01_ORIGIN BM01_TARGET BM02 ...)
 
@@ -175,7 +175,7 @@ correct behaviour for the unmanaged test case.
 ### Legacy — Hardcoded Rename Trick
 
 ```bash
-# legacy/2_perf/main.template (generated main.sh)
+# legacy.old:2_perf/main.template (generated main.sh)
 # UNMANAGED workspace assumed at a FIXED path
 if [[ " ${man_folders[*]} " == *" unmanaged "* ]]; then
     if [ -d $(pwd)/unmanaged/cadence_perf_ws ]; then

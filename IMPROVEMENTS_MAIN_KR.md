@@ -1,5 +1,5 @@
 # CAT — 회귀 테스트 프레임워크 개선 내용
-## `legacy/1_cico/main.sh` → `main.sh`
+## `legacy.old:1_cico/main.sh` → `main.sh`
 
 > English version: [IMPROVEMENTS_MAIN.md](IMPROVEMENTS_MAIN.md)
 > 통합 문서: [IMPROVEMENTS_KR.md](IMPROVEMENTS_KR.md)
@@ -31,7 +31,7 @@
 ### Legacy — 모든 것이 인라인
 
 ```bash
-# legacy/1_cico/main.sh (포맷 없는 원본 코드)
+# legacy.old:1_cico/main.sh (포맷 없는 원본 코드)
 #!/bin/bash show_help() { ... } set -e
 dateno=$(date +%Y%m%d_%H%M%S)
 user_name=$(echo $USER)
@@ -130,7 +130,7 @@ run_cmd "mv -f \"${script_dir}/code/${replays_folder}/replay_${num}.il\" \"${tes
 ### Legacy — 순차 for 루프
 
 ```bash
-# legacy/1_cico/main.sh
+# legacy.old:1_cico/main.sh
 for i in $tests; do
     three_digit_num=$(printf "%03d" $i)
     testdir=$(pwd)/"$regression_test_name"/test_$three_digit_num
@@ -183,7 +183,7 @@ export된 환경 변수로 전달 — 조율자와 깔끔하게 분리.
 ### Legacy — 바이너리 직접 호출
 
 ```bash
-# legacy/1_cico/main.sh (테스트 루프 안)
+# legacy.old:1_cico/main.sh (테스트 루프 안)
 virtuoso \
     -replay ../replay_$three_digit_num.il \
     -log ../../../CDS_log/$uniqueid/CDS_$three_digit_num".log" || true

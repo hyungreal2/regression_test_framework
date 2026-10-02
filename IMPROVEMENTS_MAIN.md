@@ -1,5 +1,5 @@
 # CAT — Regression Test Framework Improvements
-## `legacy/1_cico/main.sh` → `main.sh`
+## `legacy.old:1_cico/main.sh` → `main.sh`
 
 > Korean version: [IMPROVEMENTS_MAIN_KR.md](IMPROVEMENTS_MAIN_KR.md)
 > Combined overview: [IMPROVEMENTS.md](IMPROVEMENTS.md)
@@ -31,7 +31,7 @@
 ### Legacy — Everything Inline
 
 ```bash
-# legacy/1_cico/main.sh (unformatted, as written)
+# legacy.old:1_cico/main.sh (unformatted, as written)
 #!/bin/bash show_help() { ... } set -e
 dateno=$(date +%Y%m%d_%H%M%S)
 user_name=$(echo $USER)
@@ -132,7 +132,7 @@ Works correctly from any working directory.
 ### Legacy — Sequential for Loop
 
 ```bash
-# legacy/1_cico/main.sh
+# legacy.old:1_cico/main.sh
 for i in $tests; do
     three_digit_num=$(printf "%03d" $i)
     testdir=$(pwd)/"$regression_test_name"/test_$three_digit_num
@@ -184,7 +184,7 @@ Time ─────────────────────────
 ### Legacy — Direct Binary Call
 
 ```bash
-# legacy/1_cico/main.sh (inside test loop)
+# legacy.old:1_cico/main.sh (inside test loop)
 virtuoso \
     -replay ../replay_$three_digit_num.il \
     -log ../../../CDS_log/$uniqueid/CDS_$three_digit_num".log" || true

@@ -13,7 +13,7 @@
 
 | 항목 | Legacy | 현재 | 적용 범위 |
 |---|---|---|---|
-| 진입점 | `legacy/1_cico/main.sh` (순차 Bash), `main.pl` (Perl + 템플릿) | `main.sh`, `perf_main.sh` | 공통 |
+| 진입점 | `legacy.old:1_cico/main.sh` (순차 Bash), `main.pl` (Perl + 템플릿) | `main.sh`, `perf_main.sh` | 공통 |
 | 경로 관리 | 각 스크립트 `$(dirname $0)` | `script_dir` 한 번만 export | 공통 |
 | 에러 처리 | 조용한 실패 | `set -euo pipefail` + 명시적 메시지 | 공통 |
 | Dry-run 지원 | 없음 | 3단계 `DRY_RUN` (0/1/2) | 공통 |
@@ -222,4 +222,4 @@ perf_main.sh 실행 흐름:
 | `code/perf_teardown.sh` | `ICM_deleteProj.sh` | `gdp find` 동적 조회, not-found 우아하게 처리 |
 | `code/perf_run_single.sh` | 없음 | 동적 워크스페이스 조회, `run_vse()` |
 | `code/teardown_worker.sh` | 없음 | 회귀 테스트용 백그라운드 teardown 큐 |
-| `.gitignore` | 최소 | 런타임 출력, 로그, `GenerateReplayScript/`, `legacy/` 제외 |
+| `.gitignore` | 최소 | 런타임 출력, 로그, `GenerateReplayScript/`, `reference/` 제외 |
