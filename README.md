@@ -37,7 +37,10 @@ CAT/
 ├── site/
 │   ├── dev.env                    # Site values for local development (same as shared/code/env.sh)
 │   └── prod.env                   # Site values of the prod deployments
-├── tools/mock/                    # Mock gdp / xlp4 for DRY_RUN testing (not deployed)
+├── deploy.sh                      # Assemble a suite for a site in its prod layout
+├── tools/
+│   ├── compare_deploy.sh          # Diff a deployment against a prod snapshot
+│   └── mock/                      # Mock gdp / xlp4 for DRY_RUN testing (not deployed)
 ├── docs/                          # Manuals, improvement notes, analysis
 └── reference/                     # Local prod / legacy snapshots (git-ignored)
 ```
@@ -48,6 +51,30 @@ Runtime outputs (`log/`, `CDS_log/`, `WORKSPACES_*`, `result/`, ...) are created
 Site values (`MAX_CASES`, `FROM_LIB`, `GDP_BASE`, `VSE_VERSION`, `ICM_ENV`, `CDS_LIB_MGR`) are the only
 difference between sites. `site/<site>.env` lists them as `KEY=value` lines that replace the matching lines of
 `shared/code/env.sh` when a suite is deployed.
+
+---
+
+## Deploy
+
+`deploy.sh` assembles one suite in its prod layout: tracked files of `suites/<suite>/` with the
+`shared/` links dereferenced, and `code/env.sh` rendered with `site/<site>.env`.
+
+```bash
+./deploy.sh perf prod                 # → build/prod/2_perf_mp
+./deploy.sh cico prod /path/to/1_cico_mp
+```
+
+The destination must not exist or must be empty. Only git-tracked files are copied, so runtime
+outputs never end up in a deployment.
+
+Check a deployment against a prod snapshot (runtime outputs and generated replays are ignored):
+
+```bash
+tools/compare_deploy.sh build/prod/2_perf_mp reference/prod/2_perf_mp
+```
+
+Expected result: perf and func are identical; cico has one extra file, `code/.cdsenv`
+(cico uses the func `.cdsenv`; the prod snapshot is missing it).
 
 ---
 
