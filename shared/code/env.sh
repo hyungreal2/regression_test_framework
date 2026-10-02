@@ -52,3 +52,5 @@ PERF_GDP_BASE="${GDP_BASE}/perf"
 PERF_LIBS=(BM01 BM02 BM03)
 PERF_CELLS=(VP_FULLCHIP FULLCHIP XE_FULLCHIP_BASE)
 PERF_TESTS=(checkHier renameRefLib changeLibRef replace deleteAllMarker copyHierToEmpty copyHierToNonEmpty)  # order = Test<N> number in the replay templates
+PERF_BASE_LIBS=(DRAMLIB)        # added to every perf workspace (legacy's single workspace always had it)
+PERF_PRISTINE_OA=".oa_pristine" # UNMANAGED: untouched copy of oa/, restored before every run

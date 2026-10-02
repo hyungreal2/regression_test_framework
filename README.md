@@ -256,6 +256,13 @@ Workspace names follow the pattern: `perf_<testtype>_<lib>_<uniqueid>`
 
 > `gdp build workspace` is serialized with `flock` regardless of `-j` to reduce GDP server load.
 
+Every run starts from the same data. Before each replay (not timed), `perf_run_single.sh` resets the workspace:
+- MANAGED: `xlp4 revert` of files left opened, `xlp4 sync`, and `sync -f` only for files sync refuses to clobber
+- UNMANAGED: restore `oa/` from `.oa_pristine/`, the copy `perf_init.sh` saves after setup
+  (workspaces created before this change have no copy and run without reset)
+
+Every perf workspace also gets `PERF_BASE_LIBS` (`DRAMLIB`), which the HierCopy templates skip.
+
 ---
 
 ## Summary Reports

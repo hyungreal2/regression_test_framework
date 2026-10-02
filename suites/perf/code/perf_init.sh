@@ -68,6 +68,12 @@ if [[ -n "${PERF_COMMON_LIBS:-}" ]]; then
     done
 fi
 
+# Libraries every perf workspace needs (e.g. DRAMLIB, which the HierCopy
+# templates skip); added once even if also given with -common
+for _bl in "${PERF_BASE_LIBS[@]}"; do
+    [[ " ${libs[*]} " == *" ${_bl} "* ]] || libs+=("${_bl}")
+done
+
 # Export for gdp workspace mock (DRY_RUN=1)
 export MOCK_GDP_LIBS="${libs[*]}"
 export MOCK_GDP_CELL="${cell}"
@@ -149,6 +155,11 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
             log "[INIT]   ${tag}"
             sed -i 's/DMTYPE p4/DMTYPE none/g' "${tag}"
         done < <(find "${unmanaged_ws}/oa" -name "cdsinfo.tag" -print0)
+
+        # Keep a pristine copy; perf_run_single.sh restores oa from it before
+        # every unmanaged run so each run starts from the same data
+        log "[INIT] Saving pristine UNMANAGED oa: ${unmanaged_ws}/${PERF_PRISTINE_OA}"
+        run_cmd "cp -a \"${unmanaged_ws}/oa\" \"${unmanaged_ws}/${PERF_PRISTINE_OA}\""
 
         # Restore MANAGED oa via force-sync
         log "[INIT] Restoring MANAGED oa: xlp4 sync -f"

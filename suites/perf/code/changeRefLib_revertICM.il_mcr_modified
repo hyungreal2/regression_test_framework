@@ -48,10 +48,10 @@ prog((libPath)
 		printf("5. xlp4 submit managed library %Y\n" libPath) 
 		Exec(strcat("xlp4 submit -d 'restore changeRefLib' " libPath "/..."))
 	else
-		oriPath = "/user/virtuoso.catdm/USERS/CAT_DM/paul_test/lib_MIX/"
-		
-		printf("libPath: %Y\noriPath: %Y\n" libPath oriPath)
-		Exec(strcat("/usr/bin/cp -rf " oriPath libName "/* " libPath))
+		; UNMANAGED: perf_run_single.sh restores oa/ from .oa_pristine before
+		; every run, so nothing to copy here. (Was: cp -rf from a hard-coded
+		; /user/virtuoso.catdm/USERS/CAT_DM/paul_test/lib_MIX/ path.)
+		printf("libPath: %Y\nUNMANAGED: restored by perf_run_single.sh before the next run\n" libPath)
 	)
 	
 	

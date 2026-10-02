@@ -62,6 +62,44 @@ else
 fi
 
 #######################################
+# Reset workspace data before the run (not timed)
+# MANAGED  : revert files left opened by earlier runs, sync to head and
+#            force-sync only files sync refuses to clobber (legacy main.template)
+# UNMANAGED: restore oa from the pristine copy saved by perf_init.sh
+#######################################
+reset_managed_ws() {
+    local clobber_file sync_out
+    log "[RESET] MANAGED: revert opened files and sync (${ws_name})"
+    run_cmd "xlp4 -c \"${ws_name}\" -q revert \"//${ws_name}/...\"" || true
+    sync_out=$(run_cmd "xlp4 -c \"${ws_name}\" -q sync \"//${ws_name}/...\" 2>&1" || true)
+    clobber_file=$(mktemp)
+    grep "Can't clobber writable file" <<< "${sync_out}" \
+        | sed "s/^.*Can't clobber writable file //" > "${clobber_file}" || true
+    if [[ -s "${clobber_file}" ]]; then
+        log "[RESET] Force-syncing $(wc -l < "${clobber_file}") writable file(s)"
+        run_cmd "xlp4 -c \"${ws_name}\" -x \"${clobber_file}\" sync -f"
+    fi
+    rm -f "${clobber_file}"
+}
+
+reset_unmanaged_ws() {
+    local pristine="${unmanaged_ws}/${PERF_PRISTINE_OA}"
+    if [[ ! -d "${pristine}" ]]; then
+        warn "[RESET] No pristine copy (${pristine}); workspace predates it, running without reset"
+        return 0
+    fi
+    command -v rsync >/dev/null || error_exit "rsync is required to restore ${unmanaged_ws}/oa"
+    log "[RESET] UNMANAGED: restore oa from ${PERF_PRISTINE_OA}"
+    run_cmd "rsync -a --delete \"${pristine}/\" \"${unmanaged_ws}/oa/\""
+}
+
+if [[ "${mode}" == "managed" ]]; then
+    reset_managed_ws
+else
+    reset_unmanaged_ws
+fi
+
+#######################################
 # Run VSE inside workspace
 #######################################
 log "[RUN] Running VSE (mode=${VSE_MODE:-run}) in ${ws_dir}"
