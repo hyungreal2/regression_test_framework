@@ -2,8 +2,8 @@
 #######################################
 # Mock gdp command for local testing
 #
-# Usage: add code/mock/ to PATH before running scripts
-#   export PATH="$(pwd)/code/mock:${PATH}"
+# Usage: add tools/mock/ to PATH before running scripts
+#   export PATH="$(pwd)/tools/mock:${PATH}"
 #######################################
 
 subcommand="${1:-}"

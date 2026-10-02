@@ -24,7 +24,6 @@ GDP_BASE="/MEMORY/TEST/CAT/CAT_WORKING/${USER_NAME}"
 CICO_GDP_BASE="${GDP_BASE}/cico"
 
 # Tool config
-#VSE_VERSION="IC25.1.ISR5.EA010"
 VSE_VERSION="IC251_ISR5-023_CAT"
 ICM_ENV="/user/baap/ICM/icmanage.cshrc"
 CDS_LIB_MGR="/appl/LINUX/ICM/gdpxl.latest/SKILL/cdsLibMgr.il"

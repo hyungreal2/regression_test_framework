@@ -7,43 +7,58 @@ Supports parallel test execution, GDP workspace lifecycle management, and dry-ru
 
 ## Directory Structure
 
+The repo mirrors the three prod deployments (`1_cico_mp`, `2_perf_mp`, `3_func_mp`).
+Each `suites/<suite>/` directory has the same layout as its deployment and runs in place.
+Files used by more than one suite live once in `shared/` and are symlinked into each suite.
+
 ```
 CAT/
-├── main.sh                        # Regression test entry point
-├── perf_main.sh                   # Performance test entry point
-├── clean.sh                       # Remove all generated outputs
-├── MANUAL_MAIN.md                 # Beginner guide for main.sh (English)
-├── MANUAL_MAIN_KR.md              # Beginner guide for main.sh (Korean)
-├── MANUAL_PERF.md                 # Beginner guide for perf_main.sh (English)
-├── MANUAL_PERF_KR.md              # Beginner guide for perf_main.sh (Korean)
-├── code/
-│   ├── env.sh                     # Environment config (not tracked by git)
-│   ├── common.sh                  # Shared utilities (log, run_cmd, run_vse, build_gdp_workspace, ...)
-│   ├── generate_templates.py      # Generate replay_001.il ~ replay_256.il
-│   ├── init.sh                    # Create GDP project/workspace per test
-│   ├── run_single_test.sh         # Execute a single test (called by xargs)
-│   ├── teardown.sh                # Destroy GDP project/workspace for one test
-│   ├── teardown_all.sh            # Batch teardown for all tests in a regression dir
-│   ├── teardown_worker.sh         # Background teardown queue worker
-│   ├── summary.sh                 # Parse CDS logs and generate pass/fail summary
-│   ├── perf_generate_replay.sh    # Generate perf replay .au files
-│   ├── perf_init.sh               # Create GDP project/workspace per perf combo
-│   ├── perf_run_single.sh         # Execute a single perf test + record elapsed time
-│   ├── perf_teardown.sh           # Destroy GDP workspace for one perf combo
-│   └── perf_summary.sh            # Generate per-test elapsed time summary
+├── shared/
+│   ├── clean.sh                   # Remove generated outputs (symlinked as suites/*/clean.sh)
+│   └── code/
+│       ├── env.sh                 # Environment config; site values default to site/dev.env
+│       ├── common.sh              # log, run_cmd, run_vse (vse_run -nograph), mocks
+│       ├── generate_templates.py  # Build replay_NNN.il from control + list + template (cico, func)
+│       ├── init.sh · teardown.sh · teardown_all.sh · teardown_worker.sh
+│       ├── run_single_test.sh · summary.sh
+│       ├── mgHierParse.il · virtuosoVer.il
+│       └── .cdsenv                # Virtuoso env shared by cico and func
+├── suites/
+│   ├── cico/                      # = 1_cico_mp
+│   │   ├── main.sh                # Regression test entry point
+│   │   └── code/                  # control, list, template.il, Flat_list, Hierarchical_List (+ shared links)
+│   ├── perf/                      # = 2_perf_mp
+│   │   ├── perf_main.sh           # Performance test entry point
+│   │   ├── GenerateReplayScript/  # createReplay.pl + replay templates (*.au outputs are ignored)
+│   │   └── code/                  # perf_*.sh, perfFunctions.il, perf .cdsenv / functions.il, revert SKILL (+ shared links)
+│   └── func/                      # = 3_func_mp
+│       ├── func_main.sh           # Functional test entry point
+│       └── code/                  # func_*.sh, func_control, func_template.il, validate.il, list_<mode>*, functions.il (+ shared links)
+├── site/
+│   ├── dev.env                    # Site values for local development (same as shared/code/env.sh)
+│   └── prod.env                   # Site values of the prod deployments
+├── tools/mock/                    # Mock gdp / xlp4 for DRY_RUN testing (not deployed)
+├── docs/                          # Manuals, improvement notes, analysis
+└── reference/                     # Local prod / legacy snapshots (git-ignored)
 ```
+
+Run a suite from its own directory, for example `cd suites/perf && ./perf_main.sh -h`.
+Runtime outputs (`log/`, `CDS_log/`, `WORKSPACES_*`, `result/`, ...) are created inside that suite directory.
+
+Site values (`MAX_CASES`, `FROM_LIB`, `GDP_BASE`, `VSE_VERSION`, `ICM_ENV`, `CDS_LIB_MGR`) are the only
+difference between sites. `site/<site>.env` lists them as `KEY=value` lines that replace the matching lines of
+`shared/code/env.sh` when a suite is deployed.
 
 ---
 
 ## Prerequisites
 
-- `env.sh` must exist at `code/env.sh`
 - Tools: `gdp`, `xlp4`, `vse_run` (or `vse_sub`) must be available in `$PATH`
 - Python 3 (standard library only, no conda required)
 
 ---
 
-## Configuration — `code/env.sh`
+## Configuration — `shared/code/env.sh`
 
 | Variable | Description |
 |----------|-------------|
@@ -229,10 +244,10 @@ Automatically called at the end of each `perf_main.sh` run. Reads `CDS_log/<uniq
 ## Clean Local Outputs
 
 ```bash
-./clean.sh
+cd suites/<suite> && ./clean.sh
 ```
 
-Removes: `regression_test_*/`, `CDS_log/`, `code/replay_files/`, dry-run workspaces (`cico_ws_*/`), Python cache.
+Cleans the suite directory it is run from. Removes: `regression_test_*/`, `CDS_log/`, `code/replay_files/`, dry-run workspaces (`cico_ws_*/`), Python cache.
 
 ---
 
@@ -240,7 +255,11 @@ Removes: `regression_test_*/`, `CDS_log/`, `code/replay_files/`, dry-run workspa
 
 | File | Content |
 |------|---------|
-| `MANUAL_MAIN.md` | Beginner guide for main.sh (English) |
-| `MANUAL_MAIN_KR.md` | Beginner guide for main.sh (Korean) |
-| `MANUAL_PERF.md` | Beginner guide for perf_main.sh (English) |
-| `MANUAL_PERF_KR.md` | Beginner guide for perf_main.sh (Korean) |
+| `docs/MANUAL_MAIN.md` | Beginner guide for main.sh (English) |
+| `docs/MANUAL_MAIN_KR.md` | Beginner guide for main.sh (Korean) |
+| `docs/MANUAL_PERF.md` | Beginner guide for perf_main.sh (English) |
+| `docs/MANUAL_PERF_KR.md` | Beginner guide for perf_main.sh (Korean) |
+| `docs/IMPROVEMENTS*.md` | Changes compared to legacy |
+| `docs/ANALYSIS_PERF_KR.md` | perf code and replay template analysis (Korean) |
+
+The manuals still describe the pre-restructure layout (root-level `main.sh`, `code/`); run commands from the suite directory.

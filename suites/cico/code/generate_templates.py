@@ -1,0 +1,1 @@
+../../../shared/code/generate_templates.py
