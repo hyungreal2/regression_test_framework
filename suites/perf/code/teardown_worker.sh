@@ -1,1 +1,0 @@
-../../../shared/code/teardown_worker.sh

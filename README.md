@@ -9,7 +9,8 @@ Supports parallel test execution, GDP workspace lifecycle management, and dry-ru
 
 The repo mirrors the three prod deployments (`1_cico_mp`, `2_perf_mp`, `3_func_mp`).
 Each `suites/<suite>/` directory has the same layout as its deployment and runs in place.
-Files used by more than one suite live once in `shared/` and are symlinked into each suite.
+Files that more than one suite actually uses live once in `shared/` and are symlinked into those suites.
+Files a suite ships in prod but never uses are kept in `archive/` and are not deployed.
 
 ```
 CAT/
@@ -19,14 +20,14 @@ CAT/
 │       ├── env.sh                 # Environment config; site values default to site/dev.env
 │       ├── common.sh              # log, run_cmd, run_vse (vse_run -nograph), mocks
 │       ├── generate_templates.py  # Build replay_NNN.il from control + list + template (cico, func)
-│       ├── init.sh · teardown.sh · teardown_all.sh · teardown_worker.sh
-│       ├── run_single_test.sh · summary.sh
-│       ├── mgHierParse.il · virtuosoVer.il
+│       ├── summary.sh · teardown_worker.sh                                                 (cico, func)
+│       ├── mgHierParse.il · virtuosoVer.il                                                 (cico, func)
 │       └── .cdsenv                # Virtuoso env shared by cico and func
 ├── suites/
 │   ├── cico/                      # = 1_cico_mp
 │   │   ├── main.sh                # Regression test entry point
-│   │   └── code/                  # control, list, template.il, Flat_list, Hierarchical_List (+ shared links)
+│   │   └── code/                  # run_single_test.sh, init.sh, teardown.sh, teardown_all.sh, validate.il,
+│   │                              # control, list, template.il, Flat_list, Hierarchical_List (+ shared links)
 │   ├── perf/                      # = 2_perf_mp
 │   │   ├── perf_main.sh           # Performance test entry point
 │   │   ├── GenerateReplayScript/  # createReplay.pl + replay templates (*.au outputs are ignored)
@@ -38,6 +39,7 @@ CAT/
 │   ├── dev.env                    # Site values for local development (same as shared/code/env.sh)
 │   └── prod.env                   # Site values of the prod deployments
 ├── deploy.sh                      # Assemble a suite for a site in its prod layout
+├── archive/                       # Unused prod files kept for reference (not deployed)
 ├── tools/
 │   ├── compare_deploy.sh          # Diff a deployment against a prod snapshot
 │   └── mock/                      # Mock gdp / xlp4 for DRY_RUN testing (not deployed)
@@ -73,8 +75,12 @@ Check a deployment against a prod snapshot (runtime outputs and generated replay
 tools/compare_deploy.sh build/prod/2_perf_mp reference/prod/2_perf_mp
 ```
 
-Expected result: perf and func are identical; cico has one extra file, `code/.cdsenv`
-(cico uses the func `.cdsenv`; the prod snapshot is missing it).
+Expected differences (all intended):
+- cico adds `code/.cdsenv` (cico uses the func `.cdsenv`) and `code/validate.il` (the legacy cico
+  version; `template.il` loads it and `control` calls `Validate()`, but the prod snapshot lacks it).
+- perf and func leave out the files listed in `archive/README.md`, plus the cico scripts prod also
+  ships but they never call (perf: `init.sh`, `run_single_test.sh`, `summary.sh`, `teardown.sh`,
+  `teardown_all.sh`, `teardown_worker.sh`; func: `run_single_test.sh`).
 
 ---
 
