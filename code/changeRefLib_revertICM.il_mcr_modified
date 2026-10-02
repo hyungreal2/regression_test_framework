@@ -1,0 +1,60 @@
+; revert ICM library after change reference library
+; **INPUT**
+; libName: STRING "libA"
+;
+; **EXAMPLE**
+; changeRefLib_revertICM("libA" "managed")
+; changeRefLib_revertICM("libA" "unmanaged")
+;
+
+procedure(Exec(cmd)
+	let((cid)
+		cid=ipcBeginProcess(cmd
+			            ""
+                                    lambda((c d) print("%s" d))
+                                    lambda((c d) print("%s" d)))
+		ipcWaitForProcess(cid)
+		while(ipcIsAliveProcess(cid) ipcSleep(1))
+	)
+)
+				
+
+
+procedure(changeRefLib_revertICM(libName managed)
+prog((libPath)
+	unless(member(managed list("managed" "unmanaged")) 
+		warn("managed input only allow 'managed' or 'unmanaged'")
+		return(nil)
+	)
+
+	libPath=ddGetObj(libName)->writePath
+
+	if(managed=="managed" then
+		printf("libPath: %Y\n" libPath)
+		printf("Rolling back managed workspace...\n")
+
+		printf("1. xlp4 sync %Y/...#1 managed library to rev #1...\n" libPath)
+		Exec(strcat("xlp4 sync " libPath "/...#1"))
+
+		printf("2. xlp4 edit %Y/... managed library...\n" libPath)
+		Exec(strcat("xlp4 edit " libPath "/..."))
+
+		printf("3. xlp4 sync %Y/... to head to make a conflict...\n" libPath)
+		Exec(strcat("xlp4 sync " libPath "/..."))
+
+		printf("4. xlp4 resolve -ay managed library...\n") 
+		Exec(strcat("xlp4 resolve -ay"))
+
+		printf("5. xlp4 submit managed library %Y\n" libPath) 
+		Exec(strcat("xlp4 submit -d 'restore changeRefLib' " libPath "/..."))
+	else
+		oriPath = "/user/virtuoso.catdm/USERS/CAT_DM/paul_test/lib_MIX/"
+		
+		printf("libPath: %Y\noriPath: %Y\n" libPath oriPath)
+		Exec(strcat("/usr/bin/cp -rf " oriPath libName "/* " libPath))
+	)
+	
+	
+	ddsHiRefresh()
+)
+)

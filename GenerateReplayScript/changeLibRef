@@ -1,0 +1,63 @@
+envLoadFile("../../code/.cdsenv")
+load("../../code/perfFunctions.il")
+code_path = "../../code/"
+result_path = "../../result/"
+load( strcat( code_path "date_virtuosoVer.il"))
+load( strcat( code_path "changeRefLib.il_mcr"))
+load( strcat( code_path "changeRefLib_revertICM.il_mcr_modified"))
+ddAutoCtlSetVars(0 0 3 3)
+
+
+;--------------------------------------------------
+;# Open Design
+;# [EQUIV] legacy changeRefLib:11 과 동일하게 openDesign("a") 로 되돌렸다.
+;#         createReplay.pl:72 의 치환 패턴 openDesign\(\s*"a"\s*\) 에 걸려야
+;#         lcv.txt 의 lib/cell 쌍이 주입된다. prod 가 인자를 미리 박아두면
+;#         이 치환을 비껴가 <LIB>_MIX 를 열게 되고, 그 lib 에 해당 cell 이
+;#         없으면 openDesign 자체가 실패한다.
+;#         changeRefLib 은 gdmCreateSpec + ccpChangeRefsByRule 로 라이브러리
+;#         스펙만 다루므로(perfFunctions.il:189-211) 열린 디자인과 무관하다.
+;#         단 열린 라이브러리가 OA 캐시 상태를 바꾸므로 측정값에는 영향이 있다.
+;--------------------------------------------------
+openDesign("a")
+
+;--------------------------------------------------
+;# Set Samsung Setting
+;--------------------------------------------------
+LoadSamsungEnv()
+hiFormDone(schSRCForm)
+hiCloseWindow(geGetCellViewWindow(gec()))
+hiDBoxOK(geDBox)
+
+
+;--------------------------------------------------
+; # Start time & Test2_Replace_Lib_here: Change Reference Library
+;--------------------------------------------------
+t1=getCurrentTime()
+changeRefLib(list(list("Replace_Lib_here_MIX" 'ALL "Replace_Lib_here_MIX")))
+
+;--------------------------------------------------
+;# End Time 
+;--------------------------------------------------
+t2=getCurrentTime()
+final=compareTime(t2 t1)
+
+managed=""
+ 
+unique_result_folder = strcat( result_path CDS_PV_REG_RES_NO)
+system(strcat("mkdir -p " unique_result_folder ))
+fd=outfile(strcat(unique_result_folder "/Test3_Replace_Lib_here" managed "_" virtuosoVer() ".log") "w")
+fprintf(fd "Test3_Replace_Lib_here. Performance Change Reference Library %s time %d\n" managed final)
+close(fd)
+
+;--------------------------------------------------
+;# Revert Last Change Reference Library operation.
+;--------------------------------------------------
+changeRefLib_revertICM("Replace_Lib_here_MIX" managed) 
+
+;;--------------------------------------------------
+;;# Exit
+;;--------------------------------------------------
+exit
+geSaveAllForm->none->value= t
+hiFormDone(geSaveAllForm)

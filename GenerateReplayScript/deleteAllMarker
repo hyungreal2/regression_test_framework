@@ -1,0 +1,79 @@
+\o
+\p
+
+\i envLoadFile("../../code/.cdsenv")
+\i load("../../code/perfFunctions.il")
+\i code_path = "../../code/"
+\i result_path = "../../result/"
+\i load( strcat( code_path "date_virtuosoVer.il"))
+\i ddAutoCtlSetVars(0 0 3 3)
+\i 
+\i ;--------------------------------------------------
+\i ;# Start Time ;# Open Design
+\i ;--------------------------------------------------
+\i openDesign("a")
+\i 
+\i ;--------------------------------------------------
+\i ;# Set Samsung Setting
+\i ;--------------------------------------------------
+\i LoadSamsungEnv()
+\i hiFormDone(schSRCForm)
+\i 
+\i ;--------------------------------------------------
+\i ;# Run Editor->Check->Hierarchy
+\i ;--------------------------------------------------
+\i schHiCheckHier()
+\i hiiSetCurrentForm('schCheckHierForm)
+\i schCheckHierForm->checkAlways->value= t
+\i schCheckHierForm->checkRefLibs->value= t
+\i schCheckHierForm->openMode->value="edit"
+\i schCheckHierForm->saveStrategy->value="Save all"
+\i schCheckHierForm->closeErrorCVs->value= t
+\i hiFormDone(schCheckHierForm)
+\i hiCloseWindow(geGetCellViewWindow(gec()))
+\i 
+\i ddsHiCloseData()
+\i hiiSetCurrentForm('ddsCloseDataForm)
+\i ddsCloseDataForm->CDCVModifiedOption->value="save"
+\i ddsiCloseDataButtonCB('all)
+\i hiFormDone(ddsCloseDataForm)
+\i 
+\i ;--------------------------------------------------
+\i ;# Start Time for Delete Markers.
+\i ;#Test5_Replace_Lib_here: Editor->Check->Delete All marker
+\i ;--------------------------------------------------
+\i t1=getCurrentTime()
+\i openDesign("a")
+\i geHiDeleteAllMarker()
+\i hiiSetCurrentForm('geDeleteAllMarkerForm)
+\i geDeleteAllMarkerForm->type->all->value =  t
+\i geDeleteAllMarkerForm->scope->value="hierarchy starting from top cellview"
+\i geDeleteAllMarkerForm->geDelMarkerAccessMode->value="edit"
+\i geDeleteAllMarkerForm->sourcesScope->value="all"
+\i hiFormDone(geDeleteAllMarkerForm)
+\i hiCloseWindow(geGetCellViewWindow(gec()))
+\i hiDBoxOK(geDBox)
+\i 
+\i 
+\i ;--------------------------------------------------
+\i ;# End Time 
+\i ;--------------------------------------------------
+\i t2=getCurrentTime()
+\i final=compareTime(t2 t1)
+\i 
+\i 
+\i managed=""
+\i 
+\i unique_result_folder = strcat( result_path CDS_PV_REG_RES_NO)
+\i system(strcat("mkdir -p " unique_result_folder ))
+\i fd=outfile(strcat(unique_result_folder "/Test5_Replace_Lib_here_" managed "_" virtuosoVer() ".log") "w")
+\i fprintf(fd "Test5_Replace_Lib_here. Performance Editor->Check->Delete %s time %d\n" managed final)
+\i close(fd)
+\i 
+\i ;--------------------------------------------------
+\i ;# Exit
+\i ;--------------------------------------------------
+\i exit
+\i geSaveAllForm->none->value= t
+\i hiFormDone(geSaveAllForm)
+\i 

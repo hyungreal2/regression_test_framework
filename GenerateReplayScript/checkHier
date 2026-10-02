@@ -1,0 +1,53 @@
+\o 
+\p 
+
+\i envLoadFile("../../code/.cdsenv")
+\i load("../../code/perfFunctions.il")
+\i code_path = "../../code/"
+\i result_path = "../../result/"
+\i load( strcat( code_path "date_virtuosoVer.il"))  
+\i ddAutoCtlSetVars(0 0 3 3)
+\i ;--------------------------------------------------
+\i ;# Start Time ;# Open Design
+\i ;--------------------------------------------------
+\i t1=getCurrentTime()
+\i openDesign( "a")
+\i ;--------------------------------------------------
+\i ;# Set Samsung Setting
+\i ;--------------------------------------------------
+\i LoadSamsungEnv()
+\i hiFormDone(schSRCForm)
+\i ;--------------------------------------------------
+\i ;# Test1_Replace_Lib_here: Editor->Check->Hierarchy
+\i ;--------------------------------------------------
+\i schHiCheckHier()
+\i hiiSetCurrentForm('schCheckHierForm)
+\i schCheckHierForm->checkAlways->value= t
+\i schCheckHierForm->checkRefLibs->value= t
+\i schCheckHierForm->openMode->value="edit"
+\i schCheckHierForm->saveStrategy->value="Save all"
+\i schCheckHierForm->closeErrorCVs->value= t
+\i hiFormDone(schCheckHierForm)
+\i hiCloseWindow(geGetCellViewWindow(gec()))
+\i 
+\i ;--------------------------------------------------
+\i ;# End Time 
+\i ;--------------------------------------------------
+\i t2=getCurrentTime()
+\i final=compareTime(t2 t1)
+\i 
+\i managed=""
+\i 
+\i unique_result_folder = strcat( result_path CDS_PV_REG_RES_NO)
+\i system(strcat("mkdir -p " unique_result_folder ))
+\i fd=outfile(strcat(unique_result_folder "/Test1_Replace_Lib_here_" managed "_" virtuosoVer() ".log") "w")
+\i fprintf(fd "Test1_Replace_Lib_here. Performance Edit-Check-Hierarchy %s time %d\n" managed final)
+\i close(fd)
+\i 
+\i ;--------------------------------------------------
+\i ;# Exit
+\i ;--------------------------------------------------
+\i exit
+\i geSaveAllForm->none->value= t
+\i hiFormDone(geSaveAllForm)
+\i 

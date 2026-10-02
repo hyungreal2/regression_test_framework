@@ -45,8 +45,9 @@ result/
 # Accumulated perf metrics (trend data, managed outside git)
 perf_metrics/
 
-# GenerateReplayScript: not managed in this repo (local reference only)
-GenerateReplayScript/
+# GenerateReplayScript: templates/createReplay.pl are tracked; generated outputs are not
+GenerateReplayScript/*.au
+GenerateReplayScript/lcv.txt
 
 # ICM mock directory for DRY_RUN testing (local only, not tracked)
 ICM/
@@ -55,8 +56,11 @@ ICM/
 .trash/
 
 # ----------------------------------------
-# Legacy reference files (local only, not tracked)
-legacy/
+# Reference snapshots (local only, not tracked)
+#   reference/prod/        deployed prod snapshot
+#   reference/legacy/      latest legacy (mcr_catdm)
+#   reference/legacy.old/  previous legacy copy
+reference/
 
 # Python
 # ----------------------------------------

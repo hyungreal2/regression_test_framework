@@ -1,0 +1,32 @@
+; change reference library script
+; **INPUT**
+; rules:	list(list(inLib fromLib toLib))
+;
+; **EXAMPLE**
+; changeRefLib(list(list("libA" 'ALL "libA")))					; in libA, change all libraries to libA
+; changeRefLib(list(list("libA" "libB" "libA") list("libA" "libC" "libA")))	; in libA, change libB and libC to libA
+; changeRefLib(list(list("libA" "libB" "libA") list("libB" "libC" "libB")))	; in libA, change libB to libA; in libB, change libC to libB
+;
+procedure(changeRefLib(rules)
+	let((rule updateList spec inLib fromLib toLib)
+		inLibTable = makeTable('inLibTable list())
+		foreach(rule rules
+			inLib = nthelem(1 rule)
+			fromLib = nthelem(2 rule)
+			toLib = nthelem(3 rule)
+			
+			if(member(fromLib list('ALL 'All 'all)) then	
+				inLibTable[inLib] = cons(list('fromLibAll nil 'fromCellAll nil 'fromViewAll nil 'toLib toLib 'toCellAsIs nil 'toViewAsIs nil) inLibTable[inLib])
+			else
+				inLibTable[inLib] = cons(list('fromLib fromLib 'fromCellAll nil 'fromViewAll nil 'toLib toLib 'toCellAsIs nil 'toViewAsIs nil) inLibTable[inLib])
+			)
+		)
+
+		foreach(inLib inLibTable	
+			updateList = gdmCreateSpecList()
+			spec = gdmCreateSpec(inLib nil nil nil "CDBA")
+			gdmAddSpecToSpecList(spec updateList)
+			ccpChangeRefsByRule(updateList inLibTable[inLib] nil t)
+		)	
+	)
+)

@@ -1,0 +1,54 @@
+\o
+\p
+
+\i envLoadFile("../../code/.cdsenv")
+\i load("../../code/perfFunctions.il")
+\i code_path = "../../code/"
+\i result_path = "../../result/"
+\i load( strcat( code_path "date_virtuosoVer.il"))
+\i ddAutoCtlSetVars(0 0 3 3)
+\i 
+\i ;--------------------------------------------------
+\i ;# Open Design
+\i ;# [EQUIV] t1 을 여기서 제거했다. legacy copyHierToNonEmpty:11 은 openDesign 을
+\i ;#         측정 구간 밖에 둔다. t1 은 연산 직전으로 복원 (legacy :25).
+\i ;--------------------------------------------------
+\i openDesign("a")
+\i 
+\i ;--------------------------------------------------
+\i ;# Set Samsung Setting
+\i ;--------------------------------------------------
+\i LoadSamsungEnv()
+\i hiFormDone(schSRCForm)
+\i hiCloseWindow(geGetCellViewWindow(gec()))
+\i hiDBoxOK(geDBox)
+\i 
+\i ;--------------------------------------------------
+\i ;# Start Time
+\i ;# Test7_Replace_Lib_here: Copy Hierarchy to non-empty library
+\i ;--------------------------------------------------
+\i t1=getCurrentTime()
+\i HierCopy("Replace_Lib_here" "Replace_Cell_here" "" "Replace_Lib_here_CHIP" list("DRAMLIB"))
+\i 
+\i ;--------------------------------------------------
+\i ;; End Time 
+\i ;--------------------------------------------------
+\i t2=getCurrentTime()
+\i final=compareTime(t2 t1)
+\i 
+\i managed=""
+\i 
+\i unique_result_folder = strcat( result_path CDS_PV_REG_RES_NO)
+\i system(strcat("mkdir -p " unique_result_folder ))
+\i fd=outfile(strcat(unique_result_folder "/Test7_Replace_Lib_here_" managed "_" virtuosoVer() ".log") "w")
+\i fprintf(fd "Test7_Replace_Lib_here. Performance Copy Hierarchy to Non-empty Library %s time %d\n" managed final)
+\i close(fd)
+\i 
+\i 
+\i ;--------------------------------------------------
+\i ;# Exit
+\i ;--------------------------------------------------
+\i exit
+\i geSaveAllForm->none->value= t
+\i hiFormDone(geSaveAllForm)
+\i 
