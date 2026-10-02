@@ -31,7 +31,7 @@ hiDBoxOK(geDBox)
 
 
 ;--------------------------------------------------
-; # Start time & Test2_Replace_Lib_here: Change Reference Library
+; # Start time & Test3_Replace_Lib_here: Change Reference Library
 ;--------------------------------------------------
 t1=getCurrentTime()
 changeRefLib(list(list("Replace_Lib_here_MIX" 'ALL "Replace_Lib_here_MIX")))
@@ -46,7 +46,7 @@ managed=""
  
 unique_result_folder = strcat( result_path CDS_PV_REG_RES_NO)
 system(strcat("mkdir -p " unique_result_folder ))
-fd=outfile(strcat(unique_result_folder "/Test3_Replace_Lib_here" managed "_" virtuosoVer() ".log") "w")
+fd=outfile(strcat(unique_result_folder "/Test3_Replace_Lib_here_" managed "_" virtuosoVer() ".log") "w")
 fprintf(fd "Test3_Replace_Lib_here. Performance Change Reference Library %s time %d\n" managed final)
 close(fd)
 

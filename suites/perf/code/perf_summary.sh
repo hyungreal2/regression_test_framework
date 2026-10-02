@@ -75,16 +75,18 @@ log "Perf summary written to ${summary_file}"
 #######################################
 # Export metrics as JSON for trend tracking
 #
-# Source: result/{uniqueid}/Test{N}_{lib}_{mode}_{uniqueid}.log
-#         Log line: "Test1_BM01. Performance {desc} {mode} time {elapsed_ms}"
-#         elapsed_ms = db open~close time (Virtuoso internal)
+# Source: result/{uniqueid}/Test{N}_{lib}_{mode}_{virtuoso_ver}.log
+#         Log line: "Test1_BM01. Performance {desc} {mode} time {elapsed_sec}"
+#         elapsed_sec = compareTime(t2 t1) inside the replay, in seconds
+#         virtuoso_ver = virtuosoVer() of the Virtuoso that ran the replay
 #
 # Output:
 #   perf_metrics/{uniqueid}.json   — all records for this run (array)
 #   perf_metrics/history.jsonl     — append-only, one JSON object per line
 #                                    (ready for DB import)
 #
-# Test number (N) is derived from PERF_TESTS array order (1-based).
+# Test number (N) is derived from PERF_TESTS array order (1-based); that order
+# must match the Test<N> numbers written by the GenerateReplayScript templates.
 #######################################
 export_metrics() {
     local result_dir="${script_dir}/result/${uniqueid}"
@@ -111,7 +113,7 @@ export_metrics() {
         testtype_num["${PERF_TESTS[$i]}"]=$(( i + 1 ))
     done
 
-    local csv_header="run_time,uniqueid,testtype,lib,mode,tool_ver,elapsed_ms,description"
+    local csv_header="run_time,uniqueid,testtype,lib,mode,tool_ver,virtuoso_ver,elapsed_sec,description"
 
     local -a records=()     # JSON strings
     local -a csv_rows=()    # CSV strings (no header)
@@ -127,20 +129,30 @@ export_metrics() {
             continue
         fi
 
-        local log_file="${result_dir}/Test${test_num}_${ll}_${mm}_${uniqueid}.log"
-        if [[ ! -f "${log_file}" ]]; then
-            warn "Log not found: $(basename "${log_file}") — skipping"
+        # The replay names the file after virtuosoVer(), so match any version suffix
+        local log_prefix="Test${test_num}_${ll}_${mm}_"
+        local -a log_matches=()
+        mapfile -t log_matches < <(compgen -G "${result_dir}/${log_prefix}*.log" || true)
+        if [[ ${#log_matches[@]} -eq 0 ]]; then
+            warn "Log not found: ${log_prefix}*.log — skipping"
             skipped=$(( skipped + 1 ))
             continue
         fi
+        if [[ ${#log_matches[@]} -gt 1 ]]; then
+            warn "${#log_matches[@]} logs match ${log_prefix}*.log — using $(basename "${log_matches[0]}")"
+        fi
+        local log_file="${log_matches[0]}"
+        local virtuoso_ver
+        virtuoso_ver="$(basename "${log_file}" .log)"
+        virtuoso_ver="${virtuoso_ver#${log_prefix}}"
 
         # Log line format:
         #   "Test1_BM01. Performance Edit-Check-Hierarchy managed time 2000"
-        # Fields: $1=id  $2=Performance  $3..NF-3=description  NF-2=mode  NF-1=time  NF=elapsed_ms
+        # Fields: $1=id  $2=Performance  $3..NF-3=description  NF-2=mode  NF-1=time  NF=elapsed_sec
         local log_line
         log_line=$(head -1 "${log_file}")
-        local elapsed_ms description
-        read -r elapsed_ms description <<< "$(
+        local elapsed_sec description
+        read -r elapsed_sec description <<< "$(
             awk '{
                 e = $NF
                 d = ""
@@ -149,7 +161,7 @@ export_metrics() {
             }' <<< "${log_line}"
         )"
 
-        if [[ -z "${elapsed_ms}" || ! "${elapsed_ms}" =~ ^[0-9]+$ ]]; then
+        if [[ -z "${elapsed_sec}" || ! "${elapsed_sec}" =~ ^[0-9]+$ ]]; then
             warn "No valid timing in $(basename "${log_file}") — skipping"
             skipped=$(( skipped + 1 ))
             continue
@@ -160,16 +172,16 @@ export_metrics() {
         desc_esc="${desc_esc//\"/\\\"}"
 
         records+=(
-            "$(printf '{"run_time":"%s","uniqueid":"%s","testtype":"%s","lib":"%s","mode":"%s","tool_ver":"%s","elapsed_ms":%d,"description":"%s"}' \
+            "$(printf '{"run_time":"%s","uniqueid":"%s","testtype":"%s","lib":"%s","mode":"%s","tool_ver":"%s","virtuoso_ver":"%s","elapsed_sec":%d,"description":"%s"}' \
                 "${run_ts}" "${uniqueid}" "${tt}" "${ll}" "${mm}" \
-                "${VSE_VERSION}" "${elapsed_ms}" "${desc_esc}")"
+                "${VSE_VERSION}" "${virtuoso_ver}" "${elapsed_sec}" "${desc_esc}")"
         )
 
         # CSV: quote fields that may contain commas or spaces
         csv_rows+=(
-            "$(printf '"%s","%s","%s","%s","%s","%s",%d,"%s"' \
+            "$(printf '"%s","%s","%s","%s","%s","%s","%s",%d,"%s"' \
                 "${run_ts}" "${uniqueid}" "${tt}" "${ll}" "${mm}" \
-                "${VSE_VERSION}" "${elapsed_ms}" "${description}")"
+                "${VSE_VERSION}" "${virtuoso_ver}" "${elapsed_sec}" "${description}")"
         )
 
         count=$(( count + 1 ))

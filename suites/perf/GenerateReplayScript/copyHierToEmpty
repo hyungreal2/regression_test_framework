@@ -58,13 +58,13 @@
 \i ;#         prod 의 대체 호출은 아래 주석으로 보존한다.
 \i ;;; copyHierToEmpty_revertICM("Replace_Lib_here_COPY", managed)
 \i ;---------------------------------------------------------------------------------
-if(managed=="managed" then
+\i if(managed=="managed" then
 \i ICM_Sensitivity_popup("popup_L" "Replace_Lib_here_COPY" "" "" "" "")
 \i ICM_Delete_Lib("ICMDeleteLIB" "Replace_Lib_here_COPY" "" "" "" "")
 \i hiDBoxUser(ICM_delLibQuery nil 3)
 \i hiDBoxUser(ICM_intHierOkay nil 1)
 \i ddDeleteObj(ddGetObj("Replace_Lib_here_COPY" "" "" "data.dm"))
-)
+\i )
 \i hiDBoxUser(ICM_delLibQuery nil 3)
 \i hiDBoxUser(ICM_intHierOkay nil 1)
 \i

@@ -235,6 +235,12 @@ validate_inputs() {
         done
         [[ "${found}" == true ]] || error_exit "Unknown test: ${st} (valid: ${PERF_TESTS[*]})"
     done
+
+    local sm
+    for sm in "${selected_modes[@]}"; do
+        [[ "${sm}" == "managed" || "${sm}" == "unmanaged" ]] || \
+            error_exit "Unknown mode: ${sm} (valid: managed unmanaged)"
+    done
 }
 
 #######################################
@@ -266,7 +272,7 @@ scan_workspaces() {
     local ws_base="${script_dir}/WORKSPACES_MANAGED"
     active_ws=()
 
-    [[ -d "${ws_base}" ]] || return
+    [[ -d "${ws_base}" ]] || return 0
 
     local dname rest tt ll al at lib_ok test_ok
     for dname in "${ws_base}"/*/; do
@@ -488,13 +494,14 @@ ensure_workspaces() {
         echo ""
         echo "No active workspaces found in WORKSPACES_MANAGED/."
         echo -n "Run init to set up the environment? [y/N] "
-        read -r answer
+        read -r answer || answer=""  # no terminal input (EOF) counts as "no"
     fi
 
     [[ "${answer}" =~ ^[Yy]$ ]] || \
         error_exit "No workspaces. Run with -no-run to initialise the environment first."
 
     run_init_phases
+    scan_workspaces  # refresh active_ws with the workspaces just created
 }
 
 #######################################
