@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import re
 import os
+import sys
 import argparse
 from datetime import datetime
 
@@ -104,22 +105,42 @@ if not mode:
 # Create a the result folder if not exist
 os.makedirs(os.path.join(WORKSPACE, result_folder), exist_ok=True)
 
-# Parse control file: Start/End block format
-control_map = {}
-current_name, current_lines = None, []
+# Parse control file: Start/End block format (legacy semantics)
+# - A block not closed by "=== End" (followed by another "=== Start :" or
+#   by the end of the file) is still kept; a warning names it.
+# - A name that appears in two blocks gets the statements of both, in file
+#   order (legacy appended to the same list); a warning names it.
+blocks = {}            # name -> statement lines, in file order
+current_name = None
+unclosed, duplicated = [], []
+
 for cline in control_lines:
     cline = cline.strip()
     if not cline:
         continue
     if cline.startswith("=== Start :"):
-        current_name = re.sub(r'\s*,\s*', ', ', cline.split(":", 1)[1].strip())
-        current_lines = []
-    elif cline.startswith("=== End"):
         if current_name:
-            control_map[current_name] = ' "\\n" '.join(current_lines)
+            unclosed.append(current_name)
+        current_name = re.sub(r'\s*,\s*', ', ', cline.split(":", 1)[1].strip())
+        if current_name in blocks:
+            duplicated.append(current_name)
+        else:
+            blocks[current_name] = []
+    elif cline.startswith("=== End"):
         current_name = None
     elif current_name:
-        current_lines.append(cline)
+        blocks[current_name].append(cline)
+if current_name:
+    unclosed.append(current_name)
+
+control_map = {name: ' "\\n" '.join(lines) for name, lines in blocks.items()}
+
+for name in unclosed:
+    sys.stderr.write(f"Warning: control block \"{name}\" has no \"=== End\" line ({args.control})\n")
+for name in sorted(set(duplicated)):
+    sys.stderr.write(f"Warning: control block \"{name}\" is defined more than once ({args.control}); its statements are joined in file order\n")
+if not control_map:
+    parser.error(f"control file produced no blocks: {args.control} (expected \"=== Start : ...\" / \"=== End\" blocks)")
 
 
 def replace_names(code, line_num, cell_name=None):
@@ -165,6 +186,7 @@ def split_statements(code):
 
 
 # Process each line in list
+unmapped = {}   # step name -> occurrences without a control block
 count = 0
 flat_idx = 0
 hier_idx = 0
@@ -217,6 +239,7 @@ for line_num, line in enumerate(list_lines, start=1):
         if not matched:
             # No match found even combining all remaining — add as error
             matched_steps.append((str(i+1), commands[i], f';;; ERROR: No mapping for "{commands[i]}"'))
+            unmapped[commands[i]] = unmapped.get(commands[i], 0) + 1
             i += 1
 
     # Print first line for debug
@@ -266,8 +289,9 @@ for line_num, line in enumerate(list_lines, start=1):
 
     # Build output from template
     output = template_content
-    # Replace CDS_PV_REG_NO to current test number
-    output = output.replace('CDS_PV_REGGRESION_NO', f'"{line_num:03d}"')
+    # Replace CDS_PV_REGGRESION_NO with the test number, padded like the
+    # replay file name (3 digits for cico, digits of the scenario count for func)
+    output = output.replace('CDS_PV_REGGRESION_NO', f'"{line_num:0{pad_width}d}"')
     output = output.replace('CDS_PV_REG_RES_NO', f'"{args.result_folder}"')
     
 
@@ -291,3 +315,12 @@ for line_num, line in enumerate(list_lines, start=1):
     count += 1
 
 print(f"Successfully generated {count} template files")
+
+# A step without a control block would replay as a no-op comment and the
+# test would silently skip it (this hid a control/list vocabulary mismatch
+# once). The files are written for inspection, but the run must not go on.
+if unmapped:
+    for name, n in sorted(unmapped.items()):
+        sys.stderr.write(f"ERROR: unmapped step x{n}: \"{name}\" (no '=== Start : {name}' block in the control file)\n")
+    sys.stderr.write(f"ERROR: {sum(unmapped.values())} unmapped step(s) in {len(unmapped)} name(s); fix the control or list file\n")
+    sys.exit(3)

@@ -4,81 +4,195 @@
 #
 # Usage: add tools/mock/ to PATH before running scripts
 #   export PATH="$(pwd)/tools/mock:${PATH}"
+#
+# GDP objects are kept in a small registry file, one object per line:
+#   <type> TAB <object path> TAB <rootDir (workspaces only)>
+# so that existence checks behave like the real gdp:
+#   gdp list <path>             prints <path> if the object exists, else nothing
+#   gdp list <path>/            prints <path> and every object below it
+#   gdp list <path>/:<type>     prints the <type> objects directly below <path>
+#   gdp list <proj>:workspace   prints every workspace below <proj>
+#   gdp list <ws> --columns=rootDir   prints the workspace directory
+#   gdp find --type=workspace :=<name>  prints the workspace object path
+#
+# Object paths created by the scripts:
+#   folder    <GDP_BASE>[/<suite>]
+#   project   <base>/<proj>
+#   variant   <base>/<proj>/rev01          (also implied by create config)
+#   libtype   <base>/<proj>/rev01/oa
+#   config    <base>/<proj>/rev01/dev
+#   library   <base>/<proj>/rev01/oa/<lib>
+#   workspace <config>/<ws name>           (gdp build workspace)
+#
+# Environment:
+#   MOCK_GDP_STATE  registry file (default: ${TMPDIR:-/tmp}/mock_gdp_<user>.tsv)
+#   MOCK_GDP_DOWN=1 every call prints nothing and exits 1 (gdp not answering)
 #######################################
 
+[[ "${MOCK_GDP_DOWN:-0}" == 1 ]] && { echo "[MOCK:gdp] down: $*" >&2; exit 1; }
+
+state="${MOCK_GDP_STATE:-${TMPDIR:-/tmp}/mock_gdp_${USER:-$(id -un)}.tsv}"
+touch "${state}"
+
 subcommand="${1:-}"
+[[ $# -gt 0 ]] && shift
+
+# unquote <value>: drop quotes the callers embed in their command strings
+unquote() { local v="${1//\"/}"; echo "${v//\'/}"; }
+
+# opt <name> <args...>: value of "--name value" or "--name=value"
+opt() {
+    local name="$1" prev="" a
+    shift
+    for a in "$@"; do
+        if [[ "${prev}" == "${name}" ]]; then unquote "${a}"; return; fi
+        if [[ "${a}" == "${name}="* ]]; then unquote "${a#*=}"; return; fi
+        prev="${a}"
+    done
+}
+
+# first_path <args...>: the first argument that is not an option
+first_path() {
+    local a skip=0
+    for a in "$@"; do
+        if (( skip )); then skip=0; continue; fi
+        case "${a}" in
+            --name|--from|--location|--content|--gdp-name|--add|--columns) skip=1 ;;
+            -*) ;;
+            *) unquote "${a}"; return ;;
+        esac
+    done
+}
+
+# Registry access under a lock (parallel jobs call gdp concurrently)
+locked() { ( flock 9; "$@" ) 9>"${state}.lock"; }
+reg_has() { awk -F'\t' -v p="$1" '$2 == p { f = 1 } END { exit !f }' "${state}"; }
+_reg_add() { reg_has "$2" || printf '%s\t%s\t%s\n' "$1" "$2" "${3:-}" >> "${state}"; }
+reg_add() { locked _reg_add "$@"; }
+# _reg_del <awk condition on $1 (type) / $2 (path)>
+_reg_del() {
+    awk -F'\t' -v p="$1" -v n="$2" "!($3)" "${state}" > "${state}.tmp" && mv "${state}.tmp" "${state}"
+}
+reg_del() { locked _reg_del "$@"; }
 
 case "${subcommand}" in
 
     #######################################
-    # gdp find --type=workspace :=<workspace_name>
-    # → if ./workspace_name exists, print workspace_name
+    # gdp create folder|project|config|library <path> [...]
     #######################################
-    find)
-        ws_name=""
-        for arg in "$@"; do
-            if [[ "${arg}" == :=* ]]; then
-                ws_name="${arg#:=}"
-            fi
-        done
-        if [[ -n "${ws_name}" ]]; then
-            result=$(find "$(pwd)" -type d -name "${ws_name}" 2>/dev/null | head -1)
-            [[ -n "${result}" ]] && echo "${ws_name}"
-        fi
+    create)
+        type="${1:-}"; shift
+        path=$(first_path "$@")
+        [[ -n "${path}" ]] || { echo "[MOCK:gdp] create ${type}: no path" >&2; exit 1; }
+        case "${type}" in
+            folder|project|variant|libtype|library) reg_add "${type}" "${path}" ;;
+            config)
+                reg_add variant "$(dirname "${path}")"
+                reg_add config "${path}"
+                ;;
+            *) echo "[MOCK:gdp] create ${type} ${path} (not registered)" >&2 ;;
+        esac
+        echo "[MOCK:gdp] create ${type} ${path}" >&2
         ;;
 
     #######################################
-    # gdp list <ws_path> --columns=rootDir
-    # → print absolute path of ws_path (recursive search)
-    #######################################
-    list)
-        ws_path="${2:-}"
-        if [[ -z "${ws_path}" ]]; then
-            exit 0
-        fi
-        result=$(find "$(pwd)" -type d -name "${ws_path}" 2>/dev/null | head -1)
-        [[ -n "${result}" ]] && echo "${result}"
-        ;;
-
-    #######################################
-    # gdp build workspace --content <config> --gdp-name <name>
-    # → mkdir -p <name>
+    # gdp build workspace --content <config> --gdp-name <name> [--location <dir>]
+    # → mkdir -p [<dir>/]<name> (+ oa/<lib> per library), register <config>/<name>
     #######################################
     build)
-        gdp_name=""
-        prev=""
-        for arg in "$@"; do
-            if [[ "${prev}" == "--gdp-name" ]]; then
-                gdp_name="${arg//\"/}"
-                gdp_name="${gdp_name//\'/}"
-            fi
-            prev="${arg}"
+        config=$(opt --content "$@")
+        gdp_name=$(opt --gdp-name "$@")
+        gdp_loc=$(opt --location "$@")
+        [[ -n "${gdp_name}" ]] || { echo "[MOCK:gdp] build workspace: no --gdp-name" >&2; exit 1; }
+        if [[ -n "${config}" ]] && ! reg_has "${config}"; then
+            echo "[MOCK:gdp] build workspace: config not found: ${config}" >&2
+            exit 1
+        fi
+        ws_dir="${gdp_loc:+${gdp_loc}/}${gdp_name}"
+        echo "[MOCK:gdp] build workspace → mkdir -p ${ws_dir}" >&2
+        mkdir -p "${ws_dir}" || exit 1
+        # Libraries of the config's variant appear under the workspace at
+        # their path below the variant (created with --location=oa/{{library}})
+        if [[ -n "${config}" ]]; then
+            variant="$(dirname "${config}")"
+            awk -F'\t' -v v="${variant}" '$1 == "library" && index($2, v "/") == 1 { print substr($2, length(v) + 2) }' "${state}" \
+                | while IFS= read -r rel; do mkdir -p "${ws_dir}/${rel}"; done
+        fi
+        reg_add workspace "${config:-/mock}/${gdp_name}" "$(cd "${ws_dir}" && pwd)"
+        ;;
+
+    #######################################
+    # gdp find --type=workspace ":=<name>"
+    #######################################
+    find)
+        name=""
+        for a in "$@"; do
+            a=$(unquote "${a}")
+            [[ "${a}" == :=* ]] && name="${a#:=}"
         done
-        if [[ -n "${gdp_name}" ]]; then
-            echo "[MOCK:gdp] build workspace → mkdir -p ${gdp_name}" >&2
-            mkdir -p "${gdp_name}"
+        [[ -n "${name}" ]] || exit 0
+        awk -F'\t' -v n="${name}" '$1 == "workspace" { k = split($2, s, "/"); if (s[k] == n) print $2 }' "${state}"
+        ;;
+
+    #######################################
+    # gdp list <path>[/ | /:<type> | :workspace] [--columns=rootDir]
+    #######################################
+    list)
+        path=$(first_path "$@")
+        [[ -n "${path}" ]] || exit 0
+        if [[ " $* " == *"--columns=rootDir"* ]]; then
+            awk -F'\t' -v p="${path}" '$1 == "workspace" && $2 == p { print $3 }' "${state}"
+        elif [[ "${path}" == */:* ]]; then
+            parent="${path%/:*}"; type="${path##*/:}"
+            awk -F'\t' -v p="${parent}" -v t="${type}" '
+                $1 == t && index($2, p "/") == 1 && index(substr($2, length(p) + 2), "/") == 0 { print $2 }' "${state}"
+        elif [[ "${path}" == *:workspace ]]; then
+            parent="${path%:workspace}"
+            awk -F'\t' -v p="${parent}" '$1 == "workspace" && index($2, p "/") == 1 { print $2 }' "${state}"
+        elif [[ "${path}" == */ ]]; then
+            parent="${path%/}"
+            awk -F'\t' -v p="${parent}" '$2 == p || index($2, p "/") == 1 { print $2 }' "${state}"
+        else
+            awk -F'\t' -v p="${path}" '$2 == p { print $2 }' "${state}"
         fi
         ;;
 
     #######################################
-    # gdp delete workspace / project → no-op
+    # gdp delete workspace --name <name> [--leave-files] [--force]
+    # gdp delete <path> --recursive [--force] [--proceed]
     #######################################
     delete)
-        echo "[MOCK:gdp] delete ${*:2}" >&2
+        if [[ "${1:-}" == workspace ]]; then
+            name=$(opt --name "$@")
+            ws=$(awk -F'\t' -v n="${name}" '$1 == "workspace" { k = split($2, s, "/"); if (s[k] == n) print $2 }' "${state}")
+            [[ -n "${ws}" ]] || { echo "[MOCK:gdp] delete workspace: not found: ${name}" >&2; exit 1; }
+            reg_del "${ws}" "" '$1 == "workspace" && $2 == p'
+            echo "[MOCK:gdp] delete workspace ${name}" >&2
+        else
+            path=$(first_path "$@")
+            reg_has "${path}" || { echo "[MOCK:gdp] delete: not found: ${path}" >&2; exit 1; }
+            if [[ " $* " != *" --recursive "* ]] \
+               && awk -F'\t' -v p="${path}" 'index($2, p "/") == 1 { f = 1 } END { exit !f }' "${state}"; then
+                echo "[MOCK:gdp] delete: ${path} has children (use --recursive)" >&2
+                exit 1
+            fi
+            reg_del "${path}" "" '$2 == p || index($2, p "/") == 1'
+            echo "[MOCK:gdp] delete ${path}" >&2
+        fi
         ;;
 
     #######################################
-    # gdp create / assign / update → no-op
+    # gdp update / assign → no-op
     #######################################
-    create|assign|update)
-        echo "[MOCK:gdp] ${subcommand} ${*:2}" >&2
+    update|assign)
+        echo "[MOCK:gdp] ${subcommand} $*" >&2
         ;;
 
     #######################################
     # fallback
     #######################################
     *)
-        echo "[MOCK:gdp] $*" >&2
+        echo "[MOCK:gdp] ${subcommand} $*" >&2
         ;;
 
 esac

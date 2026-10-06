@@ -141,10 +141,13 @@ run_cmd() {
             case "${first_word}" in
                 gdp|xlp4|rm|vse_sub|vse_run)
                     if [[ "${cmd}" == *"gdp build workspace"* ]]; then
-                        local gdp_name
+                        # --gdp-name names the workspace dir; --location (if given)
+                        # is its parent, as for the real gdp build workspace
+                        local gdp_name gdp_loc
                         gdp_name=$(grep -oP '(?<=--gdp-name\s)\S+' <<< "${cmd}" | tr -d "\"'" || true)
+                        gdp_loc=$(grep -oP '(?<=--location\s)\S+' <<< "${cmd}" | tr -d "\"'" || true)
                         if [[ -n "${gdp_name}" ]]; then
-                            _mock_gdp_workspace "${gdp_name}" "${ts}" "${caller}"
+                            _mock_gdp_workspace "${gdp_loc:+${gdp_loc}/}${gdp_name}" "${ts}" "${caller}"
                         else
                             echo "[SKIP:1][${ts}][${caller}] ${cmd}" >&2
                         fi
@@ -240,6 +243,46 @@ create_gdp_project() {
         log "[PROJ] Project not found after attempt ${attempt}, retrying..."
     done
     error_exit "gdp create project failed after ${max_attempts} attempts: ${proj_path}"
+}
+
+#######################################
+# gdp_path_state <gdp_path>
+# Prints: exists | gone | unknown
+#   exists  - gdp lists the path
+#   gone    - gdp lists the parent folder but not the path
+#   unknown - gdp lists neither (gdp not answering): callers must not
+#             treat this as "gone" (fail closed)
+# gdp list may exit non-zero for a missing path, so the decision is
+# made on output, never on the exit status alone.
+#######################################
+gdp_path_state() {
+    local path="$1"
+    if [[ -n "$(gdp list "${path}" 2>/dev/null)" ]]; then
+        echo exists
+    elif [[ -n "$(gdp list "$(dirname "${path}")" 2>/dev/null)" ]]; then
+        echo gone
+    else
+        echo unknown
+    fi
+}
+
+#######################################
+# gdp_ws_state <workspace_name> <project_gdp_path>
+# Prints: registered | gone | unknown
+#   registered - gdp find still returns the workspace
+#   gone       - gdp find returns nothing and gdp answers for the
+#                project or its folder (gdp_path_state is not unknown)
+#   unknown    - gdp answers for neither: do not treat as gone
+#######################################
+gdp_ws_state() {
+    local name="$1" proj="$2"
+    if [[ -n "$(gdp find --type=workspace ":=${name}" 2>/dev/null)" ]]; then
+        echo registered
+    elif [[ "$(gdp_path_state "${proj}")" != unknown ]]; then
+        echo gone
+    else
+        echo unknown
+    fi
 }
 
 #######################################
