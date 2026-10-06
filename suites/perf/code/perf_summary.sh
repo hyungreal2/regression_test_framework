@@ -33,6 +33,36 @@ if [[ "${DRY_RUN}" -ge 2 ]]; then
     exit 0
 fi
 
+#######################################
+# Legacy result/<uniqueid>/summary.txt (legacy code/summary.sh):
+# for every file in the result dir, its name, its content, then " "
+# Written before the timing check so failed runs still get it.
+#######################################
+write_legacy_summary() {
+    local result_dir="${script_dir}/result/${uniqueid}"
+    local legacy_summary="${result_dir}/summary.txt"
+    local f
+
+    if [[ ! -d "${result_dir}" ]]; then
+        warn "result dir not found: ${result_dir} — no summary.txt written"
+        return 0
+    fi
+
+    : > "${legacy_summary}"
+    for f in "${result_dir}"/*; do
+        [[ "$(basename "${f}")" != "summary.txt" ]] || continue
+        [[ -f "${f}" ]] || continue
+        {
+            basename "${f}"   # log file name
+            cat "${f}"        # log file content
+            echo " "          # separator line
+        } >> "${legacy_summary}"
+    done
+    log "Summary generated at ${legacy_summary}"
+}
+
+write_legacy_summary
+
 [[ -f "${timing_file}" ]] || error_exit "Timing file not found: ${timing_file}"
 
 #######################################
@@ -102,7 +132,7 @@ export_metrics() {
         else
             warn "result dir not found: ${result_dir} — skipping metric export"
         fi
-        return
+        return 0
     fi
 
     mkdir -p "${metrics_dir}"
@@ -189,7 +219,7 @@ export_metrics() {
 
     if [[ ${count} -eq 0 ]]; then
         warn "No metrics to export (skipped=${skipped})"
-        return
+        return 0
     fi
 
     # --- Per-run JSON (pretty array) ---
@@ -227,7 +257,9 @@ export_metrics() {
     log "  ${metrics_dir}/${uniqueid}.csv"
     log "  ${history_file}"
     log "  ${history_csv}"
-    [[ ${skipped} -gt 0 ]] && warn "  ${skipped} record(s) skipped"
+    if [[ ${skipped} -gt 0 ]]; then
+        warn "  ${skipped} record(s) skipped"
+    fi
 }
 
 export_metrics

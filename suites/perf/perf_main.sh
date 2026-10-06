@@ -8,13 +8,19 @@ export script_dir
 source "${script_dir}/code/env.sh"
 source "${script_dir}/code/common.sh"
 
+# -h only prints help: decide before the log file is created
+_help_only=false
+for _a in "$@"; do [[ "${_a}" == "-h" || "${_a}" == "--help" ]] && _help_only=true; done
+
 #######################################
 # Log file
 #######################################
+if [[ "${_help_only}" != true ]]; then
 mkdir -p "${script_dir}/log"
 logfile="${script_dir}/log/perf_main.log.$(date +%Y%m%d_%H%M%S).txt"
 exec > >(tee "${logfile}") 2>&1
 log "Logging to ${logfile}"
+fi
 
 #######################################
 # Defaults
@@ -29,6 +35,9 @@ selected_tests=()
 selected_modes=(managed unmanaged)
 common_libs=()
 teardown_worker_pid=""
+tests_rc=0       # Phase 3 xargs status (123 = at least one test failed)
+summary_rc=0     # perf_summary.sh status
+teardown_rc=0    # Phase 5 xargs status
 
 active_ws=()   # "testtype lib ws_name" — populated by scan_workspaces()
 uniqueid=""
@@ -41,7 +50,6 @@ _cleanup() {
         wait "${teardown_worker_pid}" 2>/dev/null || true
     fi
     flush_trash || true
-    rm -f "${script_dir}/.gdp_ws_lock" 2>/dev/null || true
 }
 trap '_cleanup' EXIT INT TERM
 
@@ -66,9 +74,12 @@ OPTIONS
                                    default: all  (${PERF_TESTS[*]})
   -common      <lib[,lib,...]>   Comma-separated libraries added to ALL test combos
                                    These are appended to the per-testtype library set
-  -mode        <managed|unmanaged>
-                                 Workspace mode to run
+  -mode        <managed|unmanaged>[,<other>]
+                                 Workspace mode(s) to run; comma or space separated
+                                   ("managed,unmanaged" or "managed unmanaged")
                                    default: both managed and unmanaged
+  -version   | --version <ver>   Virtuoso version for vse_run -v
+                                   default: ${VSE_VERSION}  (code/env.sh)
   -j         | --jobs <n>        Number of parallel jobs          (default: ${jobs})
   -d         | --dry-run [0|1|2] Dry-run level                    (default: ${DRY_RUN})
                                    0 = run everything
@@ -78,6 +89,7 @@ OPTIONS
   -no-run    | --no-run          Run init phases only; skip test execution
   -t         | --teardown        Run teardown; -lib/-test filters apply
                                    Can be used standalone: -no-run -t [-lib ...] [-test ...]
+                                   With a run, teardown also runs when tests failed
   -auto-init | --auto-init       If no workspaces found, run init automatically
                                    without prompting
 
@@ -90,6 +102,14 @@ WORKSPACE TRACKING
 
   To list active workspaces:
     ls ${script_dir}/WORKSPACES_MANAGED/
+
+  GDP projects whose local directory is gone are not reached by -t; sweep them
+  (GDP projects under ${PERF_GDP_BASE}/${PERF_PREFIX}_*) with:
+    code/perf_teardown_all.sh [-d 0|1|2] [-j <n>] [-y]
+
+EXIT STATUS
+  0 when every phase succeeded; otherwise non-zero (summary and -t teardown
+  still run after failed tests). Elapsed times are not judged.
 
 OPTION COMBINATIONS
   -lib, -test, and -mode apply to run AND teardown.
@@ -138,15 +158,23 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         -lib)
+            [[ -n "${2:-}" && "${2}" != -* ]] || error_exit "-lib requires <lib[,lib,...]>"
             IFS=',' read -ra selected_libs <<< "$2"
             shift 2
             ;;
         -test)
+            [[ -n "${2:-}" && "${2}" != -* ]] || error_exit "-test requires <test[,test,...]>"
             IFS=',' read -ra selected_tests <<< "$2"
             shift 2
             ;;
         -mode)
-            selected_modes=("$2")
+            [[ -n "${2:-}" && "${2}" != -* ]] || error_exit "-mode requires managed|unmanaged (or both)"
+            IFS=', ' read -ra selected_modes <<< "$2"
+            shift 2
+            ;;
+        -version|--version|--vse-version)
+            [[ -n "${2:-}" && "${2}" != -* ]] || error_exit "$1 requires a version name"
+            VSE_VERSION="$2"
             shift 2
             ;;
         -d|--dry-run)
@@ -159,7 +187,7 @@ while [[ $# -gt 0 ]]; do
             fi
             ;;
         -j|--jobs)
-            [[ "${2:-}" =~ ^[0-9]+$ ]] || error_exit "-j requires a positive integer"
+            [[ "${2:-}" =~ ^[1-9][0-9]*$ ]] || error_exit "-j requires a positive integer"
             jobs="$2"
             shift 2
             if (( jobs > MAX_JOBS )); then
@@ -184,6 +212,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -common|--common)
+            [[ -n "${2:-}" && "${2}" != -* ]] || error_exit "$1 requires <lib[,lib,...]>"
             IFS=',' read -ra common_libs <<< "$2"
             shift 2
             ;;
@@ -194,6 +223,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 export DRY_RUN
+export VSE_VERSION CAT_VSE_VERSION="${VSE_VERSION}"   # children re-source env.sh, which reads CAT_VSE_VERSION
 export PERF_COMMON_LIBS="${common_libs[*]:-}"
 
 #######################################
@@ -236,10 +266,14 @@ validate_inputs() {
         [[ "${found}" == true ]] || error_exit "Unknown test: ${st} (valid: ${PERF_TESTS[*]})"
     done
 
-    local sm
+    [[ ${#selected_modes[@]} -ge 1 && ${#selected_modes[@]} -le 2 ]] || \
+        error_exit "-mode takes 1 or 2 values (valid: managed unmanaged)"
+    local sm seen="|"
     for sm in "${selected_modes[@]}"; do
         [[ "${sm}" == "managed" || "${sm}" == "unmanaged" ]] || \
             error_exit "Unknown mode: ${sm} (valid: managed unmanaged)"
+        [[ "${seen}" != *"|${sm}|"* ]] || error_exit "Duplicate mode: ${sm}"
+        seen+="${sm}|"
     done
 }
 
@@ -325,19 +359,19 @@ scan_workspaces() {
 # Ensure GDP base folders exist
 #######################################
 ensure_gdp_folders() {
-    if [[ "${DRY_RUN}" -ge 1 ]]; then
-        log "[DRY-RUN] Would ensure GDP folders: ${GDP_BASE}, ${PERF_GDP_BASE}"
-        return
-    fi
-
     local folder
     for folder in "${GDP_BASE}" "${PERF_GDP_BASE}"; do
+        if [[ "${DRY_RUN}" -ge 1 ]]; then
+            # L1: [SKIP:1] line, L2: [DRY-RUN:2] line (existence not checked)
+            run_cmd "gdp create folder \"${folder}\""
+            continue
+        fi
         log "Checking GDP folder: ${folder}"
         if [[ -n "$(gdp list "${folder}" 2>/dev/null)" ]]; then
             log "  → exists: ${folder}"
         else
             log "  → not found, creating: ${folder}"
-            gdp create folder "${folder}"
+            run_cmd "gdp create folder \"${folder}\"" || error_exit "Failed to create GDP folder: ${folder}"
         fi
     done
 }
@@ -349,6 +383,12 @@ generate_replays() {
     local testtype lib cell mode
 
     log "--- Phase 1: Generate replays (managed + unmanaged) ---"
+
+    # No global purge (legacy main.pl ran rm replay*.au): a concurrent run
+    # in the same deployment would lose the replays it just generated.
+    # perf_generate_replay.sh removes each combo's old outputs before
+    # regenerating it, so a stale replay is never copied.
+
     for combo in "${combos_init[@]}"; do
         read -r testtype lib cell <<< "${combo}"
         for mode in managed unmanaged; do
@@ -416,6 +456,7 @@ run_tests() {
     local testtype lib ws_name combos_run=()
 
     scan_workspaces
+    preview_ws_if_dry_run
 
     if [[ ${#active_ws[@]} -eq 0 ]]; then
         error_exit "No workspaces found matching the specified filters. Run init first with -no-run."
@@ -429,10 +470,31 @@ run_tests() {
     done
 
     log "--- Phase 3: Run tests (${#combos_run[@]} jobs, parallelism=${jobs}) ---"
+    # Capture the status so the summary (and -t teardown) still run
     printf "%s\n" "${combos_run[@]}" | \
         xargs -n4 -P"${jobs}" bash -c "
             bash \"${script_dir}/code/perf_run_single.sh\" \"\$1\" \"\$2\" \"\$3\" \"\$4\" \"${uniqueid}\" -d \"${DRY_RUN}\"
-        " _
+        " _ || tests_rc=$?
+    case "${tests_rc}" in
+        0)   ;;
+        123) warn "Phase 3: one or more tests failed (xargs rc=123); continuing to summary" ;;
+        *)   warn "Phase 3: xargs failed (rc=${tests_rc}); continuing to summary" ;;
+    esac
+}
+
+#######################################
+# DRY_RUN=2 creates no workspace, so a fresh
+# deployment has nothing to scan: preview with
+# the would-be workspace names instead.
+#######################################
+preview_ws_if_dry_run() {
+    [[ "${DRY_RUN}" -ge 2 && ${#active_ws[@]} -eq 0 ]] || return 0
+    local testtype lib cell
+    for combo in "${combos_init[@]}"; do
+        read -r testtype lib cell <<< "${combo}"
+        active_ws+=("${testtype} ${lib} ${PERF_PREFIX}_${testtype}_${lib}_DRYRUN")
+    done
+    log "[DRY-RUN:2] No workspaces on disk; previewing ${#active_ws[@]} would-be workspace(s)"
 }
 
 #######################################
@@ -454,11 +516,28 @@ teardown_workspaces() {
     done
 
     log "--- Phase 5: Teardown (${#ws_names[@]} workspace(s), jobs=${jobs}) ---"
+    # Capture the status so one failed teardown does not stop the caller
     printf "%s\n" "${ws_names[@]}" | \
         xargs -n1 -P"${jobs}" bash -c "
             bash \"${script_dir}/code/perf_teardown.sh\" \"\$1\" -d \"${DRY_RUN}\"
-        " _
-    log "All teardowns completed."
+        " _ || teardown_rc=$?
+    if [[ ${teardown_rc} -eq 0 ]]; then
+        log "All teardowns completed."
+    else
+        warn "Teardown finished with failures (xargs rc=${teardown_rc})"
+    fi
+
+    # code/date_virtuosoVer.txt marks the latest init as possibly still
+    # running (perf_teardown_all.sh keeps its projects). Once no local
+    # workspace of that run is left, drop the mark so the sweep can act.
+    local mark="${script_dir}/code/date_virtuosoVer.txt" last_uid
+    if [[ "${DRY_RUN}" -lt 2 && -f "${mark}" ]]; then
+        last_uid=$(head -1 "${mark}")
+        if [[ -n "${last_uid}" ]] && ! compgen -G "${script_dir}/WORKSPACES_MANAGED/${PERF_PREFIX}_*_${last_uid}" > /dev/null; then
+            rm -f "${mark}"
+            log "No workspace of run ${last_uid} left; cleared code/date_virtuosoVer.txt"
+        fi
+    fi
 }
 
 #######################################
@@ -490,6 +569,9 @@ ensure_workspaces() {
     if [[ "${auto_init}" == true ]]; then
         log "No workspaces found. --auto-init: running init automatically."
         answer="y"
+    elif [[ "${DRY_RUN}" -ge 2 ]]; then
+        log "[DRY-RUN:2] No workspaces found; previewing init without prompting."
+        answer="y"
     else
         echo ""
         echo "No active workspaces found in WORKSPACES_MANAGED/."
@@ -502,12 +584,13 @@ ensure_workspaces() {
 
     run_init_phases
     scan_workspaces  # refresh active_ws with the workspaces just created
+    preview_ws_if_dry_run
 }
 
 #######################################
 # Main
 #######################################
-log "START (dry-run=${DRY_RUN})"
+log "START (dry-run=${DRY_RUN}, VSE_VERSION=${VSE_VERSION})"
 
 validate_inputs
 build_combos
@@ -534,19 +617,26 @@ elif [[ "${do_run}" == true ]]; then
     generate_replays            # Phase 1: regenerate with current uniqueid
     copy_replays_to_workspaces  # push fresh .au files into each workspace
 
-    run_tests
+    run_tests                   # sets tests_rc; does not stop on failed tests
 
     log "All tests finished."
     log "Generating perf summary for CDS_log/${uniqueid}"
-    bash "${script_dir}/code/perf_summary.sh" -d "${DRY_RUN}" "${uniqueid}"
+    bash "${script_dir}/code/perf_summary.sh" -d "${DRY_RUN}" "${uniqueid}" || summary_rc=$?
+    [[ ${summary_rc} -eq 0 ]] || warn "perf_summary.sh failed (rc=${summary_rc})"
 
     if [[ "${do_teardown}" == true ]]; then
-        teardown_workspaces
+        teardown_workspaces     # sets teardown_rc
     fi
 
 elif [[ "${do_run}" == false && "${do_teardown}" == true ]]; then
     # -no-run -t: teardown only, with optional -lib/-test filters
     teardown_workspaces
+fi
+
+if [[ ${tests_rc} -ne 0 || ${summary_rc} -ne 0 || ${teardown_rc} -ne 0 ]]; then
+    warn "perf_main.sh finished with failures (tests rc=${tests_rc}, summary rc=${summary_rc}, teardown rc=${teardown_rc})"
+    log "perf_main.sh DONE (with failures)"
+    exit 1
 fi
 
 log "perf_main.sh DONE"

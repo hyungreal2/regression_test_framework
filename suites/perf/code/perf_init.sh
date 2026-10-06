@@ -94,14 +94,13 @@ run_cmd "gdp create config ${config}"
 #######################################
 for l in "${libs[@]}"; do
     log "[INIT] Creating library: ${l}"
-    run_cmd "gdp create library \"${proj_path}/rev01/oa/${l}\" --from \"${FROM_LIB}/${l}\" --columns id,name,type,path,description"
+    run_cmd "gdp create library \"${proj_path}/rev01/oa/${l}\" --from \"${FROM_LIB}/${l}\" --location=oa/{{library}} --columns id,name,type,path,description"
     run_cmd "gdp update \"${config}\" --add \"${proj_path}/rev01/oa/${l}\""
 done
 
 #######################################
 # Build MANAGED workspace
-# flock: serialise p4 protect table updates
-# across parallel perf_init.sh processes
+# (no lock: builds run in parallel up to perf_main.sh -j)
 #######################################
 log "[INIT] Creating MANAGED workspace: ${ws_name}"
 if [[ "${DRY_RUN}" -lt 2 ]]; then
@@ -122,7 +121,7 @@ fi
 # Setup UNMANAGED workspace
 # - copy non-oa files from MANAGED
 # - mv oa from MANAGED to UNMANAGED
-# - gdp rebuild MANAGED to restore oa
+# - xlp4 sync -f MANAGED to restore oa
 #######################################
 log "[INIT] Setting up UNMANAGED workspace: ${ws_name}"
 managed_ws="${script_dir}/WORKSPACES_MANAGED/${ws_name}"
@@ -165,10 +164,13 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
         log "[INIT] Restoring MANAGED oa: xlp4 sync -f"
         run_cmd "xlp4 -c \"${ws_name}\" -q sync -f"
     else
+        if [[ "${DRY_RUN}" -eq 0 ]]; then
+            error_exit "No oa dir in MANAGED workspace after gdp build: ${managed_ws}/oa (libraries must be created with --location=oa/{{library}})"
+        fi
         log "[INIT] No oa dir in managed_ws (skipped at dry-run level)"
     fi
 else
-    log "[DRY-RUN:2] Would setup UNMANAGED workspace and rebuild MANAGED"
+    log "[DRY-RUN:2] Would setup UNMANAGED workspace and re-sync MANAGED oa"
 fi
 
 #######################################

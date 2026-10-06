@@ -45,6 +45,13 @@ log "[REPLAY] Generating ${testtype}_${lib}_${mode}.au (cell=${cell}, result=${u
 (
     cd "${replay_dir}"
 
+    # createReplay.pl exits 0 without output for a missing template, so drop
+    # this combo's old outputs first; a stale file can then never be renamed
+    # and copied as if it had just been generated
+    if [[ "${DRY_RUN}" -lt 2 ]]; then
+        rm -f "replay.${testtype}_${lib}_${mode}.au" "${testtype}_${lib}_${mode}.au"
+    fi
+
     run_cmd "perl createReplay.pl -lib \"${lib}\" -cell \"${cell}\" -template ${testtype} -manage \"${mode}\" -result \"${uniqueid}\""
 
     # createReplay.pl outputs replay.<testtype>_<lib>_<mode>.au → rename to <testtype>_<lib>_<mode>.au
