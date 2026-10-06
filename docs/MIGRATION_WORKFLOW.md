@@ -35,8 +35,10 @@
 각 단계를 끝내면 보고서에 결과를 적습니다.
 
 ### 단계 0 — 준비
+이 문서가 들어 있는 브랜치(현재 반영 기준인 브랜치)에서 시작합니다. 다른 브랜치나 오래된 커밋에서 열었다면 먼저 그 브랜치로 옮깁니다.
 ```bash
 git status --short                      # 비어 있어야 함
+test -f docs/MIGRATION_WORKFLOW.md      # 없으면 이 문서가 있는 브랜치로 git switch
 git switch -c migrate/$(date +%Y%m%d)
 L=<L′ 절대 경로>; S=$(mktemp -d)          # S: 검증용 임시 디렉터리
 ```
@@ -69,7 +71,7 @@ suite 문서의 §2(데이터 규칙), §3(프레임워크 대응), §4(의도�
 | G0 문법 | MIGRATION_COMMON §7 | 출력 없음 |
 | G1 생성 | 각 suite 문서 §5.1 | rc 0, `unmapped` 없음 |
 | G2 legacy′ 1:1 | 각 suite 문서 §5.2 (perf §5.1) — **`<L>` 자리에 `<L′>`** | cico `differ=0`, func `differ=0`, perf 잔여는 P4(changeLibRef `load` 2줄)뿐. `compared`가 기대값과 같아야 함 |
-| G3 실행 | MIGRATION_COMMON §7 G3, 각 suite 문서 §5.3 | dry-run 2 rc 0. 가능하면 mock 단계 0 |
+| G3 실행 | MIGRATION_COMMON §7 G3, 각 suite 문서 §5.3 | dry-run 2 rc 0. 가능하면 mock 단계 0 (기대 rc는 MIGRATION_COMMON §7 G3) |
 | G4 prod 비교 | MIGRATION_COMMON §7 G4 | prod 스냅샷(`reference/prod/`)이 있을 때만. 없으면 "생략"으로 보고 |
 
 G2는 **반영한 뒤 legacy′와** 비교합니다(기준 legacy가 아님). 실패하면 단계 3으로 돌아갑니다.
@@ -98,6 +100,9 @@ MIGRATION_COMMON §2 단계 7처럼 나눠 커밋하고, 마지막 커밋에 보
   관련 저장소 파일·줄, 생각한 선택지를 적습니다. 나머지 변경은 계속 진행합니다.
 - 게이트가 문서와 다르게 동작하면(명령 오류, 기대값 불일치의 원인이 반영이 아닌 경우): 문서를 고치지 말고 보고서에 그대로 적습니다.
 - 문서의 내용이 실제 코드와 다르면: 코드가 기준입니다. 보고서의 "문서 불일치"에 적습니다.
+- legacy′가 한 곳만 바꿨지만 다른 suite·템플릿에도 같은 변경이 필요해 보이면(예: cico `init.sh`에만 생긴 GDP 단계, 한 템플릿에만
+  바뀐 폼 옵션): legacy′에 있는 곳만 반영하고, 나머지는 "사람 확인 필요"에 적습니다.
+- 반영한 규칙이 어디서도 쓰이지 않는 것처럼 보이면(예: 새 판정 토큰을 쓰는 코드가 없음): 그대로 반영하고 "사람 확인 필요"에 적습니다.
 
 ---
 

@@ -12,7 +12,7 @@
 | `code/control` | `suites/cico/code/control` | 데이터 | **형식 변환**(§2.1) |
 | `code/list` | `suites/cico/code/list` 1~N번 줄 | 데이터 | 그대로, 앞부분에(§2.2) |
 | `code/list_Original_AllTestcases_256` | `suites/cico/code/list` N+1번 이후 | 데이터 | `list`에 없는 줄만, 원래 순서대로(§2.2) |
-| `code/list_NoFast_144` | — | 백업 | 현재 `list`와 같은 내용. 반영하지 않음 |
+| `code/list_NoFast_144` | — | 백업 | 기준 legacy에서는 `list`와 같은 내용. `list`가 기준이며 이 파일은 반영하지 않음 |
 | `code/template.il` | `suites/cico/code/template.il` | 데이터 | 그대로(현재 바이트 단위로 같음) |
 | `code/validate.il` | `suites/cico/code/validate.il` | 데이터 | 그대로(현재 같음) |
 | `code/Flat_list`, `code/Hierarchical_List` | 같은 이름 | 데이터 | 그대로(현재 같음) |
@@ -79,6 +79,10 @@ legacy′에 새 단계가 생기면 같은 규칙으로 블록을 하나 추가
   결과의 `Row_<번호>_...` 이름이 legacy와 같아집니다.
 - 그 뒤에 `list_Original_AllTestcases_256`에만 있는 줄(현재 112줄, Fast 계열)을 그 파일의 순서대로 붙입니다.
 - legacy′에서 두 파일 중 하나라도 바뀌면 위 명령으로 다시 만듭니다.
+- N이 바뀌면 Fast 계열의 번호가 모두 밀립니다(예: N 144→145이면 Fast는 146~257). 테스트 번호는 결과의 `Row_<번호>` 이름과
+  사람들이 쓰는 `-c` 번호이므로, 보고서 "사람 확인 필요"에 이전→새 번호 대응을 적습니다.
+- legacy′의 `list`에 새로 생긴 줄이 Fast 계열처럼 보여도(이름에 `Fast`) legacy′가 `list`에 넣었다면 `list`(1~N번)에 둡니다. 의도를 확인하도록
+  보고서에 적습니다.
 - N이 바뀌면 `site/dev.env`의 `MAX_CASES`(dev 기본 = legacy 케이스 수)와 `main.sh` 도움말, README의 "1~144" 표현을 함께 고칩니다.
   `site/prod.env`의 `MAX_CASES`는 전체 줄 수입니다.
 

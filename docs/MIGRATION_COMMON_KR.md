@@ -222,6 +222,10 @@ export ICM_SkillRoot=/x
 (`MOCK_GDP_STATE` 파일)에 project/workspace가 남지 않는지도 확인합니다. `MOCK_GDP_DOWN=1`로 teardown하면 rc 1이고 아무것도
 지워지지 않아야 합니다.
 
+mock 단계 0의 기대 종료 코드: 스텁 `vse_run`은 결과 파일을 쓰지 않으므로 cico는 `summary.sh`가 "result ... not found"로
+실패해 **rc 1이 정상**입니다. func는 결과 파일이 없는 테스트를 FAIL로 세지만 판정은 종료 코드에 넣지 않으므로 rc 0, perf는
+`perf_summary.sh`가 결과 파일 없이도 시간 표를 만들므로 rc 0입니다. 이 단계에서 보는 것은 종료 코드가 아니라 등록부와 디렉터리 정리입니다.
+
 ### G4 — prod 배치 비교
 ```bash
 for s in cico:1_cico_mp perf:2_perf_mp func:3_func_mp; do
