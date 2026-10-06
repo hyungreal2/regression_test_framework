@@ -1,7 +1,31 @@
 # CAT — 성능 테스트 코드 분석 (v2)
 ## `perf_main.sh` 실행 흐름 · `-gen-replay` · 리플레이 7종
 
-> 관련 문서: [MANUAL_PERF_KR.md](MANUAL_PERF_KR.md) · [IMPROVEMENTS_PERF_KR.md](IMPROVEMENTS_PERF_KR.md)
+> 관련 문서: [MANUAL_PERF_KR.md](MANUAL_PERF_KR.md) · [IMPROVEMENTS_PERF_KR.md](IMPROVEMENTS_PERF_KR.md) · [MIGRATION_PERF_KR.md](MIGRATION_PERF_KR.md)
+
+> **이 문서는 커밋 `9f24beb` 시점(저장소 재구성 전)의 분석 기록입니다.** 경로(`code/`, 저장소 루트)와 본문의 "문제"는 그 시점 기준입니다.
+> 현재 코드의 경로는 `suites/perf/`이며, 아래 표가 각 항목의 현재 상태입니다(2026-10-07).
+
+### 현재 상태
+
+| 본문 항목 | 상태 |
+|---|---|
+| 7-1 / 5.1 `export_metrics` 결과 수집, `PERF_TESTS` 순서 | 해결. 결과 파일을 glob으로 찾고, `PERF_TESTS`는 템플릿 `Test<N>` 번호 순서(checkHier … copyHierToEmpty, copyHierToNonEmpty) |
+| 7-2 / 5.3 run 전 워크스페이스 원복 | 해결. MANAGED는 revert + sync(+ `sync -f`), sync가 진짜 실패하면 측정하지 않음. UNMANAGED도 `.oa_pristine`에서 복원(legacy에 없던 추가) |
+| 7-3 / 4.7 changeLibRef 결과 파일 이름의 `_` 누락 | 해결. unmanaged revert 경로 하드코딩과 changeLibRef 템플릿 형식(`\i` 없음)은 실제 ICM 환경 확인 전까지 보류 |
+| 7-4 / 5.4 `-nograph`에서 GUI 폼 함수 동작 | 미확인. 실제 환경의 CDS_log로 확인 필요 |
+| 7-5 / 6.3 DRAMLIB | 해결. `PERF_BASE_LIBS=(DRAMLIB)`로 모든 워크스페이스에 추가 |
+| 7-6 / 5.2 시간 단위 | 해결. `elapsed_sec`(초) |
+| 7-7 / 5.5 템플릿·SKILL 추적 | 해결. `suites/perf/GenerateReplayScript/`, `suites/perf/code/*.il` 추적 |
+| 7-8 / 6.2 lib 구성 최적화 | 보류(측정 조건이 바뀌므로 결정 필요) |
+| 7-9 / 4.5 copyHierToEmpty `if(` / `)`의 `\i` | 해결 |
+| M1 auto-init 뒤 재스캔 | 해결 |
+| M2 auto-init에서 replay 두 번 생성 | 유지(실행 때 새 uniqueid로 다시 만드는 것이라 결과에 영향 없음) |
+| M3 `-mode` 검증 | 해결(여러 값, 중복·잘못된 값 거부) |
+| M4 `teardown_worker_pid` | perf에서는 쓰이지 않는 변수로 남음(동작 영향 없음) |
+| M5 `break 2` 뒤 루프 변수 사용 | 유지(bash에서 값이 보존되어 정상 동작) |
+| M6 `code/date_virtuosoVer.txt` | 용도 변경. 마지막 init의 id를 기록해 `perf_teardown_all.sh`가 진행 중인 init을 건드리지 않게 함. 그 init의 워크스페이스가 모두 정리되면 지움 |
+| 0.1 prod `VSE_VERSION` | 세 suite 모두 `IC251SM_ISR8_003-260902`(legacy perf와 같음)로 통일 |
 
 ---
 

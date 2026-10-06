@@ -389,13 +389,15 @@ still owe a teardown (`-k` run or failed teardowns); the teardown command is pri
 
 ## Documentation
 
+All documents are in Korean.
+
 | File | Content |
 |------|---------|
-| `docs/MANUAL_MAIN.md` | Beginner guide for main.sh (English) |
-| `docs/MANUAL_MAIN_KR.md` | Beginner guide for main.sh (Korean) |
-| `docs/MANUAL_PERF.md` | Beginner guide for perf_main.sh (English) |
-| `docs/MANUAL_PERF_KR.md` | Beginner guide for perf_main.sh (Korean) |
-| `docs/IMPROVEMENTS*.md` | Changes compared to legacy |
-| `docs/ANALYSIS_PERF_KR.md` | perf code and replay template analysis (Korean) |
-
-The manuals still describe the pre-restructure layout (root-level `main.sh`, `code/`); run commands from the suite directory.
+| `docs/MANUAL_CICO_KR.md` | How to run cico (`main.sh`) |
+| `docs/MANUAL_FUNC_KR.md` | How to run func (`func_main.sh`) |
+| `docs/MANUAL_PERF_KR.md` | How to run perf (`perf_main.sh`) |
+| `docs/IMPROVEMENTS_COMMON_KR.md` | What the current code keeps and improves compared with legacy (common) |
+| `docs/IMPROVEMENTS_{CICO,FUNC,PERF}_KR.md` | Same, per suite |
+| `docs/MIGRATION_COMMON_KR.md` | How to bring a new legacy (legacy′) into this repo: procedure, rules, behaviour to keep, verification gates, baseline checksums |
+| `docs/MIGRATION_{CICO,FUNC,PERF}_KR.md` | Per suite: file mapping, intended differences, legacy′ comparison gates |
+| `docs/ANALYSIS_PERF_KR.md` | perf code and replay template analysis (snapshot at `9f24beb`, with current status) |
