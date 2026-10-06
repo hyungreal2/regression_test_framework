@@ -27,7 +27,7 @@ run_cmd "gdp create config ${config}"
 for lib in "$@"; do
     oa_lib="${FUNC_GDP_BASE}/${proj_name}/rev01/oa/${lib}"
     log "Building library: ${lib}"
-    run_cmd "gdp create library \"${oa_lib}\" --from \"${FROM_LIB}/${lib}\" --columns id,name,type,path,description"
+    run_cmd "gdp create library \"${oa_lib}\" --from \"${FROM_LIB}/${lib}\" --location=oa/{{library}} --columns id,name,type,path,description"
     log "Adding ${lib} to config"
     run_cmd "gdp update \"${config}\" --add \"${oa_lib}\""
 done

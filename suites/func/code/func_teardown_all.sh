@@ -19,10 +19,16 @@ Options:
   -h | --help           Print this help message
   -d | --dry-run [n]    Dry-run level 0/1/2  (default: ${DRY_RUN})
   -j | --jobs <n>       Parallel teardown job count  (default: ${jobs})
+  -ws | --ws_name <p>   Workspace prefix used by the run   (default: ${FUNC_WS_PREFIX})
+  -proj | --proj_prefix <p>  Project prefix used by the run (default: ${FUNC_PROJ_PREFIX})
 
 Arguments:
   regression_dir        Path to regression directory (e.g. regression_test_replace_001)
                         Can also be set via exported env var \$regression_dir
+
+Test ids are taken from the ${FUNC_WS_PREFIX}_* workspace dirs, from
+teardown_queue.txt.failed, and from teardown_queue.txt after a -k run.
+Run this before clean.sh.
 EOF
 }
 
@@ -46,8 +52,20 @@ while [[ $# -gt 0 ]]; do
             fi
             ;;
         -j|--jobs)
-            [[ "${2:-}" =~ ^[0-9]+$ ]] || error_exit "-j/--jobs requires a positive integer"
+            [[ "${2:-}" =~ ^[1-9][0-9]*$ ]] || error_exit "-j/--jobs requires a positive integer"
             jobs="$2"
+            shift 2
+            ;;
+        -ws|--ws_name)
+            [[ "${2:-}" =~ ^[A-Za-z0-9_.-]+$ ]] || error_exit "$1 requires a name ([A-Za-z0-9_.-])"
+            FUNC_WS_PREFIX="$2"
+            ws_given=true
+            shift 2
+            ;;
+        -proj|--proj_prefix)
+            [[ "${2:-}" =~ ^[A-Za-z0-9_.-]+$ ]] || error_exit "$1 requires a name ([A-Za-z0-9_.-])"
+            FUNC_PROJ_PREFIX="$2"
+            proj_given=true
             shift 2
             ;;
         -*)
@@ -60,7 +78,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-export DRY_RUN
 
 #######################################
 # Args: regression_dir (arg or env)
@@ -69,6 +86,20 @@ regression_dir="${positional_args[0]:-${regression_dir:-}}"
 [[ -n "${regression_dir}" ]] || error_exit "regression_dir not set. Pass as argument or export."
 
 [[ -d "${regression_dir}" ]] || error_exit "Directory not found: ${regression_dir}"
+regression_dir="$(cd "${regression_dir}" && pwd)"
+export regression_dir   # func_teardown.sh uses it for the DRY_RUN=1 mock workspace
+
+# Prefixes the run used (func_main.sh -ws/-proj), unless given here
+_pfx_file="${regression_dir}/run_prefixes"
+if [[ -f "${_pfx_file}" ]]; then
+    _ws=$(sed -n 's/^FUNC_WS_PREFIX=//p' "${_pfx_file}")
+    _pj=$(sed -n 's/^FUNC_PROJ_PREFIX=//p' "${_pfx_file}")
+    [[ "${ws_given:-false}" == true || -z "${_ws}" ]] || FUNC_WS_PREFIX="${_ws}"
+    [[ "${proj_given:-false}" == true || -z "${_pj}" ]] || FUNC_PROJ_PREFIX="${_pj}"
+    log "Using prefixes of the run: FUNC_WS_PREFIX=${FUNC_WS_PREFIX} FUNC_PROJ_PREFIX=${FUNC_PROJ_PREFIX}"
+fi
+export DRY_RUN FUNC_WS_PREFIX FUNC_PROJ_PREFIX
+export CAT_FUNC_WS_PREFIX="${FUNC_WS_PREFIX}" CAT_FUNC_PROJ_PREFIX="${FUNC_PROJ_PREFIX}"   # func_teardown.sh re-sources env.sh
 
 #######################################
 # Collect uniquetestids from workspace dirs
@@ -77,13 +108,36 @@ regression_dir="${positional_args[0]:-${regression_dir:-}}"
 log "Starting teardown for all tests in ${regression_dir} (jobs=${jobs})"
 
 uid_list=()
+declare -A _seen_uid=()
+_add_uid() {
+    [[ -n "$1" && -z "${_seen_uid[$1]:-}" ]] || return 0
+    _seen_uid[$1]=1
+    uid_list+=("$1")
+}
+
+# ids from the run's teardown queue (func_run_single.sh appends every test;
+# the queue is append-only, so it also lists ids already torn down):
+#  - teardown_queue.txt.failed : teardowns the worker reported as failed
+#  - teardown_queue.txt        : every id, only when the run used -k
+#                                (func_main.sh writes teardown_skipped)
+# This also covers tests whose init failed before the workspace dir existed.
+_queue="${regression_dir}/teardown_queue.txt"
+_queue_sources=("${_queue}.failed")
+[[ -f "${regression_dir}/teardown_skipped" ]] && _queue_sources+=("${_queue}")
+for _qf in "${_queue_sources[@]}"; do
+    [[ -s "${_qf}" ]] || continue
+    while IFS= read -r _uid; do
+        _add_uid "${_uid}"
+    done < "${_qf}"
+done
+
 for testdir in "${regression_dir}"/test_*/; do
     [[ -d "${testdir}" ]] || continue
     _found=false
     for ws_dir in "${testdir}"/${FUNC_WS_PREFIX}_*/; do
         [[ -d "${ws_dir}" ]] || continue
         _ws=$(basename "${ws_dir}")
-        uid_list+=("${_ws#${FUNC_WS_PREFIX}_}")
+        _add_uid "${_ws#${FUNC_WS_PREFIX}_}"
         _found=true
         break
     done
@@ -95,14 +149,20 @@ done
 #######################################
 # Run teardowns in parallel
 #######################################
+td_rc=0
 printf "%s\n" "${uid_list[@]}" | \
     xargs -n1 -P"${jobs}" bash -c "
         export uniquetestid=\"\$1\"
         bash \"${script_dir}/code/func_teardown.sh\" -d \"${DRY_RUN}\"
-    " _
+    " _ || td_rc=$?
 
+if [[ ${td_rc} -ne 0 ]]; then
+    warn "Some teardowns failed (xargs rc=${td_rc}); keeping ${regression_dir} so this can be re-run."
+    flush_trash || true
+    exit 1
+fi
 log "All teardowns completed."
 
 log "Removing regression directory: ${regression_dir}"
 safe_rm_rf "${regression_dir}"
-flush_trash
+flush_trash || true

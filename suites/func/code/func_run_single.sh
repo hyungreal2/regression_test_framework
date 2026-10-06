@@ -52,20 +52,27 @@ export MOCK_GDP_CELL="${cellname:-mock_cell}"
 workspace_name="${FUNC_WS_PREFIX}_${uniquetestid}"
 
 _test_rc=0
+# set -e does not apply inside a subshell on the left of "||", so every
+# step that must stop the test exits explicitly (as in cico run_single_test.sh)
 (
-    cd "${testdir}" || exit 1
+    # DRY_RUN=2 creates no testdir (run_cmd only prints the mkdir)
+    if [[ "${DRY_RUN:-0}" -lt 2 ]]; then
+        cd "${testdir}" || exit 1
+    else
+        log "[DRY-RUN:2][TEST ${num}] Would cd ${testdir}"
+    fi
 
     #######################################
     # Init: create GDP project + workspace
     #######################################
     log "[TEST ${num}] Running func_init.sh (libs=${init_libs[*]})"
-    run_cmd "${script_dir}/code/func_init.sh ${init_libs[*]}"
+    run_cmd "${script_dir}/code/func_init.sh ${init_libs[*]}" || { warn "[TEST ${num}] func_init.sh failed"; exit 1; }
 
     #######################################
     # Link helpers into workspace
     #######################################
     log "[TEST ${num}] Linking cdsLibMgr.il → ${workspace_name}"
-    run_cmd "ln -sf \"${CDS_LIB_MGR}\" \"${workspace_name}\""
+    run_cmd "ln -sf \"${CDS_LIB_MGR}\" \"${workspace_name}\"" || exit 1
 
     #log "[TEST ${num}] Linking .cdsenv → ${workspace_name}/.cdsenv"
     #run_cmd "ln -sf \"${script_dir}/code/.cdsenv\" \"${workspace_name}/.cdsenv\""
@@ -79,7 +86,7 @@ _test_rc=0
     fi
 
     log "[TEST ${num}] Running Virtuoso replay"
-    run_cmd "mkdir -p \"${script_dir}/CDS_log/${uniqueid}\""
+    run_cmd "mkdir -p \"${script_dir}/CDS_log/${uniqueid}\"" || exit 1
     run_vse "${testdir}/replay_${num}.il" \
         "${script_dir}/CDS_log/${uniqueid}/CDS_${mode}_${num}.log"
 ) || _test_rc=$?
@@ -87,7 +94,9 @@ _test_rc=0
 log "[TEST ${num}] DONE (rc=${_test_rc})"
 
 #######################################
-# Queue teardown unconditionally
+# Queue teardown (func_main.sh always
+# exports the queue; with -k nobody
+# consumes it, it is kept for recovery)
 #######################################
 if [[ -n "${teardown_queue_file:-}" ]]; then
     log "[TEST ${num}] Queuing teardown: ${uniquetestid}"
