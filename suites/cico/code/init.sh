@@ -19,12 +19,23 @@ source "${script_dir}/code/common.sh"
 proj_name="${PROJ_PREFIX}_${uniquetestid}"
 config="${CICO_GDP_BASE}/${proj_name}/rev01/dev"
 
+# Legacy printed this before and after the GDP steps: how to clean up
+# by hand if the run is interrupted. teardown.sh needs script_dir and
+# uniquetestid (and WS_PREFIX/PROJ_PREFIX when -ws/-proj were used).
+teardown_hint() {
+    log "If interrupted, tear down with: script_dir=${script_dir} uniquetestid=${uniquetestid} CAT_WS_PREFIX=${WS_PREFIX} CAT_PROJ_PREFIX=${PROJ_PREFIX} bash ${script_dir}/code/teardown.sh -d ${DRY_RUN}"
+    if [[ -n "${regression_dir:-}" ]]; then
+        log "  or, for the whole run: CAT_WS_PREFIX=${WS_PREFIX} CAT_PROJ_PREFIX=${PROJ_PREFIX} bash ${script_dir}/code/teardown_all.sh -d ${DRY_RUN} ${regression_dir}"
+    fi
+}
+
 #######################################
 # GDP operations
 #######################################
 log "Creating project: ${proj_name}"
 #run_cmd "gdp create project --user=gdpxl_manager ${CICO_GDP_BASE}/${proj_name}"
 create_gdp_project "${CICO_GDP_BASE}/${proj_name}"
+teardown_hint
 
 #log "Assigning role projman: ${proj_name}"
 #run_cmd "gdp assign role --user=gdpxl_manager ${CICO_GDP_BASE}/${proj_name} ${USER} projman"
@@ -46,7 +57,7 @@ for lib in "$@"; do
 
     log "Building library: ${lib}"
 
-    run_cmd "gdp create library \"${oa_lib}\" --from \"${FROM_LIB}/${lib}\" --columns id,name,type,path,description"
+    run_cmd "gdp create library \"${oa_lib}\" --from \"${FROM_LIB}/${lib}\" --location=oa/{{library}} --columns id,name,type,path,description"
 
     log "Adding ${lib} to config"
     run_cmd "gdp update \"${config}\" --add \"${oa_lib}\""
@@ -61,3 +72,4 @@ log "Creating workspace: ${workspace_name}"
 run_cmd "gdp build workspace --content \"${config}\" --gdp-name \"${workspace_name}\" --location \"$(pwd)\""
 
 log "Init completed (uniquetestid=${uniquetestid})"
+teardown_hint

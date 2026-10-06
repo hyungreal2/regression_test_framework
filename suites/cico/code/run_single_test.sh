@@ -25,14 +25,17 @@ export uniquetestid
 log "[TEST ${num}] uniquetestid=${uniquetestid}"
 
 _test_rc=0
+# set -e does not apply inside a subshell on the left of "||", so every
+# step that must stop the test exits explicitly.
 (
-    cd "${testdir}" || exit 1
+    # DRY_RUN=2 only printed the mkdir of testdir, so there is nothing to cd into
+    [[ "${DRY_RUN:-0}" -ge 2 ]] || cd "${testdir}" || exit 1
 
     #######################################
     # init
     #######################################
     log "[TEST ${num}] Running init.sh (libname=${libname})"
-    run_cmd "${script_dir}/code/init.sh ${libname}"
+    run_cmd "${script_dir}/code/init.sh ${libname}" || { warn "[TEST ${num}] init.sh failed"; exit 1; }
 
     #######################################
     # workspace path
@@ -43,18 +46,18 @@ _test_rc=0
     # link
     #######################################
     log "[TEST ${num}] Linking cdsLibMgr.il to ${workspace_name}"
-    run_cmd "ln -sf ${CDS_LIB_MGR} ${workspace_name}"
+    run_cmd "ln -sf ${CDS_LIB_MGR} ${workspace_name}" || exit 1
 
     log "[TEST ${num}] Linking .cdsenv to ${workspace_name}"
-    run_cmd "ln -sf ${script_dir}/code/.cdsenv ${workspace_name}/.cdsenv"
+    run_cmd "ln -sf ${script_dir}/code/.cdsenv ${workspace_name}/.cdsenv" || exit 1
 
     #######################################
     # run
     #######################################
-    cd "${workspace_name}"
+    [[ "${DRY_RUN:-0}" -ge 2 ]] || cd "${workspace_name}" || exit 1
 
     log "[TEST ${num}] Running virtuoso replay (replay_${num}.il)"
-    run_cmd "mkdir -p \"${script_dir}/CDS_log/${uniqueid}\""
+    run_cmd "mkdir -p \"${script_dir}/CDS_log/${uniqueid}\"" || exit 1
     run_vse "${testdir}/replay_${num}.il" "${script_dir}/CDS_log/${uniqueid}/CDS_${num}.log"
 ) || _test_rc=$?
 

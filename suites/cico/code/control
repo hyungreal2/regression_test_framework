@@ -1,3 +1,9 @@
+# cico step vocabulary for generate_templates.py (cico mode).
+# Block-format conversion of the legacy 1_cico_sp/code/control: each legacy
+# '<stmt> "\n" <stmt> ... -> <name>' line became '=== Start : <name>',
+# one SKILL statement per line, '=== End'. Step names must match code/list.
+# Lines outside a block (like these) are ignored.
+
 === Start : auto checkout on, auto checkin on
 ddAutoCtlSetVars(0 0 3 3)
 === End
@@ -19,11 +25,85 @@ ICM_Sensitivity_popup( "popup_L" "libname" "" "" "" "" )
 ICM_Checkout_Lib( "ICMFastCoLib" "libname" "" "" "" "" )
 hiDBoxUser(ICM_intHierQuestion nil 2)
 hiDBoxUser(ICM_intHierOkay nil 1)
+ICM_runP4("opened ... | wc -l")
+openedPreCnt=atoi(car(last(parseString(ICM_IPCBuffer "\n"))))
 win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
+when(win==nil fprintf(fd "RowNo_libname_cellname: Open Editor FAIL, exiting...\n")
+exit()
+geSaveAllForm->none->value= t
+hiFormDone(geSaveAllForm))
+cv=gec()
+id=cv~>view
+rval_CO=Validate_fastCO("libname")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_CO then "Fast Checkout opened count PASS" else "Fast Checkout opened count FAIL"))
+=== End
+
+=== Start : Open-triggered Checkout
+win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
+when(win==nil fprintf(fd "RowNo_libname_cellname: Open Editor FAIL, exiting...\n")
+exit()
+geSaveAllForm->none->value= t
+hiFormDone(geSaveAllForm))
 cv=gec()
 id=cv~>view
 rval=Validate(id "gdmStateCO" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval then "Check out PASS" else "Check out FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval then "Open-triggered Check out PASS" else "Open-triggered Check out FAIL"))
+=== End
+
+=== Start : Open-triggered Checkout Expect Fail
+win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
+hiDBoxCancel(_schDBox)
+if(gec() then fprintf(fd "RowNo_libname_cellname: deOpen UNEXPECTED open FAIL\n") else fprintf(fd "RowNo_libname_cellname: deOpen unsucessful PASS\n") win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "r"))
+cv=gec()
+id=cv~>view
+rval=Validate(id "gdmStateCI" "1")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval then "Open-triggered Check out EXPECTED CI PASS" else "Open-triggered Check out UNEXPECTED CO FAIL"))
+=== End
+
+=== Start : ICM Checkout
+ICM_Sensitivity_popup( "popup_V" "libname" "cellname" "schematic" "" "" )
+ICM_CheckOutButton( "ICMCheckOutButton" "libname" "cellname" "schematic" "" "" )
+win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
+when(win==nil fprintf(fd "RowNo_libname_cellname: Open Editor FAIL, exiting...\n")
+exit()
+geSaveAllForm->none->value= t
+hiFormDone(geSaveAllForm))
+cv=gec()
+id=cv~>view
+rval=Validate(id "gdmStateCO" "1")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval then "ICM Check out PASS" else "ICM Check out FAIL"))
+=== End
+
+=== Start : Hierarchical Checkout
+ICM_Sensitivity_popup( "popup_V" "libname" "cellname" "schematic" "" "" )
+ICM_Hier_View_CO( "ICMHierVIEWCO" "libname" "cellname" "schematic" "" "" )
+hiSetCurrentForm('hier_operationForm)
+hiFormDone(hier_operationForm)
+ICM_runP4("opened ... | wc -l")
+openedPreCnt=atoi(car(last(parseString(ICM_IPCBuffer "\n"))))
+win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
+when(win==nil fprintf(fd "RowNo_libname_cellname: Open Editor FAIL, exiting...\n")
+exit()
+geSaveAllForm->none->value= t
+hiFormDone(geSaveAllForm))
+cv=gec()
+id=cv~>view
+rval_hierCO=Validate_hierCO(id)
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_hierCO then "Hierarchical Checkout opened count PASS" else "Hierarchical Checkout opened count FAIL"))
+=== End
+
+=== Start : Modified
+dbCreateProp(cv "dummy" 'boolean t)
+if(dbSave(cv) then fprintf(fd "RowNo_libname_cellname: Modified PASS\n") else fprintf(fd "RowNo_libname_cellname: Modified FAIL\n"))
+=== End
+
+=== Start : Modified Expect Unchanged
+dbCreateProp(cv "dummy" 'boolean t)
+if(dbSave(cv) then fprintf(fd "RowNo_libname_cellname: Modified FAIL (unexpected save)\n") else fprintf(fd "RowNo_libname_cellname: Modified PASS (expected save to fail)\n"))
+=== End
+
+=== Start : Not Modified
+fprintf(fd "RowNo_libname_cellname: Not Modified PASS\n")
 === End
 
 === Start : Fast Checkin
@@ -33,73 +113,61 @@ hiDBoxUser(ICM_intHierWarning nil 4)
 hiSetCurrentForm('ICM_menuCIform)
 hiFormDone(ICM_menuCIform)
 rval1=Validate(id "gdmStateCI" "2")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Fast Check in PASS" else "Fast Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : Fast Checkin Expect Fail CI
+=== Start : Fast Checkin Expect 1 CI
 ICM_Sensitivity_popup( "popup_L" "libname" "" "" "" "" )
 ICM_FastCheckInButton( "ICMCheckInButtonFast" "libname" "" "" "" "" )
 hiDBoxUser(ICM_intHierWarning nil 4)
 hiSetCurrentForm('ICM_menuCIform)
 hiFormDone(ICM_menuCIform)
 rval1=Validate(id "gdmStateCI" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Fast Check in PASS" else "Fast Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : Modified
-dbCreateProp(cv "dummy" 'boolean t)
-if(dbSave(cv) then fprintf(fd "RowNo_libname_cellname: Modified PASS\n") else fprintf(fd "RowNo_libname_cellname: Modified FAIL\n"))
-=== End
-
-=== Start : Modified Expect Fail
-dbCreateProp(cv "dummy" 'boolean t)
-if(dbSave(cv) then fprintf(fd "RowNo_libname_cellname: Modified FAIL (unexpected save)\n") else fprintf(fd "RowNo_libname_cellname: Modified PASS (expected save to fail)\n"))
-=== End
-
-=== Start : Save
-"\n"
-=== End
-
-=== Start : Not Modified
-fprintf(fd "RowNo_libname_cellname: Not Modified PASS\n")
-=== End
-
-=== Start : Save-triggered Checkin
-dbClose(cv)
+=== Start : Close-triggered Checkin
 hiCloseWindow(geGetCellViewWindow(cv))
 rval1=Validate(id "gdmStateCI" "2")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Close-triggered Check in PASS" else "Close-triggered Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : Save-triggered Checkin Expect Fail CO
-dbClose(cv)
+=== Start : Close-triggered Checkin Expect 1 CO
 hiCloseWindow(geGetCellViewWindow(cv))
 rval1=Validate(id "gdmStateCO" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS CO" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Close-triggered Check in PASS CO" else "Close-triggered Check in FAIL"))
+CI_status=nil
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : Save-triggered Checkin Expect Fail CI
-dbClose(cv)
+=== Start : Close-triggered Checkin Expect 1 CI
 hiCloseWindow(geGetCellViewWindow(cv))
 rval1=Validate(id "gdmStateCI" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS CI" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Close-triggered Check in PASS CI" else "Close-triggered Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : Open-triggered Checkout
-win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
-cv=gec()
-id=cv~>view
-rval=Validate(id "gdmStateCO" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval then "Check out PASS" else "Check out FAIL"))
-=== End
-
-=== Start : Open-triggered Checkout Expect Fail
-win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
-if(win then fprintf(fd "RowNo_libname_cellname: deOpen UNEXPECTED pass\n") else fprintf(fd "RowNo_libname_cellname: deOpen EXPECTED fail\n") win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "r"))
-cv=gec()
-id=cv~>view
-rval=Validate(id "gdmStateCI" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval then "Check out EXPECTED CI" else "Check out UNEXPECTED CO"))
+=== Start : ICM Cancel Checkout
+ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "")
+ICM_CancelCheckoutButton("ICMCancelCheckoutButton" "libname" "cellname" "schematic" "" "")
+hiDBoxUser(ICM_intHierWarning nil 2)
+rval1=Validate(id "gdmStateCI" "1")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "ICM Cancel Checkout PASS" else "ICM Cancel Checkout FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
 === Start : ICM Checkin
@@ -108,38 +176,50 @@ ICM_CheckInButton( "ICMCheckInButton" "libname" "cellname" "schematic" "" "" )
 hiSetCurrentForm('ICM_menuCIform)
 hiFormDone(ICM_menuCIform)
 rval1=Validate(id "gdmStateCI" "2")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "ICM Check in PASS" else "ICM Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : ICM Checkin Expect Fail CI
+=== Start : ICM Checkin Expect 1 CI
 ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "")
 ICM_CheckInButton( "ICMCheckInButton" "libname" "cellname" "schematic" "" "" )
 hiSetCurrentForm('ICM_menuCIform)
 hiFormDone(ICM_menuCIform)
 rval1=Validate(id "gdmStateCI" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "ICM Check in PASS" else "ICM Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : ICM Checkout
-ICM_Sensitivity_popup( "popup_V" "libname" "cellname" "schematic" "" "" )
-ICM_CheckOutButton( "ICMCheckOutButton" "libname" "cellname" "schematic" "" "" )
-win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
-cv=gec()
-id=cv~>view
-rval=Validate(id "gdmStateCO" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval then "Check out PASS" else "Check out FAIL"))
+=== Start : Save
+"\n"
 === End
 
-=== Start : Hierarchical Checkout
-ICM_Sensitivity_popup( "popup_V" "libname" "cellname" "schematic" "" "" )
-ICM_Hier_View_CO( "ICMHierVIEWCO" "libname" "cellname" "schematic" "" "" )
-hiSetCurrentForm('hier_operationForm)
+=== Start : Hierarchical Cancel Checkout
+ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "")
+ICM_Hier_View_UNCO("ICMHierVIEWUNCO" "libname" "cellname" "schematic" "" "")
+hiiSetCurrentForm('hier_operationForm)
 hiFormDone(hier_operationForm)
-win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
-cv=gec()
-id=cv~>view
-rval=Validate(id "gdmStateCO" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval then "Check out PASS" else "Check out FAIL"))
+hiDBoxUser(ICM_intHierQuestion nil 2)
+rval1=Validate(id "gdmStateCI" "1")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Hierarchical Cancel Checkout PASS" else "Hierarchical Cancel Checkout FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
+=== End
+
+=== Start : Fast Cancel Checkout
+ICM_Sensitivity_popup("popup_L" "libname" "" "" "" "")
+ICM_Cancel_Lib("ICMFastCancelLIB" "libname" "" "" "" "")
+hiDBoxUser(ICM_intHierQuestion nil 2)
+rval1=Validate(id "gdmStateCI" "1")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Fast Cancel Checkout PASS" else "Fast Cancel Checkout FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
 === Start : Hierarchical Checkin
@@ -148,57 +228,28 @@ ICM_Hier_View_CI( "ICMHierVIEWCI" "libname" "cellname" "schematic" "" "" )
 hiSetCurrentForm('hier_operationForm)
 hiFormDone(hier_operationForm)
 hiDBoxUser(ICM_intHierWarning nil 1)
+hiiSetCurrentForm('ICM_menuCIform)
+hiFormDone(ICM_menuCIform)
 rval1=Validate(id "gdmStateCI" "2")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Hierarchical Check in PASS" else "Hierarchical Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : Hierarchical Checkin Expect Fail CI
+=== Start : Hierarchical Checkin Expect 1 CI
 ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "")
 ICM_Hier_View_CI( "ICMHierVIEWCI" "libname" "cellname" "schematic" "" "" )
 hiSetCurrentForm('hier_operationForm)
 hiFormDone(hier_operationForm)
 hiDBoxUser(ICM_intHierWarning nil 1)
+hiiSetCurrentForm('ICM_menuCIform)
+hiFormDone(ICM_menuCIform)
 rval1=Validate(id "gdmStateCI" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
-=== End
-
-=== Start : ddBatchCheckout
-_ddBatchCheckout(list(ddGetObj("libname" "cellname" "schematic")))
-win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
-cv=gec()
-id=cv~>view
-rval=Validate(id "gdmStateCO" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval then "Check out PASS" else "Check out FAIL"))
-=== End
-
-=== Start : ddBatchCheckout Expect Fail
-_ddBatchCheckout(list(ddGetObj("libname" "cellname" "schematic")))
-win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
-cv=gec()
-id=cv~>view
-rval=Validate(id "gdmStateCI" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval then "Check out PASS" else "Check out FAIL"))
-=== End
-
-=== Start : ddBatchCheckin
-dbClose(cv)
-_ddBatchCheckin("ddBatchCheckin from regression" list(ddGetObj("libname" "cellname" "schematic")))
-rval1=Validate(id "gdmStateCI" "2")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
-=== End
-
-=== Start : ddBatchCheckin Expect Fail CI
-dbClose(cv)
-_ddBatchCheckin("ddBatchCheckin from regression" list(ddGetObj("libname" "cellname" "schematic")))
-rval1=Validate(id "gdmStateCI" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
-=== End
-
-=== Start : ddBatchCheckin Expect Fail CO
-dbClose(cv)
-_ddBatchCheckin("ddBatchCheckin from regression" list(ddGetObj("libname" "cellname" "schematic")))
-rval1=Validate(id "gdmStateCO" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Hierarchical Check in PASS" else "Hierarchical Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
 === Start : Close Data Save
@@ -207,59 +258,76 @@ hiiSetCurrentForm('ddsCloseDataForm)
 ddsiCloseDataButtonCB('all)
 ddsCloseDataForm->CDCVModifiedOption->value="save"
 hiFormDone(ddsCloseDataForm)
-hiDBoxOK(ddsDBox)
 rval1=Validate(id "gdmStateCI" "2")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Close Data Check in PASS" else "Close Data Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : Close Data Save Expect Fail CI
+=== Start : Close Data Save Expect 1 CI
 ddsHiCloseData()
 hiiSetCurrentForm('ddsCloseDataForm)
 ddsiCloseDataButtonCB('all)
 ddsCloseDataForm->CDCVModifiedOption->value="save"
 hiFormDone(ddsCloseDataForm)
-hiDBoxOK(ddsDBox)
 rval1=Validate(id "gdmStateCI" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Close Data Check in PASS" else "Close Data Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : Close Data Save Expect Fail CO
+=== Start : Close Data Save Expect 1 CO
 ddsHiCloseData()
 hiiSetCurrentForm('ddsCloseDataForm)
 ddsiCloseDataButtonCB('all)
 ddsCloseDataForm->CDCVModifiedOption->value="save"
 hiFormDone(ddsCloseDataForm)
-hiDBoxOK(ddsDBox)
 rval1=Validate(id "gdmStateCO" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Close Data Check in PASS" else "Close Data Check in FAIL"))
+CI_status=nil
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : Close Data Discard Expect Fail CI
+=== Start : Close Data Discard Expect 1 CI
 ddsHiCloseData()
 hiiSetCurrentForm('ddsCloseDataForm)
 ddsiCloseDataButtonCB('all)
 ddsCloseDataForm->CDCVModifiedOption->value="discard"
 hiFormDone(ddsCloseDataForm)
-hiDBoxOK(ddsDBox)
 rval1=Validate(id "gdmStateCI" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Close Data Check in PASS" else "Close Data Check in FAIL"))
+CI_status=t
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : Close Data Discard Expect Fail CO
+=== Start : Close Data Discard Expect 1 CO
 ddsHiCloseData()
 hiiSetCurrentForm('ddsCloseDataForm)
 ddsiCloseDataButtonCB('all)
 ddsCloseDataForm->CDCVModifiedOption->value="discard"
 hiFormDone(ddsCloseDataForm)
-hiDBoxOK(ddsDBox)
 rval1=Validate(id "gdmStateCO" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Check in PASS" else "Check in FAIL"))
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Close Data Check in PASS" else "Close Data Check in FAIL"))
+CI_status=nil
+rval_lock=Validate_lock("libname" "cellname" "schematic")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_lock then "Lock file is not existed PASS" else "Lock file is existed FAIL"))
 === End
 
-=== Start : ddBatchCancel
-_ddBatchCancel(list(ddGetObj("libname" "cellname" "schematic")))
-rval1=Validate(id "gdmStateCI" "1")
-fprintf(fd "RowNo_libname_cellname: %s\n" if(rval1 then "Cancel PASS" else "Cancel FAIL"))
+=== Start : Validate Whole Lib CI
+rval_allLibCI=Validate_allLibCI("libname")
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_allLibCI then "Checkin opened count PASS" else "Checkin opened count FAIL"))
 === End
 
+=== Start : Validate Others Remain CO
+rval_otherRemainCO=Validate_otherRemainCO(id openedPreCnt CI_status)
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_otherRemainCO then "Checkin opened count PASS" else "Checkin opened count FAIL"))
+=== End
 
+=== Start : Validate Others Not In Hier Remain CO
+rval_otherNotInHierRemainCO=Validate_otherNotInHierRemainCO(id openedPreCnt)
+fprintf(fd "RowNo_libname_cellname: %s\n" if(rval_otherNotInHierRemainCO then "Checkin opened count PASS" else "Checkin opened count FAIL"))
+=== End
