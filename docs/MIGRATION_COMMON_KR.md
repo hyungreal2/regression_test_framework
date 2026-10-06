@@ -18,7 +18,7 @@
 
 | 용어 | 뜻 |
 |---|---|
-| legacy (기준) | 이 저장소가 마지막으로 맞춰 둔 legacy 스냅샷. 세 디렉터리 `1_cico_sp`, `2_perf_sp`, `3_func_sp`. 파일 체크섬은 [부록 A](#부록-a-기준-legacy-체크섬) |
+| legacy (기준) | 이 저장소가 마지막으로 맞춰 둔 legacy 스냅샷. **저장소의 `reference/legacy/`에 커밋되어 있습니다**(`1_cico_sp`, `2_perf_sp`, `3_func_sp`. 실행 결과물·생성 replay·편집기 임시 파일은 `.gitignore`로 제외). 파일 체크섬은 [부록 A](#부록-a-기준-legacy-체크섬) |
 | legacy′ | 새로 받은 legacy. 같은 세 디렉터리 구조 |
 | 저장소 | 이 git 저장소. `shared/`, `suites/{cico,perf,func}/`, `site/`, `deploy.sh`, `tools/` |
 | prod 배치 | `deploy.sh`가 만드는 `1_cico_mp`, `2_perf_mp`, `3_func_mp`. 저장소 suite 디렉터리와 같은 구조 |
@@ -33,15 +33,15 @@ legacy′의 suite 디렉터리 이름이 다르면(예: `1_cico`) 내용으로 
 ## 2. 작업 절차
 
 ### 단계 1 — 기준 확인
-1. 저장소 밖(또는 git이 무시하는 `reference/`)에 기준 legacy와 legacy′를 둡니다.
-   `reference/`는 `.gitignore`에 있어 커밋되지 않습니다. legacy 내용은 문서와 커밋 메시지에 **파일 이름과 발췌로만** 인용합니다.
-2. 기준 legacy가 맞는지 [부록 A](#부록-a-기준-legacy-체크섬)의 체크섬으로 확인합니다.
+1. 기준 legacy는 `reference/legacy/`입니다. legacy′는 저장소 밖이나 `reference/` 아래 다른 이름(git이 무시함)에 둡니다.
+   `reference/` 아래에서는 `reference/legacy/`만 추적되고, `reference/prod/` 등 나머지는 추적되지 않습니다.
+2. 기준 legacy가 부록 A와 맞는지 확인합니다.
    ```bash
-   cd <기준 legacy 상위 디렉터리>
-   sha256sum <경로> | cut -c1-16      # 부록 A의 값과 비교
+   cd reference/legacy && sha256sum <경로> | cut -c1-16      # 부록 A의 값과 비교
    ```
-3. 기준 legacy가 없거나 체크섬이 다르면, legacy′를 **저장소 파일과 직접** 비교합니다. 이때 suite 문서의
-   "의도한 차이" 목록이 기준 역할을 합니다. 목록에 없는 차이만 legacy′의 새 변경으로 봅니다.
+3. 체크섬이 다르면(누군가 기준을 손댔다면) `git log -- reference/legacy`로 마지막 반영 시점을 확인하고, 그 커밋의 기준과
+   legacy′를 비교합니다. 기준을 쓸 수 없으면 legacy′를 **저장소 파일과 직접** 비교합니다. 이때 suite 문서의
+   "의도한 차이" 목록이 기준 역할을 하며, 목록에 없는 차이만 legacy′의 새 변경으로 봅니다.
 
 ### 단계 2 — 변경 목록 만들기
 ```bash
@@ -72,11 +72,13 @@ diff -u  --strip-trailing-cr <기준>/<파일> <legacy′>/<파일>             
 ### 단계 6 — 문서
 - 사용법이 바뀌면 `README.md`와 해당 `docs/MANUAL_<SUITE>_KR.md`를 고칩니다.
 - 새 의도한 차이가 생기면 suite MIGRATION 문서의 "의도한 차이"에 양쪽 발췌와 이유를 추가합니다.
-- 기준 legacy를 legacy′로 바꾸면 [부록 A](#부록-a-기준-legacy-체크섬)를 다시 만듭니다(부록 A 머리말의 명령).
+- 반영이 끝나면 기준을 legacy′로 바꿉니다: `reference/legacy/`의 내용을 legacy′로 교체하고(세 suite 디렉터리 전체.
+  `.gitignore`가 실행 결과물을 거름), [부록 A](#부록-a-기준-legacy-체크섬)를 다시 만듭니다(부록 A 머리말의 명령을 `reference/legacy`에서 실행).
+  이전 기준은 git 이력에 남습니다.
 
 ### 단계 7 — 커밋
-공용(`shared/`, `site/`, `deploy.sh`, `tools/`), cico, func, perf, 문서로 나눠 커밋합니다. 메시지에 legacy′의
-어떤 파일 변경을 반영했는지 적습니다. push는 따로 확인을 받은 뒤 합니다.
+공용(`shared/`, `site/`, `deploy.sh`, `tools/`), cico, func, perf, 문서, 기준 교체(`reference/legacy/` + 부록 A)로 나눠 커밋합니다.
+메시지에 legacy′의 어떤 파일 변경을 반영했는지 적습니다. push는 따로 확인을 받은 뒤 합니다.
 
 ---
 
@@ -233,8 +235,8 @@ done
 
 ## 부록 A. 기준 legacy 체크섬
 
-이 저장소가 맞춰 둔 legacy 스냅샷의 파일별 SHA-256 앞 16자리입니다. 실행 결과물과 편집기 임시 파일은 뺐습니다.
-기준을 바꿀 때는 새 legacy 디렉터리의 상위에서 아래 명령으로 다시 만듭니다.
+`reference/legacy/`의 파일별 SHA-256 앞 16자리입니다. 실행 결과물과 편집기 임시 파일은 뺐습니다.
+기준을 바꿀 때는 `reference/legacy/`에서 아래 명령으로 다시 만들어 이 부록을 교체합니다.
 
 ```bash
 for s in 1_cico_sp 2_perf_sp 3_func_sp; do

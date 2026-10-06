@@ -1,0 +1,54 @@
+envLoadFile("../../code/.cdsenv")
+load("../../code/perfFunctions.il")
+code_path = "../../code/"
+result_path = "../../result/"
+load( strcat( code_path "date_virtuosoVer.il"))
+ddAutoCtlSetVars(0 0 3 3)
+
+
+;--------------------------------------------------
+;# Open Design
+;--------------------------------------------------
+openDesign("BM01" "VP_FULLCHIP" "schematic" "a")
+
+;--------------------------------------------------
+;# Set Samsung Setting
+;--------------------------------------------------
+LoadSamsungEnv()
+hiFormDone(schSRCForm)
+hiCloseWindow(geGetCellViewWindow(gec()))
+hiDBoxOK(geDBox)
+
+;--------------------------------------------------
+;# Test2_BM01: Rename Reference Library
+;--------------------------------------------------
+t1=getCurrentTime()
+renameRefLib("BM01_ORIGIN" "BM01_TARGET" "BM01_ORIGIN")
+
+;--------------------------------------------------
+;# End Time 
+;--------------------------------------------------
+t2=getCurrentTime()
+final=compareTime(t2 t1)
+system(strcat("mkdir -p " result_path date_virtuosoVer(code_path) ))  
+
+inport = infile(strcat(code_path "managed.txt"))
+gets(managed inport)
+managed = substring(managed 1 strlen(managed)-1)
+close(inport)
+
+fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test2_BM01_" managed "_" date_virtuosoVer(code_path) ".log") "w")
+fprintf(fd "Test2_BM01. Performance Rename Reference Library  %s time %d\n" managed final)
+close(fd)
+
+;--------------------------------------------------
+;# Revert Last Rename Reference Library operation.
+;--------------------------------------------------
+renameRefLib("BM01_TARGET" "BM01_ORIGIN" "BM01_ORIGIN")
+
+;--------------------------------------------------
+;# Exit
+;--------------------------------------------------
+exit
+geSaveAllForm->none->value= t
+hiFormDone(geSaveAllForm)

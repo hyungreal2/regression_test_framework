@@ -1,0 +1,17 @@
+***The steps to creating a managed workspace***
+
+; Please change <user name> to your echo $USER
+
+1. source /user/virtuoso.mem/ICM/client/icmanage.cshrc
+2. gdp login (the password should be empty)
+3. cd /user/virtuoso.catdm/USERS/CAT_DM/perfTest/managed
+4. gdp build workspace --content /VSM/cadence_perf_20260317064432/rev01/dev --gdp-name cadence_perf_ws_<user name>
+
+
+
+For example for user caev7449:
+
+1. source /user/virtuoso.mem/ICM/client/icmanage.cshrc
+2. gdp login (the password should be empty)
+3. cd /user/virtuoso.catdm/USERS/CAT_DM/perfTest/managed
+4. gdp build workspace --content /VSM/cadence_perf_20260317064432/rev01/dev --gdp-name cadence_perf_ws_caev7449

@@ -58,9 +58,10 @@ ICM/
 # ----------------------------------------
 # Reference snapshots (local only, not tracked)
 #   reference/prod/        deployed prod snapshot
-#   reference/legacy/      latest legacy (mcr_catdm)
+#   reference/legacy/      baseline legacy snapshot (TRACKED: the MIGRATION baseline)
 #   reference/legacy.old/  previous legacy copy
-reference/
+reference/*
+!reference/legacy/
 
 # Python
 # ----------------------------------------

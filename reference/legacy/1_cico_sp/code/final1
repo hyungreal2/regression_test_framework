@@ -1,0 +1,55 @@
+test_001_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_002_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_010_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_017_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Fast Checkin
+test_018_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_025_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_026_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_033_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+test_034_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_041_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_042_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_049_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_050_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_057_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_058_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_065_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_066_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_073_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_074_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_081_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Fast Checkin
+test_082_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_089_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_090_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_097_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+test_098_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_105_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_106_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_113_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_114_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_121_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_122_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_129_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_130_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_137_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_138_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_161_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+test_162_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_169_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_170_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_177_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_178_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_185_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_186_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_193_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_194_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_201_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_202_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_225_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+test_226_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_233_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_234_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_241_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_242_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_249_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_250_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI

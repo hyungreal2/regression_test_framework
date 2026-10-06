@@ -44,7 +44,7 @@ CAT/
 │   ├── compare_deploy.sh          # Diff a deployment against a prod snapshot
 │   └── mock/                      # Mock gdp (object registry) / xlp4 for local runs (not deployed)
 ├── docs/                          # Manuals, improvement notes, analysis
-└── reference/                     # Local prod / legacy snapshots (git-ignored)
+└── reference/legacy/              # Baseline legacy snapshot for MIGRATION (tracked; other reference/ dirs are local only)
 ```
 
 Run a suite from its own directory, for example `cd suites/perf && ./perf_main.sh -h`.
@@ -400,4 +400,5 @@ All documents are in Korean.
 | `docs/IMPROVEMENTS_{CICO,FUNC,PERF}_KR.md` | Same, per suite |
 | `docs/MIGRATION_COMMON_KR.md` | How to bring a new legacy (legacy′) into this repo: procedure, rules, behaviour to keep, verification gates, baseline checksums |
 | `docs/MIGRATION_{CICO,FUNC,PERF}_KR.md` | Per suite: file mapping, intended differences, legacy′ comparison gates |
+| `docs/MIGRATION_WORKFLOW.md` | Entry point for a worker (or an agent with no context) who brings a legacy′ into the repo |
 | `docs/ANALYSIS_PERF_KR.md` | perf code and replay template analysis (snapshot at `9f24beb`, with current status) |

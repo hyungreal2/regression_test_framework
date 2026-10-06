@@ -1,0 +1,256 @@
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Close Data Save, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Close-triggered Checkin, 6. Validate Others Remain CO 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO 
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Others Not In Hier Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Others Not In Hier Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Fast Checkin
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Close Data Save
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Close-triggered Checkin
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. ICM Checkin
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Fast Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. ICM Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Hierarchical Checkin
+1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Close Data Save
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Close-triggered Checkin
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. ICM Checkin
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. ICM Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Hierarchical Checkin
+1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Close Data Save, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Close-triggered Checkin, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Close Data Save Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Others Not In Hier Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Others Not In Hier Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Fast Checkin
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Close Data Save Expect 1 CO
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. ICM Checkin
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Fast Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. ICM Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Hierarchical Checkin
+1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Close Data Save Expect 1 CO
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. ICM Checkin
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. ICM Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Hierarchical Checkin
+1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Close Data Save Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Whole Lib CI
+1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Close Data Save, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Close-triggered Checkin, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Others Not In Hier Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Others Not In Hier Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Fast Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Close Data Save Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Close Data Discard Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Close-triggered Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. ICM Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Fast Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Fast Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. ICM Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ICM Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Hierarchical Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Hierarchical Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Close Data Save
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Close-triggered Checkin
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. ICM Checkin
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. ICM Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Hierarchical Checkin
+1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Close Data Save, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Close-triggered Checkin, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Close Data Save Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Others Not In Hier Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Others Not In Hier Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Fast Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Close Data Save Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Close Data Discard Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Close-triggered Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. ICM Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Fast Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Fast Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. ICM Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ICM Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Hierarchical Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Hierarchical Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Close Data Save Expect 1 CO
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. ICM Checkin
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. ICM Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Hierarchical Checkin
+1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Close Data Save Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Whole Lib CI
+1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Whole Lib CI

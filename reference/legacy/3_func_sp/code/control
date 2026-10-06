@@ -1,0 +1,544 @@
+
+=== Start : auto checkout on, auto checkin off
+ddAutoCtlSetVars(0 0 3 0)
+checkinStatus = nil
+checkoutStatus = t
+expValue = 1 
+=== End 
+
+=== Start : auto checkout off,auto checkin on
+ddAutoCtlSetVars(0 0 0 3)
+checkinStatus = t
+checkoutStatus = nil
+;if(mode == "renameRefLib" then expValue = 2 else expValue = 1)
+expValue = 1
+=== End 
+
+=== Start : auto checkout off,auto checkin off
+ddAutoCtlSetVars(0 0 0 0)
+checkinStatus = nil
+checkoutStatus = nil
+expValue = 1
+=== End 
+
+=== Start : auto checkout on, auto checkin on
+ddAutoCtlSetVars(0 0 3 3)
+checkinStatus = t
+checkoutStatus = t
+;if(mode == "renameRefLib" then expValue = 2 else expValue = 1) 
+expValue = 1
+=== End 
+
+
+=== Start : Open-triggered Checkout
+rval1 = nil 
+preVerList = getCurrentVersion("libname" "cellname" "schematic")
+fprintf(fd "\n===\tOpen-triggered Checkout: Expect Checkout PASS\t===\n") 
+win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a") 
+cvId=gec() 
+id=cvId~>view 
+rval1=Validate(id "gdmStateCO" preVerList 0) 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check out PASS" else "Check out FAIL"))  
+=== End 
+
+
+=== Start : ICM Checkout
+;may be fixed
+rval1 = nil
+fprintf(fd "\n===\tICM Checkout: Expect Checkout PASS\t===\n")
+testCV = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+testCVList = dmGetHierInst(testCV)
+preHierVerInfo = getHierVersion(testCVList)
+foreach(tmpCV testCVList ICM_Sensitivity_popup( "popup_V" tmpCV~>libName tmpCV~>cellName "schematic" "" "" ) ICM_CheckOutButton( "ICMCheckOutButton" tmpCV~>libName tmpCV~>cellName "schematic" "" "" ))
+win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
+cv=gec()
+id=cv~>view
+rval1=hierValidation(nil preHierVerInfo testCVList 0 "RowNo" "libname" "cellname" "gdmStateCO")
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check out PASS" else "Check out FAIL"))
+=== End
+
+
+=== Start : Hierarchical Checkout
+rval1 = nil
+fprintf(fd "\n===\tHierachical Checkout : Expect Checkout PASS\t===\n")
+ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "" )
+ICM_Hier_View_CO( "ICMHierVIEWCO" "libname" "cellname" "schematic" "" ""  )
+hiSetCurrentForm('hier_operationForm)
+hiFormDone(hier_operationForm)
+hiDBoxUser(ICM_intHierWarning nil 1)
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+checkInstCellList = dmGetHierInst(cvId)
+preHierVerInfo = getHierVersion(checkInstCellList)
+foreach(tmpCell checkInstCellList dbClose(tmpCell))
+preICMChangeN = nil
+rval1 = hierValidation(preICMChangeN preHierVerInfo checkInstCellList 0 "RowNo" "libname" "cellname" "gdmStateCO")
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check out PASS" else "Check out FAIL"))
+win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a") 
+=== End
+
+
+=== Start : Fast Checkout
+;pending: expected
+;need to be fixed
+rval1 = nil
+ICM_Sensitivity_popup( "popup_L" "libname" "" "" "" ""     )
+ICM_Checkout_Lib( "ICMFastCoLib" "libname"     )
+hiDBoxUser(ICM_intHierQuestion nil 2)
+hiDBoxUser(ICM_intHierOkay nil 1)
+win=deOpen(list(nil 'libName "libname" 'cellName "cellname" 'viewName "schematic") nil "a")
+cv=gec()
+id=cv~>view
+rval1=Validate(id "gdmStateCO" 1+expValue)
+fprintf(fd "\tRowNo_libname_cellname: %s\n " if(boundp('rval1) && rval1 then "Check out PASS" else "Check out FAIL"))
+=== End
+
+
+=== Start : Run Check Hier Save All
+fprintf(fd "\n===\tSave All && Run Check Hierarchy : Expect Check Hierarchy PASS\t===\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+hierCellList = dmGetHierInst(cvId)
+preHierVerInfo = getHierVersion(hierCellList)
+initMarkers_2=length(cvId~>markers) 
+schHiCheckHier() 
+hiiSetCurrentForm('schCheckHierForm) 
+schCheckHierForm->checkAlways->value= t 
+schCheckHierForm->checkRefLibs->value= t 
+schCheckHierForm->openMode->value="edit" 
+schCheckHierForm->saveStrategy->value="Save all" 
+schCheckHierForm->closeErrorCVs->value= t 
+preICMChangeN = Validate_ICMchanges()
+hiFormDone(schCheckHierForm) 
+postMarkers_2=length(cvId~>markers) 
+mval_2=(postMarkers_2>0) 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(mval_2 then "Run CheckHier PASS " else "Run CheckHier FAIL"))
+=== End
+
+=== Start : Check Setup 
+LoadSamsungEnv() 
+hiFormDone(schSRCForm) 
+=== End 
+
+=== Start : File Dont Save Data
+;;foreach(tmpCell openCellViews dbClose(tmpCell)) 
+=== End 
+
+=== Start : Run Check Hier Do not Save
+fprintf(fd "\n===\tDo not save && Run Check Hierarchy : Expect Check Hierarchy PASS\t===\t\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+hierCellList = dmGetHierInst(cvId)
+preHierVerInfo = getHierVersion(hierCellList)
+initMarkers_2=length(cvId~>markers) 
+schHiCheckHier() 
+hiiSetCurrentForm('schCheckHierForm) 
+schCheckHierForm->checkAlways->value= t 
+schCheckHierForm->checkRefLibs->value= t 
+schCheckHierForm->openMode->value="edit" 
+schCheckHierForm->saveStrategy->value="Do not save" 
+preICMChangeN = Validate_ICMchanges()
+hiFormDone(schCheckHierForm) 
+postMarkers_2=length(cvId~>markers) 
+mval_2=(postMarkers_2>0) 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(mval_2 then "Run CheckHier PASS " else "Run CheckHier FAIL"))
+=== End 
+
+=== Start : Create Open Wire
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic")
+if(checkoutStatus == nil then ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "" ) ICM_Hier_View_CO( "ICMHierVIEWCO" "libname" "cellname" "schematic" "" ""  ) hiSetCurrentForm('hier_operationForm))
+if(checkoutStatus == nil then hiFormDone(hier_operationForm))
+if(checkoutStatus == nil then hiDBoxUser(ICM_intHierWarning nil 1))
+dmCreateOpenWire(cvId) 
+ICM_Hier_View_CI( "ICMHierVIEWCI" "libname" "cellname" "schematic" "" "")
+hiSetCurrentForm('hier_operationForm) 
+hiFormDone(hier_operationForm) 
+hiDBoxUser(ICM_intHierWarning nil 1) 
+=== End 
+
+=== Start : Create Open Marker
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic") 
+if(checkoutStatus == nil then ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "" ) ICM_Hier_View_CO( "ICMHierVIEWCO" "libname" "cellname" "schematic" "" ""  ) hiSetCurrentForm('hier_operationForm))
+if(checkoutStatus == nil then hiFormDone(hier_operationForm))
+if(checkoutStatus == nil then hiDBoxUser(ICM_intHierWarning nil 1))
+dmCreateMarker(cvId) 
+ICM_Hier_View_CI( "ICMHierVIEWCI" "libname" "cellname" "schematic" "" "")
+hiSetCurrentForm('hier_operationForm) 
+hiFormDone(hier_operationForm) 
+hiDBoxUser(ICM_intHierWarning nil 1) 
+=== End 
+
+=== Start : Write Mode Validation
+fprintf(fd "\n===\tWrite Mode Validation : Expect Write Mode PASS\t===\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic")
+val = dmWriteModeValidation(cvId)
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(val then "Write Mode PASS " else "Write Mode FAIL")) 
+=== End
+
+=== Start : File Save Data
+ddsHiSaveData()
+hiiSetCurrentForm('ddsSaveDataForm)
+_ddsAllDataButtonCB('saveAll)
+hiFormDone(ddsSaveDataForm) 
+=== End 
+
+
+=== Start : Save Verify
+fprintf(fd "\n===\tSave Option : Expect Save PASS\t===\n")
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+checkInstCellList = dmGetHierInst(cvId)
+flag = nil
+foreach(tmpCell checkInstCellList if(dbIsCellViewModified(tmpCell) then flag = t))
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(flag then "Save FAIL" else "Save PASS"))
+openCellViews = dbGetOpenCellViews()
+foreach(tmpCell openCellViews dbSave(tmpCell)) 
+=== End
+
+
+=== Start : Close Data Discard 
+ddsHiCloseData() 
+hiiSetCurrentForm('ddsCloseDataForm) 
+ddsCloseDataForm->CDCVModifiedOption->value="discard" 
+ddsiCloseDataButtonCB('all) 
+hiFormDone(ddsCloseDataForm)  
+=== End
+
+
+=== Start : Close Data Save
+ddsHiCloseData() 
+hiiSetCurrentForm('ddsCloseDataForm) 
+ddsiCloseDataButtonCB('all) 
+ddsCloseDataForm->CDCVModifiedOption->value="save" 
+hiFormDone(ddsCloseDataForm)  
+=== End 
+
+
+=== Start : Hierarchical Checkin
+rval1 = nil 
+fprintf(fd "\n===\tHierachical Checkin : Expect Checkin PASS\t===\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r") 
+checkInstCellList = dmGetHierInst(cvId) 
+foreach(tmpCell checkInstCellList dbSave(tmpCell)) 
+ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "" ) 
+ICM_Hier_View_CI( "ICMHierVIEWCI" "libname" "cellname" "schematic" "" ""  ) 
+hiSetCurrentForm('hier_operationForm) 
+hiFormDone(hier_operationForm) 
+hiDBoxUser(ICM_intHierWarning nil 1) 
+rval1=hierValidation(preICMChangeN preHierVerInfo checkInstCellList 1 "RowNo" "libname" "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check in PASS" else "Check in FAIL")) 
+hiCloseWindow(geGetCellViewWindow(cvId))
+=== End 
+
+
+=== Start : Hierarchical Cancel Check out 
+rval1 = nil 
+fprintf(fd "\n===\tHierarchical Cancel Checkout : Expect Cancel Checkout PASS\t===\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r") 
+checkInstCellList = dmGetHierInst(cvId) 
+foreach(tmpCell checkInstCellList dbSave(tmpCell)) 
+ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "" ) 
+ICM_Hier_View_UNCO("ICMHierVIEWUNCO" "libname" "cellname" "schematic" "" ""  ) 
+hiiSetCurrentForm('hier_operationForm) 
+hiFormDone(hier_operationForm) 
+hiDBoxUser(ICM_intHierQuestion nil 2) 
+rval1=hierValidation(preICMChangeN preHierVerInfo checkInstCellList 0 "RowNo" "libname" "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Cancel Check out PASS" else "Check in FAIL")) 
+hiCloseWindow(geGetCellViewWindow(cvId))  
+=== End
+
+=== Start : Expect PASS None Checkin
+rval1 = nil 
+fprintf(fd "\n===\tNone Check In :Expect Checkin PASS\t===\n") 
+dmDbCloseHier(cvId) 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r") 
+checkInstCellList = dmGetHierInst(cvId) 
+rval1=hierValidation(preICMChangeN preHierVerInfo checkInstCellList 1 "RowNo" "libname" "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check in PASS" else "Check in FAIL"))
+=== End
+
+
+=== Start : Auto SaveOn Delete All Markers
+fprintf(fd "\n===\tDelete Markers Validate : Expect Delete All Markers PASS\t===\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+hierCellList = dmGetHierInst(cvId)
+preHierVerInfo = getHierVersion(hierCellList)
+preICMChangeN = Validate_ICMchanges()
+geHiDeleteAllMarker(cvId) 
+dmDeleteAllMarkers(cvId fd t "RowNo" "libname" "cellname") 
+=== End
+
+
+=== Start : Auto SaveOff Delete All Markers  
+fprintf(fd "\n===\tDelete Markers Validate : Expect Delete All Markers PASS\t===\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+hierCellList = dmGetHierInst(cvId)
+preHierVerInfo = getHierVersion(hierCellList)
+preICMChangeN = Validate_ICMchanges()
+geHiDeleteAllMarker(cvId) 
+dmDeleteAllMarkers(cvId fd nil "RowNo" "libname" "cellname")  
+=== End 
+
+=== Start : CreateTempLib
+ddCreateLib("toLib" "./") 
+=== End 
+
+
+=== Start : ICM Checkin 
+rval1 = nil 
+fprintf(fd "\n===\tICM Check in : Expect Checkin PASS\t===\t\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r") 
+checkInstCellList = dmGetHierInst(cvId) 
+foreach(tmpCell checkInstCellList dbSave(tmpCell)) 
+ICM_SchLayCellMenu_Checkin(getDDviewByCV(checkInstCellList)) 
+hiiSetCurrentForm('ICM_menuCIform) 
+hiFormDone(ICM_menuCIform) 
+hiDBoxUser(ICM_intHierOkay nil 1) 
+rval1=hierValidation(preICMChangeN preHierVerInfo checkInstCellList 1 "RowNo" "libname" "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check in PASS" else "Check in FAIL")) 
+hiCloseWindow(geGetCellViewWindow(cvId))
+
+cond(( checkoutStatus == t && checkinStatus == nil ddAutoCtlSetVars(0 0 3 0) ) ( checkoutStatus == nil && checkinStatus == t ddAutoCtlSetVars(0 0 0 3) ) ( checkoutStatus == nil && checkinStatus == nil ddAutoCtlSetVars(0 0 0 0) ) ( checkoutStatus == t && checkinStatus == t ddAutoCtlSetVars(0 0 3 3) ))
+=== End 
+
+
+=== Start : ICM Cancel Check out 
+rval1 = nil 
+fprintf(fd "\n===\tICM Cancel Check out : Expect Cancel Checkout PASS \t===\t\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r") 
+checkInstCellList = dmGetHierInst(cvId) 
+ddViewList = getDDviewByCV(checkInstCellList) 
+foreach(tmpCell ddViewList teDiscardEdits(tmpCell)) 
+ICM_SchLayCellMenu_CancelCheckout(ddViewList) 
+rval1=hierValidation(preICMChangeN preHierVerInfo checkInstCellList 0 "RowNo" "libname" "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Cancel Check out PASS" else "Cancel Check out FAIL")) 
+hiCloseWindow(geGetCellViewWindow(cvId)) 
+=== End 
+
+
+=== Start : AddProperty 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+hierCellList = dmGetHierInst(cvId)
+preHierVerInfo = getHierVersion(hierCellList)
+preICMChangeN = Validate_ICMchanges()
+addprop=AddInstProperty("test" "test") 
+=== End 
+
+=== Start : Run Replace 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+hierCellList = dmGetHierInst(cvId)
+preHierVerInfo = getHierVersion(hierCellList)
+schHiReplace() 
+hiiSetCurrentForm('schSchReplaceForm) 
+schSchReplaceForm->objectFilterTri->value=t 
+schSchReplaceForm->propName->value="other" 
+hiiSetCurrentForm('schRepNewPropForm) 
+schRepNewPropForm->schRepPropNameString->value="test" 
+hiFormDone(schRepNewPropForm) 
+hiiSetCurrentForm('schSchReplaceForm) 
+schSchReplaceForm->condOp->value="==" 
+schSchReplaceForm->propValue->value="*" 
+schSchReplaceForm->newPropName->value="test" 
+schSchReplaceForm->searchScope->value="hierarchy" 
+schSchReplaceForm->newPropValue->value="MCR" 
+schSchReplaceForm->hierarchyScope->value="top" 
+schSchReplaceForm->matchMasterProps->value= t 
+schSchReplaceForm->allNone->all->value =  t 
+schSchReplaceForm->instAllNone->all->value =  t 
+schSchReplaceForm->schRepSaveEdits->value= t 
+preICMChangeN = Validate_ICMchanges()
+schRepReplaceAll() 
+hiDBoxOK(_schDBox) 
+hiDBoxOK(_schDBox) 
+hiFormCancel(schSchReplaceForm) 
+=== End 
+
+
+=== Start : Run Replace2 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+hierCellList = dmGetHierInst(cvId)
+preHierVerInfo = getHierVersion(hierCellList)
+schHiReplace() 
+hiiSetCurrentForm('schSchReplaceForm) 
+schSchReplaceForm->objectFilterTri->value=t 
+schSchReplaceForm->propName->value="other" 
+hiiSetCurrentForm('schRepNewPropForm) 
+schRepNewPropForm->schRepPropNameString->value="test" 
+hiFormDone(schRepNewPropForm) 
+hiiSetCurrentForm('schSchReplaceForm) 
+schSchReplaceForm->condOp->value="==" 
+schSchReplaceForm->propValue->value="*" 
+schSchReplaceForm->newPropName->value="test" 
+schSchReplaceForm->searchScope->value="hierarchy" 
+schSchReplaceForm->newPropValue->value="MCR2" 
+schSchReplaceForm->hierarchyScope->value="top" 
+schSchReplaceForm->matchMasterProps->value= t 
+schSchReplaceForm->allNone->all->value =  t 
+schSchReplaceForm->instAllNone->all->value =  t 
+schSchReplaceForm->schRepSaveEdits->value= t
+preICMChangeN = Validate_ICMchanges() 
+schRepReplaceAll() 
+hiDBoxOK(_schDBox) 
+hiDBoxOK(_schDBox) 
+hiFormCancel(schSchReplaceForm) 
+=== End 
+
+=== Start : Replace Verify 
+vprop = nil
+fprintf(fd "\n===\tReplace & Save : Expect Replace PASS\t===\t\n") 
+vprop=VerifyInstPropValue(addprop "test" "MCR") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('vprop) && vprop then "Replace Property PASS" else "Replace Property FAIL"))    
+=== End 
+
+
+=== Start :  Replace Verify2 
+vprop = nil
+fprintf(fd "\n===\tReplace & Save : Expect Replace PASS\t===\t\n") 
+vprop=VerifyInstPropValue(addprop "test" "MCR2") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('vprop) && vprop then "Replace Property PASS" else "Replace Property FAIL"))    
+=== End 
+
+
+=== Start : Library Expect PASS None Checkin 
+rval1 = nil 
+fprintf(fd "\n===\tNone Check In : Expect Checkin PASS\t===\n") 
+closeAllCV() 
+rval1=libraryValidate(preICMChangeN preHierVerInfo "libname" "in" expValue "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check In PASS" else "Check In FAIL")) 
+=== End 
+
+=== Start : Library ICM Cancel Check out 
+rval1 = nil 
+fprintf(fd "\n===\tICM Cancel Check out : Expect Cancel Checkout PASS\t===\t\n") 
+ddViewList = getAllDDViewByLib("libname") 
+ICM_SchLayCellMenu_CancelCheckout(ddViewList) 
+rval1=libraryValidate(preICMChangeN preHierVerInfo "libname" "in" 0 "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Cancel Check out PASS" else "Cancel Check out FAIL")) 
+=== End
+
+=== Start : Library ICM Checkin 
+rval1 = nil 
+fprintf(fd "\n===\tICM Check in : Expect Checkin PASS\t===\t\n") 
+ddViewList = getAllDDViewByLib("libname") 
+ICM_SchLayCellMenu_Checkin(ddViewList) 
+hiiSetCurrentForm('ICM_menuCIform) 
+hiFormDone(ICM_menuCIform) 
+hiDBoxUser(ICM_intHierOkay nil 1) 
+rval1=libraryValidate(preICMChangeN preHierVerInfo "libname" "in" expValue "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check in PASS" else "Check in FAIL")) 
+=== End
+
+
+=== Start : Library Hierarchical Checkin 
+rval1 = nil 
+fprintf(fd "\n===\tHierachical Checkin : Expect Checkin PASS\t===\n") 
+ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" ""  ) 
+ICM_Hier_View_CI( "ICMHierVIEWCI" "libname" "cellname" "schematic" "" ""  ) 
+hiSetCurrentForm('hier_operationForm) 
+hiFormDone(hier_operationForm) 
+hiDBoxUser(ICM_intHierWarning nil 1) 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r") 
+hierInstList = dmGetHierInst(cvId) 
+rval1=libraryValidate(preICMChangeN preHierVerInfo "libname" nil expValue "cellname" hierInstList ) 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check in PASS" else "Check in FAIL"))  
+=== End 
+
+
+=== Start : Library Hierarchical Cancel Check out 
+rval1 = nil 
+fprintf(fd "\n===\tHierarchical Cancel checkout : Expect Cancel Checkout PASS\t===\n") 
+ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "" ) 
+ICM_Hier_View_UNCO("ICMHierVIEWUNCO" "libname" "cellname" "schematic" "" "" ) 
+hiiSetCurrentForm('hier_operationForm) 
+hiFormDone(hier_operationForm) 
+hiDBoxUser(ICM_intHierQuestion nil 2) 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r")
+hierInstList = dmGetHierInst(cvId)
+rval1=libraryValidate(preICMChangeN preHierVerInfo "libname" "in" 0 "cellname" hierInstList) 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Cancel Check out PASS" else "Cancel Check out FAIL"))  
+=== End
+
+
+=== Start : Library ICM Checkout
+rval1 = nil
+fprintf(fd "\n===\tICM Checkout: Expect Checkout PASS\t===\n")
+libCellList = nil
+libCellList = getDBViewList("libname")
+preHierVerInfo = getHierVersion(libCellList)
+foreach(libCell libCellList ICM_Sensitivity_popup( "popup_V" "libname" libCell~>cellName "schematic" "" "" ) ICM_CheckOutButton( "ICMCheckOutButton" "libname" libCell~>cellName "schematic" "" "" ))
+rval1=hierValidation(nil preHierVerInfo libCellList 0 "RowNo" "libname" "cellname" "gdmStateCO")
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check out PASS" else "Check out FAIL"))
+=== End
+
+
+=== Start : renameRefLib 
+fprintf(fd "\n===\tRename Ref Lib : Expect Checkin PASS\t \n" ) 
+libCellList = getDBViewList("libname")
+preHierVerInfo =  getHierVersion(libCellList)
+preICMChangeN = Validate_ICMchanges()
+validation = dmRenameRefLib("fromLib" "toLib" "libname")
+if(boundp('validation) && validation then fprintf(fd "\tRowNo_libname_cellname : PASS\n") else fprintf(fd "\tRowNo_libname_cellname : FAIL\n"))  
+=== End
+
+
+=== Start : Saveoff Hierarchical Checkin 
+rval1 = nil 
+fprintf(fd "\n===\tHierachical Checkin : Expect Checkin PASS\t===\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r") 
+checkInstCellList = dmGetHierInst(cvId) 
+foreach(tmpCell checkInstCellList dbSave(tmpCell)) 
+ICM_Sensitivity_popup("popup_V" "libname" "cellname" "schematic" "" "" ) 
+ICM_Hier_View_CI( "ICMHierVIEWCI" "libname" "cellname" "schematic" "" ""  ) 
+hiSetCurrentForm('hier_operationForm) 
+hiFormDone(hier_operationForm) 
+hiDBoxUser(ICM_intHierWarning nil 1) 
+rval1=hierValidation(preICMChangeN preHierVerInfo checkInstCellList 0 "RowNo" "libname" "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check in PASS" else "Check in FAIL")) 
+hiCloseWindow(geGetCellViewWindow(cvId))
+=== End
+
+=== Start : Saveoff ICM Checkin 
+rval1 = nil 
+fprintf(fd "\n===\tICM Check in : Expect Checkin PASS\t===\t\n") 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r") 
+checkInstCellList = dmGetHierInst(cvId) 
+foreach(tmpCell checkInstCellList dbSave(tmpCell)) 
+ICM_SchLayCellMenu_Checkin(checkInstCellList) 
+hiiSetCurrentForm('ICM_menuCIform) 
+hiFormDone(ICM_menuCIform) 
+hiDBoxUser(ICM_intHierOkay nil 1) 
+rval1=hierValidation(preICMChangeN preHierVerInfo checkInstCellList 0 "RowNo" "libname" "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check in PASS" else "Check in FAIL")) 
+hiCloseWindow(geGetCellViewWindow(cvId))  
+=== End
+
+=== Start : Saveoff Expect PASS None Checkin  
+rval1 = nil 
+fprintf(fd "\n===\tNone Check In : Expect Checkin PASS\t===\n") 
+dmDbCloseHier(cvId) 
+cvId = dbOpenCellViewByType("libname" "cellname" "schematic" nil "r") 
+checkInstCellList = dmGetHierInst(cvId) 
+rval1=hierValidation(preICMChangeN preHierVerInfo checkInstCellList 0 "RowNo" "libname" "cellname") 
+fprintf(fd "\tRowNo_libname_cellname: %s\n" if(boundp('rval1) && rval1 then "Check in PASS" else "Check in FAIL")) 
+=== End
+
+=== Start : changeLibRef 
+fprintf(fd "\n===\tChange Ref Lib : Expect Change Ref Lib CheckIn PASS\t===\n" ) 
+ddsRefresh(?cellview t)
+toLib = "toLib"
+targetLibName = "libname"
+libCellList = getDBViewList("libname")
+preHierVerInfo =  getHierVersion(libCellList)
+preICMChangeN = Validate_ICMchanges()
+changeLibRefList = list(list(targetLibName 'ALL toLib))
+preCVInstInfoList = getCurrentInstRefLib(targetLibName changeLibRefList)
+managed = dmRunChangeLibRef(changeLibRefList)
+rval = validationChangeLibRef(targetLibName preCVInstInfoList)
+if(rval then fprintf(fd "\tRowNo_libname_cellname : PASS\n") else fprintf(fd "\tRowNo_libname_cellname : FAIL\n")) 
+=== End
+
+=== Start : changeLibRef RevertICM
+changeLibRef_revertICM(targetLibName  managed)
+hiFormDone(ddsRefreshForm)  
+=== End 
+
+=== Start : renameRefLib RevertICM
+renameRefLib_revertICM("libname" "managed")
+hiFormDone(ddsRefreshForm)
+=== End

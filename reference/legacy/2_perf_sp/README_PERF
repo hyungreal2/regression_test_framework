@@ -1,0 +1,52 @@
+
+
+-----------------------------------------------------------
+README for Performance Script
+-----------------------------------------------------------
+
+1.Login  to performance dedicated system psky1035
+==>ssh psky1035
+2.Run newgrp command in the termainal
+==>newgrp virtuoso.catdm
+3.source ICMANAGE environment
+==>source /user/virtuoso.mem/ICM/client/icmanage.cshrc
+4.To run performance test user MUST cd into the perf directory. THIS is must because library are managed by  icmanage under this location.
+==>/user/virtuoso.catdm/USERS/CAT_DM/perfTest
+
+5.All setup are done and NOW you can proceed to trigger the performance RUN. Pls note do not remove or update any files under perfTest directory.
+
+6.Run Perf by typing the following with MUST and Optional inputs for main.pl
+syntax >>> ./main.pl  -lib "LIB1 LIB2 ..." -cell "cell1 cell2..." -version IC251_ISR5-023_CAT -genOnly 0
+
+Must Arguments 
+--------------
+-lib  ( specify library within quote with space if more then 1 library is required)
+-cell  ( specify cell within quote with space if more then 1 cell is required. Pls note then -lib and -cell need to be in the same sequence for pairing)
+-version  ( specify the version dir name IC251_ISR5-023_CAT that is under installed path /user/virtuoso.cat/TOOL/IC* )
+-genOnly 0 or 1 (   0 to run performance  and 1 is only to generate replay files for testing or debugging. Replay files will be created under folder code/replay )
+
+Optional Arguments
+------------------
+-mode (if mode is not speccified all 7 modes( checkHier renameRefLib changeRefLib replace deleteAllMarker copyHierToEmpty copyHierToNonEmpty) will be run. If user wants to run 1 OR more modes, user can specify modes in quotes with space eg -mode "replace renameRefLib"
+
+-manage ( if manage is not specified both modes (managed unmanaged) will be run. If user wants to run 1, user can specify as -manage managed or -manage unmanaged. If user wants to run both in any user desired order spceify in quotes -manage "unmanaged managed"
+
+
+eg:-
+./main.pl -lib "BM01 BM02 BM03" -cell "VP_FULLCHIP FULLCHIP XE_FULLCHIP_BASE" -version IC251_ISR5-023_CAT  -genOnly 0
+./main.pl -lib "BM01 BM02 BM03" -cell "VP_FULLCHIP FULLCHIP XE_FULLCHIP_BASE" -version IC251_ISR5-023_CAT  -mode renameRefLib -genOnly 0
+./main.pl -lib "BM01 BM02 BM03" -cell "VP_FULLCHIP FULLCHIP XE_FULLCHIP_BASE" -version IC251_ISR5-023_CAT  -mode "replace renameRefLib" -genOnly 0
+./main.pl -lib "BM01 BM02 BM03" -cell "VP_FULLCHIP FULLCHIP XE_FULLCHIP_BASE" -version IC251_ISR5-023_CAT  -mode "replace renameRefLib" -manage managed -genOnly 0
+./main.pl -lib "BM03" -cell "OEQINVD4" -version IC251_ISR5-023_CAT -mode replace -manage unmanaged -genOnly 1 ( will create replay files and NO virtuoso will be run using the created replay file)
+
+7.Results will be posted in summary.txt file in the following location after performance run is completed.
+==>/user/virtuoso.catdm/USERS/CAT_DM/perfTest/result/ ( with unique id and build no eg:-   1775604261_IC25.1-64b.ISR5.EA.23 )
+eg of summary.txt
+---
+Test7_BM01_managed_1775604261_IC25.1-64b.ISR5.EA.23.log
+Test7_BM01. Performance Copy Hierarchy to Non-empty Library managed time <time in seconds>
+---
+
+8.For reviewing the replay of the performance log file for each performance test run will be placed under CDS_log.
+/user/virtuoso.catdm/USERS/CAT_DM/perfTest/CDS_log
+

@@ -1,0 +1,256 @@
+test_001_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_002_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_003_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Close Data Save, 6. Validate Others Remain CO
+test_004_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI, 6. Validate Others Remain CO
+test_005_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Close-triggered Checkin, 6. Validate Others Remain CO 
+test_006_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_007_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+test_008_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_009_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_010_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_011_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_012_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_013_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+test_014_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO 
+test_015_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Others Not In Hier Remain CO
+test_016_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Others Not In Hier Remain CO
+test_017_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Fast Checkin
+test_018_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_019_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Close Data Save
+test_020_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI
+test_021_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Close-triggered Checkin
+test_022_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI
+test_023_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. ICM Checkin
+test_024_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+test_025_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_026_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_027_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. ICM Cancel Checkout
+test_028_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+test_029_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+test_030_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+test_031_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Modified, 5. Hierarchical Checkin
+test_032_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Open-triggered Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+test_033_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+test_034_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_035_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Close Data Save
+test_036_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI
+test_037_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Close-triggered Checkin
+test_038_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI
+test_039_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. ICM Checkin
+test_040_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+test_041_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_042_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_043_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. ICM Cancel Checkout
+test_044_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+test_045_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+test_046_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+test_047_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Hierarchical Checkin
+test_048_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+test_049_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_050_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_051_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Close Data Save, 6. Validate Others Remain CO
+test_052_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI, 6. Validate Others Remain CO
+test_053_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Close-triggered Checkin, 6. Validate Others Remain CO
+test_054_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_055_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+test_056_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_057_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_058_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_059_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_060_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_061_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+test_062_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+test_063_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Whole Lib CI
+test_064_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_065_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_066_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_067_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Close Data Save Expect 1 CO, 6. Validate Others Remain CO
+test_068_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO, 6. Validate Others Remain CO
+test_069_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+test_070_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+test_071_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+test_072_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_073_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_074_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_075_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_076_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_077_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+test_078_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+test_079_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Others Not In Hier Remain CO
+test_080_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Others Not In Hier Remain CO
+test_081_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Fast Checkin
+test_082_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_083_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Close Data Save Expect 1 CO
+test_084_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO
+test_085_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO
+test_086_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO
+test_087_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. ICM Checkin
+test_088_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+test_089_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_090_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_091_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. ICM Cancel Checkout
+test_092_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+test_093_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+test_094_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+test_095_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Modified, 5. Hierarchical Checkin
+test_096_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Open-triggered Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+test_097_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+test_098_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_099_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Close Data Save Expect 1 CO
+test_100_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO
+test_101_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO
+test_102_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO
+test_103_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. ICM Checkin
+test_104_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+test_105_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_106_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_107_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. ICM Cancel Checkout
+test_108_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+test_109_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+test_110_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+test_111_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Hierarchical Checkin
+test_112_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+test_113_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_114_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_115_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Close Data Save Expect 1 CO, 6. Validate Others Remain CO
+test_116_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO, 6. Validate Others Remain CO
+test_117_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+test_118_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+test_119_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+test_120_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_121_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_122_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_123_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_124_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_125_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+test_126_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+test_127_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Whole Lib CI
+test_128_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout on, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_129_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_130_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_131_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Close Data Save, 6. Validate Others Remain CO
+test_132_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI, 6. Validate Others Remain CO
+test_133_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Close-triggered Checkin, 6. Validate Others Remain CO
+test_134_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_135_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+test_136_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_137_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_138_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_139_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_140_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_141_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+test_142_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+test_143_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Others Not In Hier Remain CO
+test_144_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Others Not In Hier Remain CO
+test_145_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Fast Checkin Expect 1 CI
+test_146_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_147_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Close Data Save Expect 1 CI
+test_148_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Close Data Discard Expect 1 CI
+test_149_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Close-triggered Checkin Expect 1 CI
+test_150_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI
+test_151_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. ICM Checkin Expect 1 CI
+test_152_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+test_153_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Fast Cancel Checkout
+test_154_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Fast Cancel Checkout
+test_155_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. ICM Cancel Checkout
+test_156_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ICM Cancel Checkout
+test_157_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Hierarchical Cancel Checkout
+test_158_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Hierarchical Cancel Checkout
+test_159_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Hierarchical Checkin Expect 1 CI
+test_160_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+test_161_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+test_162_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_163_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Close Data Save
+test_164_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI
+test_165_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Close-triggered Checkin
+test_166_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI
+test_167_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. ICM Checkin
+test_168_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+test_169_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_170_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_171_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. ICM Cancel Checkout
+test_172_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+test_173_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+test_174_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+test_175_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Modified, 5. Hierarchical Checkin
+test_176_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+test_177_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_178_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_179_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Close Data Save, 6. Validate Others Remain CO
+test_180_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CI, 6. Validate Others Remain CO
+test_181_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Close-triggered Checkin, 6. Validate Others Remain CO
+test_182_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_183_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+test_184_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_185_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_186_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_187_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_188_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_189_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+test_190_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+test_191_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Whole Lib CI
+test_192_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin on, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_193_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_194_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_195_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Close Data Save Expect 1 CO, 6. Validate Others Remain CO
+test_196_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO, 6. Validate Others Remain CO
+test_197_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+test_198_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+test_199_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+test_200_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_201_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_202_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_203_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_204_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_205_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+test_206_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Others Not In Hier Remain CO
+test_207_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Others Not In Hier Remain CO
+test_208_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Fast Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Others Not In Hier Remain CO
+test_209_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Fast Checkin Expect 1 CI
+test_210_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_211_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Close Data Save Expect 1 CI
+test_212_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Close Data Discard Expect 1 CI
+test_213_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Close-triggered Checkin Expect 1 CI
+test_214_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CI
+test_215_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. ICM Checkin Expect 1 CI
+test_216_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+test_217_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Fast Cancel Checkout
+test_218_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Fast Cancel Checkout
+test_219_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. ICM Cancel Checkout
+test_220_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. ICM Cancel Checkout
+test_221_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Hierarchical Cancel Checkout
+test_222_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Hierarchical Cancel Checkout
+test_223_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Modified Expect Unchanged, 5. Hierarchical Checkin Expect 1 CI
+test_224_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Open-triggered Checkout Expect Fail, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+test_225_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Checkin
+test_226_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI
+test_227_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Close Data Save Expect 1 CO
+test_228_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO
+test_229_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO
+test_230_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO
+test_231_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. ICM Checkin
+test_232_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI
+test_233_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Fast Cancel Checkout
+test_234_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Fast Cancel Checkout
+test_235_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. ICM Cancel Checkout
+test_236_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. ICM Cancel Checkout
+test_237_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Hierarchical Cancel Checkout
+test_238_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout
+test_239_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Modified, 5. Hierarchical Checkin
+test_240_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. ICM Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI
+test_241_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Checkin, 6. Validate Whole Lib CI
+test_242_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Checkin Expect 1 CI, 6. Validate Whole Lib CI
+test_243_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Close Data Save Expect 1 CO, 6. Validate Others Remain CO
+test_244_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Close Data Discard Expect 1 CO, 6. Validate Others Remain CO
+test_245_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+test_246_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Close-triggered Checkin Expect 1 CO, 6. Validate Others Remain CO
+test_247_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. ICM Checkin, 6. Validate Others Remain CO
+test_248_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Checkin Expect 1 CI, 6. Validate Others Remain CO
+test_249_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_250_IC25.1-64b.SM_ISR6.11 FAIL 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Fast Cancel Checkout, 6. Validate Whole Lib CI
+test_251_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_252_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. ICM Cancel Checkout, 6. Validate Others Remain CO
+test_253_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+test_254_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Cancel Checkout, 6. Validate Whole Lib CI
+test_255_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Modified, 5. Hierarchical Checkin, 6. Validate Whole Lib CI
+test_256_IC25.1-64b.SM_ISR6.11 PASS 	1. auto checkout off, 2. auto checkin off, 3. Hierarchical Checkout, 4. Not Modified, 5. Hierarchical Checkin Expect 1 CI, 6. Validate Whole Lib CI

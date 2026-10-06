@@ -1,0 +1,4 @@
+"BM01" "VP_FULLCHIP" "schematic"
+"BM02" "FULLCHIP" "schematic"
+"BM03" "XE_FULLCHIP_BASE" "schematic"
+

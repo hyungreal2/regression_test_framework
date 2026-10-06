@@ -1,0 +1,1 @@
+1. auto checkout off, 2. auto checkin on, 3. CreateTempLib, 4. Library ICM Checkout, 5. changeLibRef, 6. Library Expect PASS None Checkin, 7. changeLibRef RevertICM, 8. Library ICM Checkout, 9. changeLibRef, 10. Library Expect PASS None Checkin, 11. changeLibRef RevertICM

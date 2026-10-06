@@ -1,0 +1,54 @@
+envLoadFile("../../code/.cdsenv")
+load("../../code/perfFunctions.il")
+code_path = "../../code/"
+result_path = "../../result/"
+load( strcat( code_path "date_virtuosoVer.il"))
+ddAutoCtlSetVars(0 0 3 3)
+
+;--------------------------------------------------
+;# Open Design in Edit Mode.
+;--------------------------------------------------
+openDesign("BM03" "XE_FULLCHIP_BASE" "schematic" "a")
+
+;--------------------------------------------------
+;# Set Samsung Setting
+;--------------------------------------------------
+LoadSamsungEnv()
+hiFormDone(schSRCForm)
+hiCloseWindow(geGetCellViewWindow(gec()))
+hiDBoxOK(geDBox)
+
+;--------------------------------------------------
+;# Time start here 
+;# Test3_BM03: Change Reference Library
+;--------------------------------------------------
+t1=getCurrentTime()
+changeRefLib(list(list("BM03_MIX" 'ALL "BM03_MIX")))
+
+;--------------------------------------------------
+;# End Time 
+;--------------------------------------------------
+t2=getCurrentTime()
+final=compareTime(t2 t1)
+system(strcat("mkdir -p " result_path date_virtuosoVer(code_path) ))  
+
+inport = infile(strcat(code_path "managed.txt"))
+gets(managed inport)
+managed = substring(managed 1 strlen(managed)-1)
+close(inport)
+
+fd=outfile(strcat(result_path date_virtuosoVer(code_path) "/Test3_BM03_" managed "_" date_virtuosoVer(code_path) ".log") "w")
+fprintf(fd "Test3_BM03. Performance Change Reference Library  %s time %d\n" managed final)
+close(fd)
+
+;--------------------------------------------------
+;# Revert Last Change Reference Library operation.
+;--------------------------------------------------
+changeRefLib_revertICM("BM03_MIX" managed)
+
+;;--------------------------------------------------
+;;# Exit
+;;--------------------------------------------------
+exit
+geSaveAllForm->none->value= t
+hiFormDone(geSaveAllForm)
