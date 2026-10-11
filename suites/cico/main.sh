@@ -57,6 +57,7 @@ _cleanup() {
     if [[ -n "${dryrun_queue_dir}" ]]; then
         rm -rf "${dryrun_queue_dir}" 2>/dev/null || true
     fi
+    stop_display || true
     flush_trash || true
 }
 trap '_cleanup' EXIT INT TERM
@@ -338,8 +339,10 @@ run_tests() {
     # Capture the xargs status instead of letting set -e stop main.sh:
     # the summary must run even when tests fail (legacy behaviour).
     local _rc=0
+    start_display "${CICO_DISPLAY}"
     printf "%s\n" "${tests[@]}" | \
         xargs -n1 -P"${jobs}" bash "${script_dir}/code/run_single_test.sh" || _rc=$?
+    stop_display
     case "${_rc}" in
         0)   ;;
         123) warn "Some tests failed (xargs rc=123); continuing to summary" ;;

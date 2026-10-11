@@ -1,0 +1,24 @@
+#!/bin/bash
+#######################################
+# Mock Xvfb for local testing (no X server installed)
+#
+# Usage: add tools/mock/ to PATH before running scripts
+#   export PATH="$(pwd)/tools/mock:${PATH}"
+#
+# Xvfb :<n> ... → creates what start_display checks for a live server
+# (<socket dir>/X<n> and /tmp/.X<n>-lock with this pid), waits until
+# killed, then removes them. The socket dir is CAT_X11_SOCKET_DIR (default
+# /tmp/.X11-unix, which may be read-only, e.g. under WSLg).
+#######################################
+
+n="${1#:}"
+[[ "${n}" =~ ^[0-9]+$ ]] || { echo "[MOCK:Xvfb] usage: Xvfb :<n> ..." >&2; exit 1; }
+sock_dir="${CAT_X11_SOCKET_DIR:-/tmp/.X11-unix}"
+sock="${sock_dir}/X${n}" lock="/tmp/.X${n}-lock"
+[[ -e "${lock}" ]] && { echo "[MOCK:Xvfb] :${n} in use" >&2; exit 1; }
+mkdir -p "${sock_dir}" 2>/dev/null
+touch "${sock}" || exit 1
+printf '%10d\n' $$ > "${lock}" || { rm -f "${sock}"; exit 1; }
+trap 'rm -f "${sock}" "${lock}"; exit 0' TERM INT
+echo "[MOCK:Xvfb] :${n} started (pid $$)" >&2
+while :; do sleep 1; done

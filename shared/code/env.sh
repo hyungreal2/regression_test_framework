@@ -42,6 +42,13 @@ MAX_JOBS=${MAX_JOBS:-32}
 # VSE execution mode: "run" (vse_run, synchronous) or "sub" (vse_sub + bwait)
 VSE_MODE="${VSE_MODE:-run}"
 
+# Virtual X display (Xvfb) for vse_run: replays use functions that need a GUI,
+# so Virtuoso runs on a per-suite display instead of with -nograph
+CICO_DISPLAY=97
+PERF_DISPLAY=98
+FUNC_DISPLAY=99
+XVFB_SCREEN="1920x1080x24"
+
 #######################################
 # Functional test config
 #######################################

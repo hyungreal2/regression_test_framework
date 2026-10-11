@@ -20,7 +20,7 @@ dev 사이트의 기본 실행(`MAX_CASES=144`)은 정확히 legacy 케이스이
 | 항목 | legacy | 현재 |
 |---|---|---|
 | 실행 방식 | 순차, 실행 하나에 프로젝트 이름 하나를 테스트마다 재생성 | 병렬(`-j`), 테스트마다 고유 프로젝트·워크스페이스 |
-| Virtuoso | `virtuoso -replay` | `run_vse` (`vse_run -v VSE_VERSION -nograph`, 또는 `VSE_MODE=sub`) |
+| Virtuoso | `virtuoso -replay` | `run_vse` (`vse_run -v VSE_VERSION`, suite별 Xvfb 디스플레이(`DISPLAY`), 또는 `VSE_MODE=sub`) |
 | 도우미 파일 | `cdsLibMgr.il`, `.cdsenv`를 복사 | 사이트 `CDS_LIB_MGR`과 func `.cdsenv`를 링크 |
 | 실패 처리 | `|| true`로 계속, 결과는 항상 성공 | init/링크 실패 시 그 테스트를 멈추고 실패로 집계. summary와 teardown은 계속 |
 | CDS 로그 누락 | — | Virtuoso 로그가 없는 테스트를 경고 |

@@ -71,6 +71,7 @@ _cleanup() {
     if [[ -n "${teardown_worker_pid}" ]]; then
         wait "${teardown_worker_pid}" 2>/dev/null || true
     fi
+    stop_display || true
     flush_trash || true
     [[ -z "${_dry_state_dir:-}" ]] || rm -rf "${_dry_state_dir}" 2>/dev/null || true
 }
@@ -446,9 +447,11 @@ run_tests() {
 
     # A failing test must not stop main (set -e): capture the xargs rc,
     # always go on to the summary and teardown, and exit with it at the end.
+    start_display "${FUNC_DISPLAY}"
     printf "%s\n" "${tests[@]}" | \
         xargs -n1 -P"${jobs}" bash "${script_dir}/code/func_run_single.sh" \
         || tests_rc=$?  # FUNC: func_run_single
+    stop_display
     case "${tests_rc}" in
         0)   ;;
         123) warn "Some tests failed (xargs rc=123); continuing to summary" ;;

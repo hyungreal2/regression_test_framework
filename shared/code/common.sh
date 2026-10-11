@@ -206,8 +206,121 @@ run_vse() {
             sleep 10
         done
     else
-        run_cmd "vse_run -v ${VSE_VERSION} -nograph -replay ${replay} -log ${logfile}"
+        # No -nograph: some replay functions need a GUI. DISPLAY is the
+        # suite's Xvfb display exported by start_display
+        run_cmd "vse_run -v ${VSE_VERSION} -replay ${replay} -log ${logfile}"
     fi
+}
+
+#######################################
+# Virtual X display (Xvfb) for vse_run
+# Each suite has its own display number (CICO_DISPLAY / PERF_DISPLAY /
+# FUNC_DISPLAY). The suite calls start_display before its tests, which
+# inherit the exported DISPLAY, and stop_display when it ends (also from its
+# EXIT trap). Runs of the same suite at the same time share the display:
+# each registers its pid in /tmp/.cat_xvfb_<n>.users, and the last one to
+# leave stops the Xvfb, only if a CAT run started it (.pid).
+#######################################
+_xvfb_num=""   # display this process registered on (for stop_display)
+
+# _xvfb_alive <n>: an X server answers on :<n> (socket and live lock owner).
+# CAT_X11_SOCKET_DIR is for tools/mock/Xvfb only, where /tmp/.X11-unix may
+# not be writable
+_xvfb_alive() {
+    local n="$1" lock_pid
+    [[ -e "${CAT_X11_SOCKET_DIR:-/tmp/.X11-unix}/X${n}" && -r "/tmp/.X${n}-lock" ]] || return 1
+    lock_pid=$(tr -dc '0-9' < "/tmp/.X${n}-lock")
+    [[ -n "${lock_pid}" ]] && ps -p "${lock_pid}" > /dev/null 2>&1
+}
+
+# _xvfb_prune_users <users file> [<pid to drop>]: keep live pids only
+_xvfb_prune_users() {
+    local users="$1" drop="${2:-}" p kept=""
+    [[ -f "${users}" ]] || return 0
+    while read -r p; do
+        [[ -n "${p}" && "${p}" != "${drop}" ]] || continue
+        ps -p "${p}" > /dev/null 2>&1 && kept+="${p}"$'\n'
+    done < "${users}"
+    printf '%s' "${kept}" > "${users}"
+}
+
+start_display() {
+    local n="$1" base i me="${BASHPID}"
+    [[ "${n}" =~ ^[0-9]+$ ]] || error_exit "start_display: invalid display number: ${n}"
+    if [[ "${VSE_MODE:-run}" == "sub" ]]; then
+        log "VSE_MODE=sub: jobs run on other hosts; no local display started"
+        return 0
+    fi
+    if [[ "${DRY_RUN:-0}" -ge 1 ]]; then
+        log "[DRY-RUN:${DRY_RUN}] Would start Xvfb :${n} -screen 0 ${XVFB_SCREEN} and export DISPLAY=:${n}"
+        return 0
+    fi
+    command -v Xvfb > /dev/null || error_exit "Xvfb not found (needed for vse_run on display :${n})"
+
+    base="/tmp/.cat_xvfb_${n}"
+    # Other users' runs of the suite share these files: create them writable
+    ( umask 000; touch "${base}.lock" "${base}.users" ) 2>/dev/null || true
+    (
+        flock 9
+        _xvfb_prune_users "${base}.users"
+        if _xvfb_alive "${n}"; then
+            if [[ -s "${base}.pid" ]] && ps -p "$(< "${base}.pid")" > /dev/null 2>&1; then
+                log "Display :${n} already running (Xvfb pid $(< "${base}.pid")); sharing it"
+            else
+                rm -f "${base}.pid"
+                warn "Display :${n} is held by an X server CAT did not start; using it, never stopping it"
+            fi
+        else
+            log "Starting Xvfb :${n} -screen 0 ${XVFB_SCREEN}"
+            # 9>&-: the server must not inherit the lock fd, or it would hold
+            # the lock for its whole life
+            nohup Xvfb ":${n}" -screen 0 "${XVFB_SCREEN}" > /dev/null 2>&1 9>&- &
+            echo $! > "${base}.pid"
+            for (( i = 0; i < 50; i++ )); do
+                _xvfb_alive "${n}" && break
+                ps -p "$(< "${base}.pid")" > /dev/null 2>&1 || break
+                sleep 0.2
+            done
+            if ! _xvfb_alive "${n}"; then
+                kill "$(< "${base}.pid")" 2>/dev/null || true
+                rm -f "${base}.pid"
+                echo "$(_log_prefix ERROR) Xvfb :${n} did not start" >&2
+                exit 1
+            fi
+        fi
+        echo "${me}" >> "${base}.users"
+    ) 9> "${base}.lock" || error_exit "Could not start display :${n}"
+    _xvfb_num="${n}"
+    export DISPLAY=":${n}"
+    log "DISPLAY=${DISPLAY}"
+}
+
+stop_display() {
+    local n="${_xvfb_num}" base pid i me="${BASHPID}"
+    [[ -n "${n}" ]] || return 0
+    _xvfb_num=""
+    base="/tmp/.cat_xvfb_${n}"
+    (
+        flock 9
+        _xvfb_prune_users "${base}.users" "${me}"
+        if [[ -s "${base}.users" ]]; then
+            log "Display :${n} still used by $(wc -l < "${base}.users") other run(s); leaving it running"
+        elif [[ -s "${base}.pid" ]]; then
+            pid=$(< "${base}.pid")
+            log "Stopping Xvfb :${n} (pid ${pid})"
+            if kill "${pid}" 2>/dev/null; then
+                # Wait (up to 5 s) so a run starting right after does not
+                # find the dying server and share it
+                for (( i = 0; i < 25; i++ )); do
+                    ps -p "${pid}" > /dev/null 2>&1 || break
+                    sleep 0.2
+                done
+            else
+                warn "Could not stop Xvfb :${n} (pid ${pid})"
+            fi
+            rm -f "${base}.pid"
+        fi
+    ) 9> "${base}.lock" || warn "stop_display :${n} failed"
 }
 
 #######################################

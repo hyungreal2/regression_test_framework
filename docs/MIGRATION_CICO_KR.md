@@ -105,7 +105,7 @@ legacy′의 func 쪽(또는 prod) 버전과 다르면 두 suite에 모두 맞�
 |---|---|
 | `main.sh` 옵션 `-m`, `-c`, `-ws`, `-proj`, `-lib`, `-cell`, `-debug` | 같은 옵션. `-debug`(=`-keep-artifacts`)는 성공한 teardown 뒤의 산출물 삭제를 건너뜀. 추가: `-j`, `-d`, `-k` |
 | 실행마다 `cadence_cico_<user>_<시각>` 프로젝트 하나를 테스트마다 다시 만들고 지움 (순차) | 테스트마다 `PROJ_PREFIX_<uniquetestid>` (`<번호>_<시각>_<pid>`). `xargs -P`로 병렬 |
-| `virtuoso -replay ... -log CDS_log/<id>/CDS_NNN.log` | `run_vse`(`vse_run -v VSE_VERSION -nograph`, 또는 `VSE_MODE=sub`) |
+| `virtuoso -replay ... -log CDS_log/<id>/CDS_NNN.log` | `run_vse`(`vse_run -v VSE_VERSION`, suite의 Xvfb `DISPLAY`; 또는 `VSE_MODE=sub`) |
 | `cp code/cdsLibMgr.il`, `cp code/.cdsenv` 워크스페이스로 | `ln -sf CDS_LIB_MGR`, `ln -sf code/.cdsenv` |
 | `init.sh`: project → variant → libtype → config → library(`--location=oa/{{library}}`) → update → build workspace | 같은 순서. project 생성은 `create_gdp_project`(재시도). 경로는 `CICO_GDP_BASE` |
 | `init.sh`의 "중단되면 이렇게 지우라" 안내 | `teardown_hint` (프로젝트 생성 직후, init 끝) |

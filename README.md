@@ -18,7 +18,7 @@ CAT/
 │   ├── clean.sh                   # Remove generated outputs (symlinked as suites/*/clean.sh)
 │   └── code/
 │       ├── env.sh                 # Environment config; site values default to site/dev.env
-│       ├── common.sh              # log, run_cmd, run_vse (vse_run -nograph), mocks
+│       ├── common.sh              # log, run_cmd, run_vse (vse_run on the suite's Xvfb display), start/stop_display, mocks
 │       ├── generate_templates.py  # Build replay_NNN.il from control + list + template (cico, func)
 │       ├── teardown_worker.sh                                                             (cico, func)
 │       ├── mgHierParse.il · virtuosoVer.il                                                 (cico, func)
@@ -42,7 +42,7 @@ CAT/
 ├── archive/                       # Unused prod files kept for reference (not deployed)
 ├── tools/
 │   ├── compare_deploy.sh          # Diff a deployment against a prod snapshot
-│   └── mock/                      # Mock gdp (object registry) / xlp4 for local runs (not deployed)
+│   └── mock/                      # Mock gdp (object registry) / xlp4 / Xvfb for local runs (not deployed)
 ├── docs/                          # Manuals, improvement notes, analysis
 └── reference/legacy/              # Baseline legacy snapshot for MIGRATION (tracked; other reference/ dirs are local only)
 ```
@@ -91,6 +91,7 @@ Expected differences (all intended):
 ## Prerequisites
 
 - Tools: `gdp`, `xlp4`, `vse_run` (or `vse_sub`) must be available in `$PATH`
+- `Xvfb` (for `VSE_MODE=run`): Virtuoso runs with a GUI on a virtual display, because some replay functions do not work with `-nograph`
 - Python 3 (standard library only, no conda required)
 
 ---
@@ -113,6 +114,8 @@ Expected differences (all intended):
 | `VSE_VERSION` | Virtuoso version passed to `vse_run` / `vse_sub` (site value; override: `CAT_VSE_VERSION`, perf also `-version`) |
 | `GDP_PROJ_MAX_ATTEMPTS` | `gdp create project` attempts, 10 s apart (default 5) |
 | `VSE_MODE` | `run` (synchronous) or `sub` (batch submit + poll) |
+| `CICO_DISPLAY` / `PERF_DISPLAY` / `FUNC_DISPLAY` | Xvfb display number of each suite (97 / 98 / 99). Started before the tests (`Xvfb :<n> -screen 0 ${XVFB_SCREEN}`), exported as `DISPLAY` for `vse_run`, stopped when the suite ends. Runs of the same suite at the same time share it; the last one to finish stops it. Not used with `VSE_MODE=sub` |
+| `XVFB_SCREEN` | Xvfb screen geometry (`1920x1080x24`) |
 | `ICM_ENV` | ICManage environment setup script path |
 | `CDS_LIB_MGR` | Path to `cdsLibMgr.il` |
 | `DRY_RUN` | Default dry-run level (0/1/2) |
@@ -139,6 +142,7 @@ exported in the shell is never picked up. The entry scripts export the `CAT_*` n
 | `2` | All commands skipped (print only) |
 
 To run level 0 locally, put `tools/mock` first in `PATH` (and set `ICM_SkillRoot` to any value).
+Where `/tmp/.X11-unix` is not writable (e.g. WSLg), also set `CAT_X11_SOCKET_DIR` to a writable directory for the mock `Xvfb`.
 The mock `gdp` keeps the GDP objects it creates in a registry file and answers like the real gdp:
 `gdp list <path>` prints the path only if the object exists, `<path>/` adds everything below it,
 `<path>/:<type>` lists the children of that type. `MOCK_GDP_STATE` sets the registry file

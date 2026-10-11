@@ -102,7 +102,7 @@ legacy′ 템플릿을 반영할 때:
 | `managed.txt`에 현재 모드를 써서 replay가 읽음 | replay에 `managed="<mode>"`를 생성 시 치환 |
 | MANAGED 실행 전: 열린 파일 revert(반복), `xlp4 sync`, "Can't clobber" 파일만 `sync -f` | 같은 revert·sync 뒤 rollback(`perf_run_single.sh`의 `reset_managed_ws` → `rollback_managed_ws`, §4 P15). sync·undo·submit이 실패하면 측정하지 않고 실패 |
 | UNMANAGED 실행 전: 초기화 없음 | `.oa_pristine`에서 `rsync -a --delete`로 복원(§3.1) |
-| `vse_run -v <ver> -replay ... -log CDS_log/<replay>_<mode>.log` | `run_vse` (`-nograph`), 로그 `CDS_log/<id>/<test>_<lib>_<mode>.log`, 측정 시간 `timing.tsv` |
+| `vse_run -v <ver> -replay ... -log CDS_log/<replay>_<mode>.log` | `run_vse` (Xvfb `DISPLAY=:98`, `-nograph` 없음), 로그 `CDS_log/<id>/<test>_<lib>_<mode>.log`, 측정 시간 `timing.tsv` |
 | `summary.sh <폴더>`: 결과 폴더의 파일마다 이름 → 내용 → `" "` | `perf_summary.sh`의 `write_legacy_summary` (같은 형식, `result/<id>/summary.txt`) + 시간 표 + `perf_metrics/` |
 | `ICM_deleteProj.sh -prefix`, `teardown.sh` | `perf_main.sh -no-run -t` (로컬 워크스페이스 기준), `perf_teardown_all.sh` (GDP 기준 고아 정리) |
 

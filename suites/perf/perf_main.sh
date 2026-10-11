@@ -49,6 +49,7 @@ _cleanup() {
     if [[ -n "${teardown_worker_pid}" ]]; then
         wait "${teardown_worker_pid}" 2>/dev/null || true
     fi
+    stop_display || true
     flush_trash || true
 }
 trap '_cleanup' EXIT INT TERM
@@ -471,10 +472,12 @@ run_tests() {
 
     log "--- Phase 3: Run tests (${#combos_run[@]} jobs, parallelism=${jobs}) ---"
     # Capture the status so the summary (and -t teardown) still run
+    start_display "${PERF_DISPLAY}"
     printf "%s\n" "${combos_run[@]}" | \
         xargs -n4 -P"${jobs}" bash -c "
             bash \"${script_dir}/code/perf_run_single.sh\" \"\$1\" \"\$2\" \"\$3\" \"\$4\" \"${uniqueid}\" -d \"${DRY_RUN}\"
         " _ || tests_rc=$?
+    stop_display
     case "${tests_rc}" in
         0)   ;;
         123) warn "Phase 3: one or more tests failed (xargs rc=123); continuing to summary" ;;
