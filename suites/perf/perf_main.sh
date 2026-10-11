@@ -93,6 +93,8 @@ OPTIONS
                                    With a run, teardown also runs when tests failed
   -auto-init | --auto-init       If no workspaces found, run init automatically
                                    without prompting
+  -no-xvfb   | --no-xvfb         Do not start the Xvfb display; vse_run uses the
+                                   current DISPLAY            (default: Xvfb :${PERF_DISPLAY})
 
 WORKSPACE TRACKING
   Active workspaces live under:
@@ -210,6 +212,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -auto-init|--auto-init)
             auto_init=true
+            shift
+            ;;
+        -no-xvfb|--no-xvfb)
+            USE_XVFB=0
             shift
             ;;
         -common|--common)

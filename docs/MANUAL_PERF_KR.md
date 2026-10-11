@@ -53,6 +53,7 @@ cico와 같습니다([MANUAL_CICO_KR.md](MANUAL_CICO_KR.md) §2). 추가로 UNMA
 | `-d [0\|1\|2]` | dry-run 단계 (`-d`만 주면 2) | 0 |
 | `-no-run` | init만 | |
 | `-auto-init` | 워크스페이스가 없으면 묻지 않고 init | |
+| `-no-xvfb` | Xvfb 가상 디스플레이를 띄우지 않고 현재 `DISPLAY`로 `vse_run` 실행 (GUI를 직접 볼 때) | Xvfb :98 사용 |
 | `-t` | teardown (`-lib`/`-test` 적용). 실행과 함께 주면 측정이 실패해도 마지막에 실행 | |
 | `-gen-replay` | replay만 생성 | |
 

@@ -48,6 +48,7 @@ CICO_DISPLAY=97
 PERF_DISPLAY=98
 FUNC_DISPLAY=99
 XVFB_SCREEN="1920x1080x24"
+USE_XVFB=1                      # 0 (-no-xvfb): no Xvfb; vse_run uses the caller's DISPLAY
 
 #######################################
 # Functional test config

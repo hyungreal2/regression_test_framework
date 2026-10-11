@@ -116,6 +116,7 @@ Expected differences (all intended):
 | `VSE_MODE` | `run` (synchronous) or `sub` (batch submit + poll) |
 | `CICO_DISPLAY` / `PERF_DISPLAY` / `FUNC_DISPLAY` | Xvfb display number of each suite (97 / 98 / 99). Started before the tests (`Xvfb :<n> -screen 0 ${XVFB_SCREEN}`), exported as `DISPLAY` for `vse_run`, stopped when the suite ends. Runs of the same suite at the same time share it; the last one to finish stops it. Not used with `VSE_MODE=sub` |
 | `XVFB_SCREEN` | Xvfb screen geometry (`1920x1080x24`) |
+| `USE_XVFB` | `1` (default) starts the suite's Xvfb; `0` (`-no-xvfb`) runs `vse_run` on the current `DISPLAY` |
 | `ICM_ENV` | ICManage environment setup script path |
 | `CDS_LIB_MGR` | Path to `cdsLibMgr.il` |
 | `DRY_RUN` | Default dry-run level (0/1/2) |
@@ -173,6 +174,7 @@ The mock `gdp` keeps the GDP objects it creates in a registry file and answers l
 | `-k` / `--keep` / `--no-teardown` | Skip teardown: keep GDP projects, workspaces and p4 clients | |
 | `-t` / `--teardown` | Accepted for compatibility (teardown is the default) | on |
 | `-debug` / `-keep-artifacts` | Keep `regression_test_NNN/` and `code/replay_files_<id>/` after a successful teardown | |
+| `-no-xvfb` / `--no-xvfb` | Do not start the Xvfb display; `vse_run` uses the current `DISPLAY` | Xvfb :97 |
 
 > `-m` and `-c` cannot be used together.
 >
@@ -245,6 +247,7 @@ attempted and counted (teardown), so a GDP outage cannot make a teardown report 
 | `-ws` / `-proj` | Workspace / project prefix | `func_ws_<user>` / `func_<user>` |
 | `-k` / `--keep` / `--no-teardown` | Skip teardown | |
 | `-t` | Accepted for compatibility (teardown is the default) | on |
+| `-no-xvfb` / `--no-xvfb` | Do not start the Xvfb display; `vse_run` uses the current `DISPLAY` | Xvfb :99 |
 
 Scenarios are generated from `code/func_control` + `code/list_<mode>[_<prefix>]` + `code/func_template.il`.
 Results are judged by `code/func_summary.sh` with the legacy rules, on the result files the replay
@@ -283,6 +286,7 @@ Performance tests use a **directory-based** workflow: workspaces are tracked by 
 | `-no-run` / `--no-run` | Init workspaces only; skip test execution | |
 | `-t` / `--teardown` | Run teardown; `-lib`/`-test` filters apply; also runs when tests failed | |
 | `-auto-init` / `--auto-init` | Auto-init if no workspaces found (no prompt) | |
+| `-no-xvfb` / `--no-xvfb` | Do not start the Xvfb display; `vse_run` uses the current `DISPLAY` | Xvfb :98 |
 
 ### Workflow
 

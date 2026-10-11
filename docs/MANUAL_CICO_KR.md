@@ -30,7 +30,7 @@ summary (code/summary.sh)  → result/<id>/summary.txt
 - 실행 환경에 `gdp`, `xlp4`, `vse_run`(또는 `vse_sub`)이 있고 `ICM_SkillRoot`가 설정되어 있어야 합니다.
 - `Xvfb`: replay 일부 기능이 GUI 없이(`-nograph`) 동작하지 않아, Virtuoso를 가상 디스플레이에 띄웁니다. suite마다
   고유 번호(cico 97, perf 98, func 99; `code/env.sh`의 `*_DISPLAY`)로 테스트 전에 `Xvfb :<n> -screen 0 1920x1080x24`를
-  띄우고 `DISPLAY`로 넘기며, suite가 끝나면 종료합니다. 같은 suite를 동시에 실행하면 디스플레이를 함께 쓰고 마지막 실행이 종료합니다.
+  띄우고 `DISPLAY`로 넘기며, suite가 끝나면 종료합니다. `-no-xvfb`를 주면 띄우지 않고 현재 `DISPLAY`를 씁니다. 같은 suite를 동시에 실행하면 디스플레이를 함께 쓰고 마지막 실행이 종료합니다.
 - Python 3 (표준 라이브러리만 사용)
 - 사이트 값(`GDP_BASE`, `FROM_LIB`, `VSE_VERSION`, `ICM_ENV`, `CDS_LIB_MGR`, `MAX_CASES`)은 배치된 `code/env.sh`에 들어 있습니다.
   저장소에서 고칠 때는 `site/<site>.env`를 고치고 `deploy.sh`로 다시 배치합니다.
@@ -51,6 +51,7 @@ summary (code/summary.sh)  → result/<id>/summary.txt
 | `-k` | teardown 생략 (GDP 프로젝트·워크스페이스·p4 client를 남김) | |
 | `-debug` | teardown이 성공해도 `regression_test_NNN/`과 `code/replay_files_<id>/`를 남김 | |
 | `-t` | 호환용 (teardown은 기본으로 실행) | |
+| `-no-xvfb` | Xvfb 가상 디스플레이를 띄우지 않고 현재 `DISPLAY`로 `vse_run` 실행 (GUI를 직접 볼 때) | Xvfb :97 사용 |
 
 `-m`과 `-c`는 함께 쓸 수 없습니다.
 

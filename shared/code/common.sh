@@ -251,6 +251,14 @@ start_display() {
         log "VSE_MODE=sub: jobs run on other hosts; no local display started"
         return 0
     fi
+    if [[ "${USE_XVFB:-1}" != 1 ]]; then
+        if [[ -n "${DISPLAY:-}" ]]; then
+            log "Xvfb disabled (-no-xvfb); vse_run uses DISPLAY=${DISPLAY}"
+        else
+            warn "Xvfb disabled (-no-xvfb) and DISPLAY is not set; replay functions that need a GUI may fail"
+        fi
+        return 0
+    fi
     if [[ "${DRY_RUN:-0}" -ge 1 ]]; then
         log "[DRY-RUN:${DRY_RUN}] Would start Xvfb :${n} -screen 0 ${XVFB_SCREEN} and export DISPLAY=:${n}"
         return 0

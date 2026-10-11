@@ -85,6 +85,8 @@ Options:
   -t     | --teardown         Teardown after tests (default: on; kept for compatibility)
   -debug | -keep-artifacts    Keep regression_test_NNN and code/replay_files_<id>
                               (default: both are deleted after a successful teardown)
+  -no-xvfb | --no-xvfb       Do not start the suite's Xvfb display; vse_run uses
+                              the current DISPLAY (default: Xvfb :${CICO_DISPLAY})
 
 Test numbers are line numbers of code/list: 1-144 are the legacy 144 cases
 in legacy order, 145-256 are the Fast-series cases.
@@ -170,6 +172,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -debug|-keep-artifacts|--keep-artifacts)
             keep_artifacts=true
+            shift
+            ;;
+        -no-xvfb|--no-xvfb)
+            USE_XVFB=0
             shift
             ;;
         *)

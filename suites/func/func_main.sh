@@ -106,6 +106,8 @@ Options:
                               Skip teardown: keep GDP projects/workspaces,
                               p4 clients and local workspaces (debug)
   -t  | --teardown            Accepted for compatibility (teardown is the default)
+  -no-xvfb | --no-xvfb       Do not start the suite's Xvfb display; vse_run uses
+                              the current DISPLAY (default: Xvfb :${FUNC_DISPLAY})
 
 Exit status: non-zero if a test could not run (init or Virtuoso failed), the
 summary crashed or a teardown failed. PASS/FAIL verdicts are not reflected
@@ -179,6 +181,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -t|--teardown)
             do_teardown=true    # default; kept for compatibility
+            shift
+            ;;
+        -no-xvfb|--no-xvfb)
+            USE_XVFB=0
             shift
             ;;
         -k|--keep|--no-teardown)
