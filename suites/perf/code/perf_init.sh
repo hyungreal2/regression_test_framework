@@ -156,9 +156,13 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
         done < <(find "${unmanaged_ws}/oa" -name "cdsinfo.tag" -print0)
 
         # Keep a pristine copy; perf_run_single.sh restores oa from it before
-        # every unmanaged run so each run starts from the same data
+        # every unmanaged run so each run starts from the same data.
+        # --reflink=never: a physical copy. A copy-on-write clone would share
+        # blocks with oa/, and Virtuoso's in-place writes to oa/ during a
+        # measured run would then pay the CoW allocation (coreutils >= 9.0
+        # clones by default, so this is stated explicitly)
         log "[INIT] Saving pristine UNMANAGED oa: ${unmanaged_ws}/${PERF_PRISTINE_OA}"
-        run_cmd "cp -a \"${unmanaged_ws}/oa\" \"${unmanaged_ws}/${PERF_PRISTINE_OA}\""
+        run_cmd "cp -a --reflink=never \"${unmanaged_ws}/oa\" \"${unmanaged_ws}/${PERF_PRISTINE_OA}\""
 
         # Restore MANAGED oa via force-sync
         log "[INIT] Restoring MANAGED oa: xlp4 sync -f"

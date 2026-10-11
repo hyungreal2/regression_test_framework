@@ -111,7 +111,7 @@ legacy′ 템플릿을 반영할 때:
 1. `cds.libicm` → UNMANAGED `cds.lib`로 복사하고 경로의 `WORKSPACES_MANAGED`를 `WORKSPACES_UNMANAGED`로 바꿈
 2. MANAGED `oa/`를 UNMANAGED로 옮기고 `chmod -R ug+w`
 3. 모든 `cdsinfo.tag`의 `DMTYPE p4` → `DMTYPE none`
-4. `cp -a oa .oa_pristine` (복원 원본)
+4. `cp -a --reflink=never oa .oa_pristine` (복원 원본; 측정 중 CoW 비용을 피하려고 물리 복사)
 5. MANAGED는 `xlp4 sync -f`로 `oa/`를 다시 받음
 
 legacy′의 `README_CREATENEWMANWS`(수동 절차)가 바뀌면 1~3을 그에 맞게 고칩니다. 4·5와 실행 전 복원은 저장소 추가 동작이므로 유지합니다.
