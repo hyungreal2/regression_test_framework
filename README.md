@@ -122,6 +122,8 @@ Expected differences (all intended):
 | `PERF_PREFIX` | GDP workspace name prefix for perf workspaces |
 | `PERF_BASE_LIBS` | Libraries added to every perf workspace (`DRAMLIB`) |
 | `PERF_PRISTINE_OA` | UNMANAGED: untouched copy of `oa/` restored before every run (`.oa_pristine`) |
+| `PERF_INIT_CL` | MANAGED: changelist the workspace held right after init, the rollback target (`.init_cl`) |
+| `PERF_CLEAN_CL` | MANAGED: newest changelist at which the depot equals the init state; the next rollback undoes only later changes (`.clean_cl`) |
 
 Overrides use framework-specific names (`CAT_*`), so an unrelated `WS_PREFIX` or `VSE_VERSION`
 exported in the shell is never picked up. The entry scripts export the `CAT_*` names for their children.
@@ -332,7 +334,10 @@ Workspace names follow the pattern: `perf_<testtype>_<lib>_<uniqueid>`
 > Workspace builds (`perf_init.sh`) run in parallel, up to `-j` at a time; nothing serialises them.
 
 Every run starts from the same data. Before each replay (not timed), `perf_run_single.sh` resets the workspace:
-- MANAGED: `xlp4 revert` of files left opened, `xlp4 sync`, and `sync -f` only for files sync refuses to clobber
+- MANAGED: `xlp4 revert` of files left opened, `xlp4 sync`, and `sync -f` only for files sync refuses to clobber;
+  then an ICM-style rollback: changes submitted after the init changelist (`.init_cl`, recorded by `perf_init.sh`)
+  are undone with `xlp4 undo` and submitted as a new change, so the depot head equals the init state again.
+  A failed sync, undo or submit stops that combination without measuring it
 - UNMANAGED: restore `oa/` from `.oa_pristine/`, the copy `perf_init.sh` saves after setup
   (workspaces created before this change have no copy and run without reset)
 

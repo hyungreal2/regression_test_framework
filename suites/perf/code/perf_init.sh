@@ -24,6 +24,7 @@ done
 [[ -n "${script_dir:-}" ]] || { echo "ERROR: script_dir is not set. Run via main.sh or perf_main.sh." >&2; exit 1; }
 source "${script_dir}/code/env.sh"
 source "${script_dir}/code/common.sh"
+source "${script_dir}/code/perf_icm.sh"
 
 #######################################
 # Args
@@ -167,6 +168,25 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
         # Restore MANAGED oa via force-sync
         log "[INIT] Restoring MANAGED oa: xlp4 sync -f"
         run_cmd "xlp4 -c \"${ws_name}\" -q sync -f"
+
+        # Record the changelist the workspace holds now, before any test ran:
+        # perf_run_single.sh rolls the depot back to it before every MANAGED
+        # run. Taken from #have here because no test has checked in yet; the
+        # library-creation derivation is what perf_run_single.sh falls back
+        # to when the file is missing, so check that both agree.
+        if [[ "${DRY_RUN}" -eq 0 ]]; then
+            init_cl=$(run_cmd "xlp4 -c \"${ws_name}\" changes -m1 \"//${ws_name}/...#have\"" | awk '{print $2}')
+            [[ "${init_cl}" =~ ^[0-9]+$ ]] || error_exit "Cannot read the init changelist of ${ws_name} (xlp4 changes -m1 #have)"
+            derived_cl=$(perf_derive_init_cl "${ws_name}" "${libs[@]}") || derived_cl=""
+            if [[ "${derived_cl}" != "${init_cl}" ]]; then
+                warn "[INIT] Newest library creation CL (${derived_cl:-none}) != init CL ${init_cl}: init made extra check-ins, so the fallback used when ${PERF_INIT_CL} is missing would be wrong for this workspace"
+            fi
+            echo "${init_cl}" > "${managed_ws}/${PERF_INIT_CL}"
+            echo "${init_cl}" > "${managed_ws}/${PERF_CLEAN_CL}"
+            log "[INIT] Init changelist: ${init_cl} (${managed_ws}/${PERF_INIT_CL})"
+        else
+            log "[DRY-RUN:${DRY_RUN}] Would record the init changelist in ${managed_ws}/${PERF_INIT_CL}"
+        fi
     else
         if [[ "${DRY_RUN}" -eq 0 ]]; then
             error_exit "No oa dir in MANAGED workspace after gdp build: ${managed_ws}/oa (libraries must be created with --location=oa/{{library}})"

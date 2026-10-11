@@ -24,6 +24,7 @@ done
 [[ -n "${script_dir:-}" ]] || { echo "ERROR: script_dir is not set. Run via main.sh or perf_main.sh." >&2; exit 1; }
 source "${script_dir}/code/env.sh"
 source "${script_dir}/code/common.sh"
+source "${script_dir}/code/perf_icm.sh"
 
 #######################################
 # Args
@@ -74,14 +75,18 @@ fi
 #######################################
 # Reset workspace data before the run (not timed)
 # MANAGED  : revert files left opened by earlier runs, sync to head and
-#            force-sync only files sync refuses to clobber (legacy main.template)
-#            Limitation (same as legacy): files a run created that are not in
-#            the depot (e.g. cells added by copyHier*) stay on disk, because
-#            p4 revert keeps files opened for add and sync ignores untracked
-#            files. A depot-wide `xlp4 clean` would fix that but would also
-#            delete the untracked workspace files the run needs (replay .au,
-#            cds.lib, .cdsenv/cdsLibMgr.il links), so it is not used until it
-#            has been scoped and checked on a real ICM workspace.
+#            force-sync only files sync refuses to clobber (legacy main.template),
+#            then roll the depot back to the init changelist (ICM rollback):
+#            undo every change submitted after the last clean point and
+#            submit the result as a new change, so head equals the init state
+#            and the next run checks in on top of it without out-of-date
+#            conflicts (e.g. copyHier* adding the same cells again).
+#            Limitation: files a run created but never submitted stay on
+#            disk, because p4 revert keeps files opened for add and sync
+#            ignores untracked files. A depot-wide `xlp4 clean` would fix that
+#            but would also delete the untracked workspace files the run needs
+#            (replay .au, cds.lib, .cdsenv/cdsLibMgr.il links), so it is not
+#            used until it has been scoped and checked on a real ICM workspace.
 # UNMANAGED: restore oa from the pristine copy saved by perf_init.sh
 #######################################
 _clobber_file=""
@@ -116,6 +121,81 @@ reset_managed_ws() {
     fi
     _cleanup_clobber
     _clobber_file=""
+    rollback_managed_ws
+}
+
+# managed_init_cl: prints the init changelist recorded by perf_init.sh, or (for a
+# workspace initialised before it was recorded) the newest creation
+# changelist of the GDP libraries perf_init.sh created, saved for next time
+managed_init_cl() {
+    local init_file="${managed_ws}/${PERF_INIT_CL}" cl libs
+    if [[ -s "${init_file}" ]]; then
+        cl=$(< "${init_file}")
+    else
+        warn "[RESET] ${init_file} missing; deriving the init changelist from the library creation changes"
+        mapfile -t libs < <(run_cmd "gdp list \"${PERF_GDP_BASE}/${ws_name}/rev01/oa/:library\"" | awk -F/ 'NF { print $NF }')
+        (( ${#libs[@]} > 0 )) || error_exit "[RESET] No GDP libraries found for ${ws_name}; cannot determine the init changelist (re-init the workspace)"
+        cl=$(perf_derive_init_cl "${ws_name}" "${libs[@]}") \
+            || error_exit "[RESET] Cannot determine the init changelist of ${ws_name} (re-init the workspace)"
+        echo "${cl}" > "${init_file}"
+        log "[RESET] Init changelist ${cl} (libraries: ${libs[*]}) saved to ${init_file}" >&2
+    fi
+    [[ "${cl}" =~ ^[0-9]+$ ]] || error_exit "[RESET] Invalid init changelist in ${init_file}: ${cl}"
+    echo "${cl}"
+}
+
+# rollback_managed_ws: ICM rollback of the workspace's depot files to the init
+# state. The workspace is synced to head (above). Only changes submitted after
+# the last clean point (PERF_CLEAN_CL, where the depot last equalled the init
+# state) are undone, so each rollback covers one run's check-ins. Files whose
+# content is already the init revision are reverted before submit (the client
+# has submitunchanged). Any failure reverts what was opened and stops the
+# combo, as for a failed sync.
+rollback_managed_ws() {
+    local init_cl clean_cl clean_file="${managed_ws}/${PERF_CLEAN_CL}" later opened head_cl
+    if [[ "${DRY_RUN:-0}" -ge 1 ]]; then
+        log "[DRY-RUN:${DRY_RUN}] Would roll back the depot of ${ws_name} to its init changelist (${PERF_INIT_CL})"
+        return 0
+    fi
+    init_cl=$(managed_init_cl)
+    clean_cl="${init_cl}"
+    if [[ -s "${clean_file}" ]]; then
+        clean_cl=$(< "${clean_file}")
+        [[ "${clean_cl}" =~ ^[0-9]+$ ]] && (( clean_cl >= init_cl )) || clean_cl="${init_cl}"
+    fi
+
+    later=$(run_cmd "xlp4 -c \"${ws_name}\" changes -m1 \"//${ws_name}/...@>${clean_cl}\"") \
+        || error_exit "[RESET] xlp4 changes failed (${ws_name}); not measuring on unreset data"
+    if [[ -z "${later}" ]]; then
+        log "[RESET] Depot unchanged since @${clean_cl} (init @${init_cl}); no rollback needed"
+        return 0
+    fi
+
+    log "[RESET] Rolling back ${ws_name} to @${init_cl}: undo changes after @${clean_cl}"
+    if ! run_cmd "xlp4 -c \"${ws_name}\" undo \"//${ws_name}/...@>${clean_cl}\""; then
+        run_cmd "xlp4 -c \"${ws_name}\" -q revert \"//${ws_name}/...\"" || true
+        error_exit "[RESET] xlp4 undo failed (${ws_name}); not measuring on unreset data"
+    fi
+    run_cmd "xlp4 -c \"${ws_name}\" -q revert -a \"//${ws_name}/...\"" || true
+    opened=$(run_cmd "xlp4 -c \"${ws_name}\" opened \"//${ws_name}/...\"") \
+        || error_exit "[RESET] xlp4 opened failed (${ws_name}); not measuring on unreset data"
+    if [[ -n "${opened}" ]]; then
+        log "[RESET] Submitting rollback of $(wc -l <<< "${opened}") file(s)"
+        if ! run_cmd "xlp4 -c \"${ws_name}\" submit -d \"CAT perf: roll back ${ws_name} to @${init_cl}\""; then
+            run_cmd "xlp4 -c \"${ws_name}\" -q revert \"//${ws_name}/...\"" || true
+            error_exit "[RESET] Rollback submit failed (${ws_name}); not measuring on unreset data"
+        fi
+    else
+        log "[RESET] Depot content already equals @${init_cl}; nothing to submit"
+    fi
+
+    # The depot now equals the init state at its newest change
+    head_cl=$(run_cmd "xlp4 -c \"${ws_name}\" changes -m1 \"//${ws_name}/...\"" | awk '{print $2}')
+    if [[ "${head_cl}" =~ ^[0-9]+$ ]]; then
+        echo "${head_cl}" > "${clean_file}"
+    else
+        warn "[RESET] Could not read the head changelist of ${ws_name}; next rollback starts from @${clean_cl}"
+    fi
 }
 
 reset_unmanaged_ws() {

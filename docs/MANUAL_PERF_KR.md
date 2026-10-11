@@ -18,9 +18,11 @@ prod 배치 이름은 `2_perf_mp`이고, 저장소에서는 `suites/perf/`입니
 ```
 init  (perf_init.sh, 한 번)   GDP 프로젝트 → MANAGED 워크스페이스 (WORKSPACES_MANAGED/<ws>)
                                └→ oa/를 옮겨 UNMANAGED 구성 (WORKSPACES_UNMANAGED/<ws>), 원본 사본 .oa_pristine 저장
+                               └→ MANAGED의 init 시점 CL을 .init_cl에 기록
 run   (perf_run_single.sh, 매번)
       replay 생성 → 초기화(측정 제외) → vse_run → 걸린 시간 기록
         MANAGED  : xlp4 revert + sync (+ 덮어쓰기 거부 파일만 sync -f)
+                   → rollback: init 뒤 체크인된 변경을 undo해 새 CL로 submit (head = init 상태)
         UNMANAGED: .oa_pristine에서 rsync로 oa 복원
 summary (perf_summary.sh)     시간 표, legacy 형식 summary.txt, 추세 데이터
 teardown (perf_teardown.sh)   p4 client, GDP 워크스페이스·프로젝트, depot, 로컬 디렉터리
@@ -110,6 +112,9 @@ cico와 같습니다([MANUAL_CICO_KR.md](MANUAL_CICO_KR.md) §2). 추가로 UNMA
 |---|---|
 | `No workspaces found matching the specified filters` | init을 먼저 (`-no-run` 또는 `-auto-init`) |
 | `MANAGED reset failed: xlp4 sync rc=...` | p4 서버/client 문제로 초기화 실패. 측정하지 않고 그 조합만 실패 처리됨 |
+| `xlp4 undo failed` / `Rollback submit failed` | depot를 init 상태로 되돌리지 못함. 열린 파일은 revert하고, 측정하지 않고 그 조합만 실패 처리됨 |
+| `.init_cl missing; deriving ...` | init CL 기록 전에 만든 워크스페이스. 라이브러리 생성 CL 중 가장 큰 값으로 대신하고 `.init_cl`에 저장 |
+| `Cannot determine the init changelist` | 위 대체도 실패. 정리 후 다시 init |
 | `No pristine copy ... running without reset` | 예전에 만든 UNMANAGED라 원본 사본이 없음. 정리 후 다시 init |
 | `No oa dir in MANAGED workspace after gdp build` | 라이브러리 생성 실패. GDP 로그 확인 |
 | `Timing file not found` | 모든 측정이 실패함. 앞선 오류를 확인 |

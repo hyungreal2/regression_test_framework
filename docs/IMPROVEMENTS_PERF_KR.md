@@ -24,10 +24,10 @@
 
 | 모드 | legacy | 현재 |
 |---|---|---|
-| MANAGED | 열린 파일 revert, `sync`, 덮어쓰기 거부 파일만 `sync -f` | 같음. `sync`가 다른 이유로 실패하면 측정하지 않고 그 조합을 실패로 |
+| MANAGED | 열린 파일 revert, `sync`, 덮어쓰기 거부 파일만 `sync -f` (head로 맞출 뿐, 테스트가 체크인한 변경은 남음) | 같은 revert·sync 뒤 **ICM rollback**: init 시점 CL(`.init_cl`) 이후 체크인된 변경을 `xlp4 undo`해 새 CL로 submit. depot head가 init 상태가 되어 다음 실행의 체크인이 out-of-date로 충돌하지 않음. 실패하면 측정하지 않고 그 조합을 실패로 |
 | UNMANAGED | 없음(이전 실행이 바꾼 데이터에서 측정) | init 때 저장한 `.oa_pristine`에서 `rsync -a --delete`로 복원 |
 
-초기화는 측정 시간에 들어가지 않습니다. MANAGED는 depot에 없는 파일(예: copyHier*가 만든 셀)을 지우지 못하는 한계가 legacy와 같습니다.
+초기화는 측정 시간에 들어가지 않습니다. MANAGED rollback은 체크인된 변경만 되돌립니다. 체크인되지 않고 남은 파일(add로 열렸다가 revert된 파일 등)은 지우지 못합니다.
 
 ## 4. 실행과 결과
 

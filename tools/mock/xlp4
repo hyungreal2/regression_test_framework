@@ -4,7 +4,26 @@
 #
 # Usage: add tools/mock/ to PATH before running scripts
 #   export PATH="$(pwd)/tools/mock:${PATH}"
+#
+# Every call is echoed to stderr and exits 0. "changes" prints one change
+# (Change 1) so the perf init changelist can be recorded, except for a
+# revision range after a change (@>N), which prints nothing: the depot is
+# never changed after init, so the MANAGED rollback has nothing to undo.
 #######################################
 
 echo "[MOCK:xlp4] $*" >&2
+
+args=("$@")
+sub="" i=0
+while (( i < ${#args[@]} )); do
+    case "${args[i]}" in
+        -c|-x|-u|-p|-P|-C) i=$(( i + 2 )) ;;
+        -*) i=$(( i + 1 )) ;;
+        *) sub="${args[i]}"; break ;;
+    esac
+done
+
+if [[ "${sub}" == changes && " $* " != *"@>"* ]]; then
+    echo "Change 1 on 2026/01/01 by mock@mock 'mock'"
+fi
 exit 0

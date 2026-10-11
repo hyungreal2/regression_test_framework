@@ -100,7 +100,7 @@ legacy′ 템플릿을 반영할 때:
 | `main.pl`이 `main.template`의 `man_folders`, `virtuoso_version`, `replay_files`를 채워 `main.sh` 생성 | `perf_main.sh`가 조합 목록을 만들고 `perf_run_single.sh`를 병렬 실행 |
 | 워크스페이스 하나(`cadence_perf_ws`)를 `ICM_createProj.sh`로 수동 생성, UNMANAGED는 `README_CREATENEWMANWS` 절차로 수동 복사 | `perf_init.sh`가 조합마다 project → variant → libtype → config → library(`--location=oa/{{library}}`) → build workspace, UNMANAGED 자동 구성(§3.1) |
 | `managed.txt`에 현재 모드를 써서 replay가 읽음 | replay에 `managed="<mode>"`를 생성 시 치환 |
-| MANAGED 실행 전: 열린 파일 revert(반복), `xlp4 sync`, "Can't clobber" 파일만 `sync -f` | 같음(`perf_run_single.sh`의 `reset_managed_ws`). sync가 다른 이유로 실패하면 측정하지 않고 실패 |
+| MANAGED 실행 전: 열린 파일 revert(반복), `xlp4 sync`, "Can't clobber" 파일만 `sync -f` | 같은 revert·sync 뒤 rollback(`perf_run_single.sh`의 `reset_managed_ws` → `rollback_managed_ws`, §4 P15). sync·undo·submit이 실패하면 측정하지 않고 실패 |
 | UNMANAGED 실행 전: 초기화 없음 | `.oa_pristine`에서 `rsync -a --delete`로 복원(§3.1) |
 | `vse_run -v <ver> -replay ... -log CDS_log/<replay>_<mode>.log` | `run_vse` (`-nograph`), 로그 `CDS_log/<id>/<test>_<lib>_<mode>.log`, 측정 시간 `timing.tsv` |
 | `summary.sh <폴더>`: 결과 폴더의 파일마다 이름 → 내용 → `" "` | `perf_summary.sh`의 `write_legacy_summary` (같은 형식, `result/<id>/summary.txt`) + 시간 표 + `perf_metrics/` |
@@ -135,6 +135,7 @@ legacy′의 `README_CREATENEWMANWS`(수동 절차)가 바뀌면 1~3을 그에 �
 | P11 | changeLibRef / copyHierToEmpty 템플릿 | — | `;# [EQUIV]` 주석으로 legacy와 같게 되돌린 지점 설명, 비활성 코드는 주석으로 보존 | 주석만 다름. 명령 줄은 legacy와 같음 |
 | P12 | 워크스페이스 | 하나를 계속 사용 | 조합마다 하나, `WORKSPACES_MANAGED/UNMANAGED/<perf_<test>_<lib>_<id>>` | 조합별 독립 측정 |
 | P13 | 실행 전 복원 | MANAGED만 | MANAGED + UNMANAGED(`.oa_pristine`) | 매 측정을 같은 데이터에서 시작 |
+| P15 | MANAGED depot 복원 | 없음(head로 sync만) | init 끝에 `changes -m1 //<ws>/...#have`를 `.init_cl`에 기록. 매 실행 전 마지막 깨끗한 시점(`.clean_cl`) 이후 변경을 `xlp4 undo` → 내용이 같은 파일 `revert -a` → submit. `.init_cl`이 없으면 GDP 라이브러리마다 `changes //<ws>/oa/<lib>/...`의 마지막 줄(생성 CL) 중 최댓값 사용 (`code/perf_icm.sh`) | ICM rollback과 같은 동작. 테스트의 자동 체크인으로 head가 바뀌어 다음 실행이 out-of-date로 충돌하거나 다른 경로를 타는 문제 |
 | P14 | 전역 replay 삭제 | `rm replay*.au` | 조합별 이전 출력만 삭제 | 동시 실행 시 다른 실행의 replay를 지우지 않음 |
 
 ---

@@ -59,3 +59,5 @@ PERF_CELLS=(VP_FULLCHIP FULLCHIP XE_FULLCHIP_BASE)
 PERF_TESTS=(checkHier renameRefLib changeLibRef replace deleteAllMarker copyHierToEmpty copyHierToNonEmpty)  # order = Test<N> number in the replay templates
 PERF_BASE_LIBS=(DRAMLIB)        # added to every perf workspace (legacy's single workspace always had it)
 PERF_PRISTINE_OA=".oa_pristine" # UNMANAGED: untouched copy of oa/, restored before every run
+PERF_INIT_CL=".init_cl"         # MANAGED: changelist the workspace held right after init (rollback target)
+PERF_CLEAN_CL=".clean_cl"       # MANAGED: newest changelist at which the depot equals the init state
