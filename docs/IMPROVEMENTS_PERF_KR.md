@@ -8,7 +8,7 @@
 |---|---|---|
 | 템플릿 | 7개 (`changeRefLib` 포함) | 같은 7개 (`changeLibRef`로 이름 통일). 명령 줄은 legacy와 같음 |
 | 측정 구간·결과 문구 | `t1`~`t2`, `Test<N>_<lib>. Performance ... time <초>` | 같음 |
-| 라이브러리·셀 | `lib_cell_view.txt`, `main.pl -lib/-cell` | `PERF_LIBS` / `PERF_CELLS` (BM01·BM02·BM03) |
+| 라이브러리·셀 | `lib_cell_view.txt`, `main.pl -lib/-cell` | `PERF_LIBS` / `PERF_CELLS` (BM01·BM02·BM03·MEMGEN5K) |
 | 차이 | — | changeLibRef가 쓰는 함수(`changeRefLib`, `changeRefLib_revertICM`)를 별도 SKILL 파일 2개에서 로드. `HierCopy`가 빈 skip 목록과 없는 라이브러리를 안전하게 처리 |
 
 ## 2. 워크스페이스

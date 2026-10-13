@@ -10,7 +10,7 @@ prod 배치 이름은 `2_perf_mp`이고, 저장소에서는 `suites/perf/`입니
 측정 하나 = **템플릿 × 라이브러리 × 모드**입니다.
 
 - 템플릿 7개(`PERF_TESTS`): `checkHier` `renameRefLib` `changeLibRef` `replace` `deleteAllMarker` `copyHierToEmpty` `copyHierToNonEmpty`
-- 라이브러리 3개(`PERF_LIBS`/`PERF_CELLS`): BM01(VP_FULLCHIP), BM02(FULLCHIP), BM03(XE_FULLCHIP_BASE)
+- 라이브러리 4개(`PERF_LIBS`/`PERF_CELLS`): BM01(VP_FULLCHIP), BM02(FULLCHIP), BM03(XE_FULLCHIP_BASE), MEMGEN5K(test)
 - 모드: managed, unmanaged
 
 템플릿×라이브러리마다 워크스페이스 한 쌍을 만들어 두고(init), 여러 번 측정한 뒤(run), 필요 없어지면 지웁니다(teardown).
