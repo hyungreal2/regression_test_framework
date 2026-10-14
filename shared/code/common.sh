@@ -194,12 +194,22 @@ run_vse() {
         local sub_version="${VSE_VERSION%-[0-9][0-9][0-9][0-9][0-9][0-9]}"
         sub_version="${sub_version//_/.}"
         vse_out=$(run_cmd "vse_sub -v ${sub_version} -env ${ICM_ENV} -replay ${replay} -log ${logfile}")
-        job_id=$(awk -F'[<>]' '{print $2}' <<< "${vse_out}")
+        # Dry run: nothing was submitted (level 1 ran the mock in place), so
+        # there is no job to wait for
+        if [[ "${DRY_RUN:-0}" -ge 1 ]]; then
+            log "[DRY-RUN:${DRY_RUN}] Would poll the job with ${VSE_SUB_BJOBS} until DONE/EXIT"
+            return 0
+        fi
+        # "Job <12345> is submitted to queue <q>.": the first <number>
+        job_id=$(grep -oE '<[0-9]+>' <<< "${vse_out}" | head -1 | tr -d '<>' || true)
+        if [[ -z "${job_id}" ]]; then
+            error_exit "vse_sub did not return a job id: ${vse_out}"
+        fi
         log "Submitted job: ${job_id}. Polling every 10s..."
         # bwait -w "ended(${job_id})"  # disabled: pending verification
         while true; do
-            #stat=$(bjobs -noheader -o stat "${job_id}" 2>/dev/null | awk '{print $1}')
-            stat=$(mjobs -noheader -o stat "${job_id}" 2>/dev/null | tail -1)
+            stat=$(LSF_ENVDIR="${VSE_SUB_LSF_ENVDIR}" "${VSE_SUB_BJOBS}" \
+                -noheader -o stat "${job_id}" 2>/dev/null | tail -1)
 	    if [ "${stat}" = "RUN" ] && [ "${seen_run}" -eq 0 ]; then
             	log "  job ${job_id} stat=${stat:-unknown}"
 		seen_run=1

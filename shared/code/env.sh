@@ -41,6 +41,9 @@ MAX_JOBS=${MAX_JOBS:-32}
 
 # VSE execution mode: "run" (vse_run, synchronous) or "sub" (vse_sub + bwait)
 VSE_MODE="${VSE_MODE:-run}"
+# VSE_MODE=sub: bjobs (and its LSF config) used to poll the submitted job
+VSE_SUB_LSF_ENVDIR="/user/mcr1spool/lsfmcr1/conf"
+VSE_SUB_BJOBS="/user/mcr1spool/lsfmcr1/10.1/linux3.10-glibc2.17-x86_64/bin/bjobs"
 
 # Virtual X display (Xvfb) for vse_run: replays use functions that need a GUI,
 # so Virtuoso runs on a per-suite display instead of with -nograph
