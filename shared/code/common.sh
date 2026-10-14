@@ -188,7 +188,10 @@ run_vse() {
     local seen_run=0
     if [[ "${VSE_MODE:-run}" == "sub" ]]; then
         local vse_out job_id stat
-        vse_out=$(run_cmd "vse_sub -v ${VSE_VERSION} -env ${ICM_ENV} -replay ${replay} -log ${logfile}")
+        # vse_sub takes the version without the build-date suffix:
+        # IC251SM_ISR8_003-260902 → IC251SM_ISR8_003 (no suffix: unchanged)
+        local sub_version="${VSE_VERSION%-[0-9][0-9][0-9][0-9][0-9][0-9]}"
+        vse_out=$(run_cmd "vse_sub -v ${sub_version} -env ${ICM_ENV} -replay ${replay} -log ${logfile}")
         job_id=$(awk -F'[<>]' '{print $2}' <<< "${vse_out}")
         log "Submitted job: ${job_id}. Polling every 10s..."
         # bwait -w "ended(${job_id})"  # disabled: pending verification
