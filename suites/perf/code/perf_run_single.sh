@@ -171,8 +171,10 @@ rollback_managed_ws() {
         return 0
     fi
 
+    # -q on undo / submit: they print a line per file (like revert), which
+    # floods the log on a large library; errors still reach stderr
     log "[RESET] Rolling back ${ws_name} to @${init_cl}: undo changes after @${clean_cl}"
-    if ! run_cmd "xlp4 -c \"${ws_name}\" undo \"//${ws_name}/...@>${clean_cl}\""; then
+    if ! run_cmd "xlp4 -c \"${ws_name}\" -q undo \"//${ws_name}/...@>${clean_cl}\""; then
         run_cmd "xlp4 -c \"${ws_name}\" -q revert \"//${ws_name}/...\"" || true
         error_exit "[RESET] xlp4 undo failed (${ws_name}); not measuring on unreset data"
     fi
@@ -181,7 +183,7 @@ rollback_managed_ws() {
         || error_exit "[RESET] xlp4 opened failed (${ws_name}); not measuring on unreset data"
     if [[ -n "${opened}" ]]; then
         log "[RESET] Submitting rollback of $(wc -l <<< "${opened}") file(s)"
-        if ! run_cmd "xlp4 -c \"${ws_name}\" submit -d \"CAT perf: roll back ${ws_name} to @${init_cl}\""; then
+        if ! run_cmd "xlp4 -c \"${ws_name}\" -q submit -d \"CAT perf: roll back ${ws_name} to @${init_cl}\""; then
             run_cmd "xlp4 -c \"${ws_name}\" -q revert \"//${ws_name}/...\"" || true
             error_exit "[RESET] Rollback submit failed (${ws_name}); not measuring on unreset data"
         fi
@@ -193,6 +195,7 @@ rollback_managed_ws() {
     head_cl=$(run_cmd "xlp4 -c \"${ws_name}\" changes -m1 \"//${ws_name}/...\"" | awk '{print $2}')
     if [[ "${head_cl}" =~ ^[0-9]+$ ]]; then
         echo "${head_cl}" > "${clean_file}"
+        log "[RESET] Rolled back ${ws_name}; depot head @${head_cl} = init @${init_cl}"
     else
         warn "[RESET] Could not read the head changelist of ${ws_name}; next rollback starts from @${clean_cl}"
     fi
