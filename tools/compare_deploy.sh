@@ -8,7 +8,7 @@
 #   code/replay_files*, code/func_template_*.il, code/date_virtuosoVer.txt,
 #   GenerateReplayScript/*.au and lcv.txt, cico_ws_* / func_ws_* (dry-run
 #   workspaces), perf_metrics/, .gdp_ws_lock, .trash, __pycache__, editor swap files,
-#   .deploy_info (written by deploy.sh).
+#   .deploy_info, .deploy_files, .deploy_backup/ (written by deploy.sh).
 #
 # Besides content, the owner exec bit of every script (*.sh, *.pl, *.py)
 # present on both sides is compared (diff -r ignores modes).
@@ -25,7 +25,7 @@ EXCLUDES=(
     log CDS_log result 'WORKSPACES_*' 'regression_test_*' 'regression_num*.txt'
     'replay_files*' 'func_template_*.il' date_virtuosoVer.txt
     '*.au' lcv.txt
-    'cico_ws_*' 'func_ws_*' perf_metrics .gdp_ws_lock .trash .deploy_info
+    'cico_ws_*' 'func_ws_*' perf_metrics .gdp_ws_lock .trash .deploy_info .deploy_files .deploy_backup
     '*.swp' '*.swo' __pycache__ '*.pyc'
 )
 

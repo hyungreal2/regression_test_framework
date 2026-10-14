@@ -64,12 +64,19 @@ difference between sites. `site/<site>.env` lists them as `KEY=value` lines that
 ```bash
 ./deploy.sh perf prod                 # → build/prod/2_perf_mp
 ./deploy.sh cico prod /path/to/1_cico_mp
+./deploy.sh -f perf prod /path/to/2_perf_mp   # update an existing deployment in place
 ```
 
-The destination must not exist or must be empty. Only git-tracked files are copied, so runtime
+The destination must not exist or must be empty, unless `-f` is given. With `-f`, an existing
+deployment of the same suite is updated in place: deployed files are overwritten, runtime outputs
+(`WORKSPACES_*`, `log/`, `result/`, `regression_test_*`, `perf_metrics/`, ...) are kept, and files
+whose content changes, or that a previous deployment shipped and this one no longer does
+(listed in `.deploy_files`), are first copied to `.deploy_backup/<time>/`. Files are replaced one
+by one, so do not update while a suite is running from the destination. Only git-tracked files are copied, so runtime
 outputs never end up in a deployment. Their content is taken from the working tree: uncommitted
 changes under the suite, `shared/` or `site/` are deployed too, with a warning listing them.
-Every deployment gets a `.deploy_info` file (commit, dirty or not, suite, site, time, user).
+Every deployment gets a `.deploy_info` file (commit, dirty or not, suite, site, time, user) and
+a `.deploy_files` list of the deployed files.
 
 Check a deployment against a prod snapshot (runtime outputs and generated replays are ignored):
 

@@ -25,7 +25,7 @@ suite별 내용은 [IMPROVEMENTS_CICO_KR.md](IMPROVEMENTS_CICO_KR.md) · [IMPROV
 |---|---|---|
 | 배치 단위 | suite마다 독립 디렉터리, 공용 파일을 복사해 둠 | `shared/`(2개 이상 suite가 쓰는 파일) + `suites/<suite>/`(prod 배치와 같은 구조), 링크로 공유 |
 | 사이트 값 | 스크립트·SKILL에 박힌 경로와 버전 | `site/dev.env`, `site/prod.env` 6개 키(`MAX_CASES`, `FROM_LIB`, `GDP_BASE`, `VSE_VERSION`, `ICM_ENV`, `CDS_LIB_MGR`) |
-| 배포 | 디렉터리 복사 | `deploy.sh <suite> <site>`: git이 추적하는 파일만, 링크를 풀어, 임시 디렉터리에서 조립해 한 번에 이동. 사이트 파일 키 검증, 커밋 안 된 변경 경고, `.deploy_info` 기록 |
+| 배포 | 디렉터리 복사 | `deploy.sh [-f] <suite> <site>`: git이 추적하는 파일만, 링크를 풀어, 임시 디렉터리에서 조립해 한 번에 이동. 사이트 파일 키 검증, 커밋 안 된 변경 경고, `.deploy_info` 기록. `-f`는 기존 배치를 제자리에서 갱신(실행 결과물 유지, 바뀌는 파일은 `.deploy_backup/`에 백업) |
 | prod 대조 | — | `tools/compare_deploy.sh`: 실행 결과물을 빼고 내용 + 스크립트 실행 권한 비교 |
 | 미사용 파일 | 백업이 섞여 있음 | `archive/`로 분리, 배치하지 않음 |
 

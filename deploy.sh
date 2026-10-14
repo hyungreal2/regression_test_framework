@@ -21,6 +21,15 @@
 #
 # The deployment is assembled in a temp dir next to <dest> and moved into
 # place only when complete; on any error nothing is left at <dest>.
+#
+# -f (update in place): <dest> may already hold a deployment of the same
+# suite. Only deployed files are written; runtime outputs (WORKSPACES_*,
+# log/, result/, regression_test_*, perf_metrics/, ...) are left alone, so
+# live GDP workspaces keep their local directories. A deployed file whose
+# content changes is first copied to .deploy_backup/<time>/. Files listed
+# in the previous .deploy_files that are no longer deployed are moved there
+# too. Files are replaced one by one (not atomically as a whole), so do not
+# update while a suite is running from <dest>.
 #######################################
 
 set -euo pipefail
@@ -33,35 +42,60 @@ env_src="${repo_dir}/shared/code/env.sh"
 
 usage() {
     cat <<EOF
-Usage: $(basename "$0") <suite> <site> [dest]
+Usage: $(basename "$0") [-f] <suite> <site> [dest]
 
   suite   cico | perf | func
   site    name of a file in site/ without .env  ($(cd "${repo_dir}/site" && ls *.env | sed 's/\.env$//' | xargs))
   dest    target directory (default: build/<site>/<deployment name>)
-          must not exist or must be empty
+          must not exist or must be empty, unless -f is given
+  -f      update an existing deployment of the same suite in place:
+          overwrite deployed files (changed ones are backed up to
+          <dest>/.deploy_backup/<time>/), keep runtime outputs
 
 Examples:
   $(basename "$0") perf prod                     # → build/prod/2_perf_mp
   $(basename "$0") func dev /tmp/3_func_mp
+  $(basename "$0") -f perf prod /path/to/2_perf_mp   # redeploy over an existing one
 EOF
 }
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
-[[ "${1:-}" == "-h" || "${1:-}" == "--help" ]] && { usage; exit 0; }
-[[ $# -ge 2 && $# -le 3 ]] || { usage >&2; exit 1; }
+force=0
+args=()
+for a in "$@"; do
+    case "${a}" in
+        -h|--help)   usage; exit 0 ;;
+        -f|--force)  force=1 ;;
+        -*)          echo "ERROR: Unknown option: ${a}" >&2; usage >&2; exit 1 ;;
+        *)           args+=("${a}") ;;
+    esac
+done
+[[ ${#args[@]} -ge 2 && ${#args[@]} -le 3 ]] || { usage >&2; exit 1; }
 
-suite="$1"
-site="$2"
+suite="${args[0]}"
+site="${args[1]}"
 [[ -n "${DEPLOY_NAME[${suite}]:-}" ]] || die "Unknown suite: ${suite} (valid: ${!DEPLOY_NAME[*]})"
 site_file="${repo_dir}/site/${site}.env"
 [[ -f "${site_file}" ]] || die "Site file not found: site/${site}.env"
 [[ -f "${env_src}" ]]   || die "Missing ${env_src}"
-dest="${3:-${repo_dir}/build/${site}/${DEPLOY_NAME[${suite}]}}"
+dest="${args[2]:-${repo_dir}/build/${site}/${DEPLOY_NAME[${suite}]}}"
 
+update=0
 if [[ -e "${dest}" ]]; then
     [[ -d "${dest}" ]] || die "Destination exists and is not a directory: ${dest}"
-    [[ -z "$(ls -A "${dest}")" ]] || die "Destination is not empty: ${dest} (remove it first)"
+    if [[ -n "$(ls -A "${dest}")" ]]; then
+        (( force )) || die "Destination is not empty: ${dest} (remove it first, or -f to update it in place)"
+        # Guard against overwriting another suite's deployment by mistake
+        if [[ -f "${dest}/.deploy_info" ]]; then
+            old_suite=$(sed -n 's/^suite=//p' "${dest}/.deploy_info")
+            [[ "${old_suite}" == "${suite}" ]] \
+                || die "Destination holds a ${old_suite:-unknown} deployment, not ${suite}: ${dest}"
+        else
+            echo "WARNING: ${dest} has no .deploy_info (not made by deploy.sh); updating it anyway" >&2
+        fi
+        update=1
+    fi
 fi
 
 #######################################
@@ -177,11 +211,76 @@ bash -n "${env_out}" || die "Rendered code/env.sh has a syntax error"
 } > "${tmp_dest}/.deploy_info"
 chmod 644 "${tmp_dest}/.deploy_info"
 
+# The deployed file list: -f uses the previous one to remove files that
+# are no longer deployed
+rels=()
+for f in "${files[@]}"; do rels+=("${f#${src}/}"); done
+printf '%s\n' "${rels[@]}" > "${tmp_dest}/.deploy_files"
+chmod 644 "${tmp_dest}/.deploy_files"
+
 #######################################
 # Move into place
 #######################################
-[[ -d "${dest}" ]] && rmdir "${dest}"
-mv "${tmp_dest}" "${dest}"
-trap - EXIT
+if (( ! update )); then
+    [[ -d "${dest}" ]] && rmdir "${dest}"
+    mv "${tmp_dest}" "${dest}"
+    trap - EXIT
+    echo "Deployed ${suite} (site=${site}) → ${dest}  (${#files[@]} files)"
+    exit 0
+fi
 
-echo "Deployed ${suite} (site=${site}) → ${dest}  (${#files[@]} files)"
+# -f: update in place. Check every target first so a conflict stops the
+# update before anything is written.
+for rel in "${rels[@]}"; do
+    t="${dest}/${rel}"
+    [[ ! -d "${t}" || -L "${t}" ]] || die "Cannot update: ${t} is a directory in the destination"
+done
+
+backup_dir="${dest}/.deploy_backup/$(date '+%Y%m%d_%H%M%S')"
+[[ ! -e "${backup_dir}" ]] || backup_dir="${backup_dir}_$$"   # two updates in one second
+backup() {   # backup <rel>: copy dest/<rel> into backup_dir, keeping its path
+    mkdir -p "${backup_dir}/$(dirname "$1")"
+    cp -pP "${dest}/$1" "${backup_dir}/$1"
+}
+
+n_new=0 n_changed=0 n_same=0 n_removed=0
+for rel in "${rels[@]}"; do
+    t="${dest}/${rel}"
+    if [[ -e "${t}" || -L "${t}" ]]; then
+        if [[ ! -L "${t}" ]] && cmp -s "${tmp_dest}/${rel}" "${t}"; then
+            # Same content: only bring the mode in line
+            chmod --reference="${tmp_dest}/${rel}" "${t}"
+            n_same=$(( n_same + 1 ))
+            continue
+        fi
+        backup "${rel}"
+        n_changed=$(( n_changed + 1 ))
+    else
+        n_new=$(( n_new + 1 ))
+    fi
+    mkdir -p "$(dirname "${t}")"
+    # Copy beside the target and rename over it, so a file is never half-written
+    cp -p "${tmp_dest}/${rel}" "${t}.deploy_tmp"
+    mv -f "${t}.deploy_tmp" "${t}"
+done
+
+# Files the previous deployment shipped that this one no longer does
+if [[ -f "${dest}/.deploy_files" ]]; then
+    declare -A now=()
+    for rel in "${rels[@]}"; do now["${rel}"]=1; done
+    while IFS= read -r rel; do
+        [[ -n "${rel}" && -z "${now[${rel}]:-}" ]] || continue
+        [[ -e "${dest}/${rel}" || -L "${dest}/${rel}" ]] || continue
+        backup "${rel}"
+        rm -f "${dest}/${rel}"
+        n_removed=$(( n_removed + 1 ))
+    done < "${dest}/.deploy_files"
+else
+    echo "WARNING: no previous .deploy_files in ${dest}: files that are no longer deployed (if any) were not removed" >&2
+fi
+
+cp -p "${tmp_dest}/.deploy_info" "${tmp_dest}/.deploy_files" "${dest}/"
+
+echo "Updated ${suite} (site=${site}) in ${dest}: ${n_changed} changed, ${n_new} new, ${n_same} unchanged, ${n_removed} removed"
+(( n_changed + n_removed == 0 )) || echo "Previous versions of changed/removed files: ${backup_dir}"
+exit 0
