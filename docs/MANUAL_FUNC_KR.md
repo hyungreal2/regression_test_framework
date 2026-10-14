@@ -44,7 +44,7 @@ cico와 같습니다([MANUAL_CICO_KR.md](MANUAL_CICO_KR.md) §2). 원본 라이�
 | `-ws`, `-proj` | 워크스페이스 / 프로젝트 접두어 (기본 `func_ws_<user>` / `func_<user>`) |
 | `-k` | teardown 생략 |
 | `-t` | 호환용 (teardown은 기본) |
-| `-no-xvfb` | Xvfb 가상 디스플레이를 띄우지 않고 현재 `DISPLAY`로 `vse_run` 실행 (기본: Xvfb :99) |
+| `-no-xvfb` | Xvfb 가상 디스플레이를 띄우지 않고 현재 `DISPLAY`로 Virtuoso 실행 (기본: Xvfb :99) |
 
 ---
 

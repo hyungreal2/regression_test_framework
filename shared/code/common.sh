@@ -181,7 +181,8 @@ run_cmd() {
 #######################################
 # VSE execution wrapper
 # VSE_MODE=run  → vse_run  (synchronous, env 1)
-# VSE_MODE=sub  → vse_sub + poll bjobs (async submit, env 2)
+# VSE_MODE=sub  → vse_sub + poll bjobs (async submit, env 2); the job
+#                 inherits DISPLAY (<submit host>:<n>, see start_display)
 #######################################
 run_vse() {
     local replay="$1" logfile="$2"
@@ -224,6 +225,12 @@ run_vse() {
 # EXIT trap). Runs of the same suite at the same time share the display:
 # each registers its pid in /tmp/.cat_xvfb_<n>.users, and the last one to
 # leave stops the Xvfb, only if a CAT run started it (.pid).
+#
+# VSE_MODE=sub: Virtuoso runs on the LSF execution host, so it reaches the
+# display over TCP. The Xvfb then listens on TCP port 6000+<n> with access
+# control off (-ac: anyone who can reach the port can use the display), and
+# DISPLAY is <this host>:<n>. .tcp marks a server started that way; a sub
+# run cannot share a server started without it.
 #######################################
 _xvfb_num=""   # display this process registered on (for stop_display)
 
@@ -249,22 +256,25 @@ _xvfb_prune_users() {
 }
 
 start_display() {
-    local n="$1" base i me="${BASHPID}"
+    local n="$1" base i me="${BASHPID}" tcp=0 disp xargs=()
     [[ "${n}" =~ ^[0-9]+$ ]] || error_exit "start_display: invalid display number: ${n}"
     if [[ "${VSE_MODE:-run}" == "sub" ]]; then
-        log "VSE_MODE=sub: jobs run on other hosts; no local display started"
-        return 0
+        tcp=1
+        xargs=(-listen tcp -ac)
+        disp="$(hostname -f 2>/dev/null || hostname):${n}"
+    else
+        disp=":${n}"
     fi
     if [[ "${USE_XVFB:-1}" != 1 ]]; then
         if [[ -n "${DISPLAY:-}" ]]; then
-            log "Xvfb disabled (-no-xvfb); vse_run uses DISPLAY=${DISPLAY}"
+            log "Xvfb disabled (-no-xvfb); Virtuoso uses DISPLAY=${DISPLAY}"
         else
             warn "Xvfb disabled (-no-xvfb) and DISPLAY is not set; replay functions that need a GUI may fail"
         fi
         return 0
     fi
     if [[ "${DRY_RUN:-0}" -ge 1 ]]; then
-        log "[DRY-RUN:${DRY_RUN}] Would start Xvfb :${n} -screen 0 ${XVFB_SCREEN} and export DISPLAY=:${n}"
+        log "[DRY-RUN:${DRY_RUN}] Would start Xvfb :${n} -screen 0 ${XVFB_SCREEN} ${xargs[*]} and export DISPLAY=${disp}"
         return 0
     fi
     command -v Xvfb > /dev/null || error_exit "Xvfb not found (needed for vse_run on display :${n})"
@@ -277,17 +287,23 @@ start_display() {
         _xvfb_prune_users "${base}.users"
         if _xvfb_alive "${n}"; then
             if [[ -s "${base}.pid" ]] && ps -p "$(< "${base}.pid")" > /dev/null 2>&1; then
+                if (( tcp )) && [[ ! -e "${base}.tcp" ]]; then
+                    echo "$(_log_prefix ERROR) Display :${n} is running without TCP (started by a VSE_MODE=run run); jobs on other hosts cannot reach it. Wait for that run to finish" >&2
+                    exit 1
+                fi
                 log "Display :${n} already running (Xvfb pid $(< "${base}.pid")); sharing it"
             else
-                rm -f "${base}.pid"
+                rm -f "${base}.pid" "${base}.tcp"
                 warn "Display :${n} is held by an X server CAT did not start; using it, never stopping it"
+                (( tcp )) && warn "Jobs on other hosts reach :${n} only if that server accepts TCP connections from them"
             fi
         else
-            log "Starting Xvfb :${n} -screen 0 ${XVFB_SCREEN}"
+            log "Starting Xvfb :${n} -screen 0 ${XVFB_SCREEN} ${xargs[*]}"
             # 9>&-: the server must not inherit the lock fd, or it would hold
             # the lock for its whole life
-            nohup Xvfb ":${n}" -screen 0 "${XVFB_SCREEN}" > /dev/null 2>&1 9>&- &
+            nohup Xvfb ":${n}" -screen 0 "${XVFB_SCREEN}" "${xargs[@]}" > /dev/null 2>&1 9>&- &
             echo $! > "${base}.pid"
+            if (( tcp )); then touch "${base}.tcp"; else rm -f "${base}.tcp"; fi
             for (( i = 0; i < 50; i++ )); do
                 _xvfb_alive "${n}" && break
                 ps -p "$(< "${base}.pid")" > /dev/null 2>&1 || break
@@ -295,7 +311,7 @@ start_display() {
             done
             if ! _xvfb_alive "${n}"; then
                 kill "$(< "${base}.pid")" 2>/dev/null || true
-                rm -f "${base}.pid"
+                rm -f "${base}.pid" "${base}.tcp"
                 echo "$(_log_prefix ERROR) Xvfb :${n} did not start" >&2
                 exit 1
             fi
@@ -303,7 +319,8 @@ start_display() {
         echo "${me}" >> "${base}.users"
     ) 9> "${base}.lock" || error_exit "Could not start display :${n}"
     _xvfb_num="${n}"
-    export DISPLAY=":${n}"
+    # vse_sub passes the environment to the job, so the job gets it too
+    export DISPLAY="${disp}"
     log "DISPLAY=${DISPLAY}"
 }
 
@@ -330,7 +347,7 @@ stop_display() {
             else
                 warn "Could not stop Xvfb :${n} (pid ${pid})"
             fi
-            rm -f "${base}.pid"
+            rm -f "${base}.pid" "${base}.tcp"
         fi
     ) 9> "${base}.lock" || warn "stop_display :${n} failed"
 }
