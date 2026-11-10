@@ -69,6 +69,9 @@ PERF_LIBS=(BM01 BM02 BM03 MEMGEN5K)
 PERF_CELLS=(VP_FULLCHIP FULLCHIP XE_FULLCHIP_BASE test)
 PERF_TESTS=(checkHier renameRefLib changeLibRef replace deleteAllMarker copyHierToEmpty copyHierToNonEmpty)  # order = Test<N> number in the replay templates
 PERF_BASE_LIBS=(DRAMLIB)        # added to every perf workspace (legacy's single workspace always had it)
-PERF_PRISTINE_OA=".oa_pristine" # UNMANAGED: untouched copy of oa/, restored before every run
+PERF_PRISTINE_DIR="WORKSPACES_PRISTINE" # shared read-only GDP workspace of the FROM_LIB libraries (perf_pristine.sh)
+PERF_PRISTINE_OA=".oa_pristine" # UNMANAGED (workspaces made before WORKSPACES_PRISTINE): own copy of oa/
+PERF_OA_READY=".oa_ready"       # UNMANAGED: <lib> = copied from the pristine, <lib>.lock = held while copying
+PERF_COPY_JOBS=${PERF_COPY_JOBS:-8}  # background pristine → UNMANAGED copies running at once (all inits)
 PERF_INIT_CL=".init_cl"         # MANAGED: changelist the workspace held right after init (rollback target)
 PERF_CLEAN_CL=".clean_cl"       # MANAGED: newest changelist at which the depot equals the init state

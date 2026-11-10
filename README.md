@@ -133,7 +133,10 @@ Expected differences (all intended):
 | `PERF_TESTS` | Array of perf test types |
 | `PERF_PREFIX` | GDP workspace name prefix for perf workspaces |
 | `PERF_BASE_LIBS` | Libraries added to every perf workspace (`DRAMLIB`) |
-| `PERF_PRISTINE_OA` | UNMANAGED: untouched copy of `oa/` restored before every run (`.oa_pristine`) |
+| `PERF_PRISTINE_DIR` | Shared read-only GDP workspace of every FROM_LIB library a workspace was initialised with; UNMANAGED `oa/<lib>` is copied from it (`WORKSPACES_PRISTINE`) |
+| `PERF_PRISTINE_OA` | UNMANAGED workspaces made before `PERF_PRISTINE_DIR`: their own copy of `oa/` (`.oa_pristine`) |
+| `PERF_OA_READY` | UNMANAGED: per-library copy flag and lock, library list, copy log (`.oa_ready/`) |
+| `PERF_COPY_JOBS` | Background pristine → UNMANAGED copies running at once across all inits (8) |
 | `PERF_INIT_CL` | MANAGED: changelist the workspace held right after init, the rollback target (`.init_cl`) |
 | `PERF_CLEAN_CL` | MANAGED: newest changelist at which the depot equals the init state; the next rollback undoes only later changes (`.clean_cl`) |
 
@@ -342,20 +345,29 @@ Workspace names follow the pattern: `perf_<testtype>_<lib>_<uniqueid>`
 | Phase | Script | Parallelism |
 |-------|--------|-------------|
 | 1 — Generate replays | `perf_generate_replay.sh` | Sequential |
+| 2a — Pristine copy | `perf_pristine.sh` | Sequential (once, before 2) |
 | 2 — Init workspaces | `perf_init.sh` | Parallel (`xargs -P`) |
 | 3 — Run tests | `perf_run_single.sh` | Parallel (`xargs -P`) |
 | 4 — Summary | `perf_summary.sh` | Sequential |
 | 5 — Teardown | `perf_teardown.sh` | Parallel (`xargs -P`) |
 
 > Workspace builds (`perf_init.sh`) run in parallel, up to `-j` at a time; nothing serialises them.
+>
+> Before them, `perf_pristine.sh` (Phase 2a) builds one shared GDP workspace, `WORKSPACES_PRISTINE/<name>`, holding
+> every library of the requested combos once (`gdp create library --from`, then `gdp build workspace`, or
+> `gdp rebuild workspace` for libraries added by a later init). It fixes `cdsinfo.tag` (`DMTYPE none`) and `ug+w`
+> there once and is only read afterwards. `perf_init.sh` keeps MANAGED's built `oa/` and copies each UNMANAGED
+> `oa/<lib>` from the pristine in the background (`rsync`, at most `PERF_COPY_JOBS` at once). It stops when
+> the newest change synced in `FROM_LIB/<lib>` (`xlp4 changes -m1 ./...#have`) moved since the pristine imported it. `-t` keeps the pristine; `-t -pristine` removes it.
 
 Every run starts from the same data. Before each replay (not timed), `perf_run_single.sh` resets the workspace:
 - MANAGED: `xlp4 revert` of files left opened, `xlp4 sync`, and `sync -f` only for files sync refuses to clobber;
   then an ICM-style rollback: changes submitted after the init changelist (`.init_cl`, recorded by `perf_init.sh`)
   are undone with `xlp4 undo` and submitted as a new change, so the depot head equals the init state again.
   A failed sync, undo or submit stops that combination without measuring it
-- UNMANAGED: restore `oa/` from `.oa_pristine/`, the copy `perf_init.sh` saves after setup
-  (workspaces created before this change have no copy and run without reset)
+- UNMANAGED: `rsync -a --delete` of each `oa/<lib>` from the pristine; it first waits for that library's
+  background copy (`.oa_ready/<lib>.lock`), so only the difference is transferred. Workspaces made before the
+  shared pristine restore from their own `.oa_pristine/`; older ones run without reset
 
 Every perf workspace also gets `PERF_BASE_LIBS` (`DRAMLIB`), which the HierCopy templates skip.
 

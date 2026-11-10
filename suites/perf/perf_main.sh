@@ -7,6 +7,7 @@ export script_dir
 
 source "${script_dir}/code/env.sh"
 source "${script_dir}/code/common.sh"
+source "${script_dir}/code/perf_icm.sh"
 
 # -h only prints help: decide before the log file is created
 _help_only=false
@@ -27,6 +28,7 @@ fi
 #######################################
 jobs=4
 do_teardown=false
+do_pristine_teardown=false
 do_run=true
 do_gen_replay=false
 auto_init=false
@@ -91,6 +93,9 @@ OPTIONS
   -t         | --teardown        Run teardown; -lib/-test filters apply
                                    Can be used standalone: -no-run -t [-lib ...] [-test ...]
                                    With a run, teardown also runs when tests failed
+  -pristine  | --pristine        With -t: also remove the shared pristine copy
+                                   (${PERF_PRISTINE_DIR}/); kept otherwise, and
+                                   rebuilt by the next init (-no-run)
   -auto-init | --auto-init       If no workspaces found, run init automatically
                                    without prompting
   -no-xvfb   | --no-xvfb         Do not start the Xvfb display; vse_run uses the
@@ -125,6 +130,7 @@ OPTION COMBINATIONS
   $(basename "$0") -mode managed                                    all workspaces × managed only
   $(basename "$0") -no-run -t -lib BM01                             teardown BM01 workspaces only
   $(basename "$0") -no-run -t                                       teardown all workspaces
+  $(basename "$0") -no-run -t -pristine                             ... and the shared pristine copy
 
 WORKFLOW EXAMPLES
   # Generate replay files only
@@ -210,6 +216,10 @@ while [[ $# -gt 0 ]]; do
             do_teardown=true
             shift
             ;;
+        -pristine|--pristine)
+            do_pristine_teardown=true
+            shift
+            ;;
         -auto-init|--auto-init)
             auto_init=true
             shift
@@ -232,6 +242,7 @@ done
 export DRY_RUN
 export VSE_VERSION CAT_VSE_VERSION="${VSE_VERSION}"   # children re-source env.sh, which reads CAT_VSE_VERSION
 export PERF_COMMON_LIBS="${common_libs[*]:-}"
+[[ "${do_pristine_teardown}" == false || "${do_teardown}" == true ]] || error_exit "-pristine is used with -t"
 
 #######################################
 # Start condition
@@ -406,6 +417,23 @@ generate_replays() {
 }
 
 #######################################
+# Phase 2a: Shared pristine copy (once, before the parallel inits)
+# Every library of the requested combos, existing workspaces included, so
+# an init after -t -pristine rebuilds what their resets copy from.
+#######################################
+prepare_pristine() {
+    local testtype lib cell l all=()
+    for combo in "${combos_init[@]}"; do
+        read -r testtype lib cell <<< "${combo}"
+        for l in $(perf_ws_libs "${testtype}" "${lib}"); do
+            [[ " ${all[*]} " == *" ${l} "* ]] || all+=("${l}")
+        done
+    done
+    log "--- Phase 2a: Pristine copy (${#all[@]} libraries) ---"
+    bash "${script_dir}/code/perf_pristine.sh" "${uniqueid}" "${all[@]}" -d "${DRY_RUN}"
+}
+
+#######################################
 # Phase 2: Init workspaces (parallel)
 # Skips combos where a workspace already exists.
 #######################################
@@ -550,6 +578,30 @@ teardown_workspaces() {
 }
 
 #######################################
+# -t -pristine: remove the shared pristine copy
+# (GDP project, client, depot copy, PERF_PRISTINE_DIR)
+#######################################
+teardown_pristine() {
+    local base="${script_dir}/${PERF_PRISTINE_DIR}" name rc=0
+    if [[ ! -s "${base}/.name" ]]; then
+        log "No pristine copy (${base}/.name); nothing to remove"
+        return 0
+    fi
+    name=$(head -1 "${base}/.name")
+    if compgen -G "${script_dir}/WORKSPACES_UNMANAGED/${PERF_PREFIX}_*/${PERF_OA_READY}/.libs" > /dev/null; then
+        warn "UNMANAGED workspaces still restore from the pristine; their runs fail until an init (-no-run) rebuilds it"
+    fi
+    log "--- Teardown of the pristine copy: ${name} ---"
+    bash "${script_dir}/code/perf_teardown.sh" "${name}" -d "${DRY_RUN}" || rc=$?
+    if [[ ${rc} -ne 0 ]]; then
+        teardown_rc=${rc}
+        warn "Pristine teardown failed (rc=${rc}); keeping ${base}"
+    elif [[ "${DRY_RUN}" -lt 2 ]]; then
+        safe_mv_to_trash "${base}"
+    fi
+}
+
+#######################################
 # Init phases (1+2): generate + init
 #######################################
 run_init_phases() {
@@ -564,6 +616,7 @@ run_init_phases() {
 
     ensure_gdp_folders
     generate_replays
+    prepare_pristine
     init_workspaces
 }
 
@@ -635,11 +688,13 @@ elif [[ "${do_run}" == true ]]; then
 
     if [[ "${do_teardown}" == true ]]; then
         teardown_workspaces     # sets teardown_rc
+        [[ "${do_pristine_teardown}" == false ]] || teardown_pristine
     fi
 
 elif [[ "${do_run}" == false && "${do_teardown}" == true ]]; then
     # -no-run -t: teardown only, with optional -lib/-test filters
     teardown_workspaces
+    [[ "${do_pristine_teardown}" == false ]] || teardown_pristine
 fi
 
 if [[ ${tests_rc} -ne 0 || ${summary_rc} -ne 0 || ${teardown_rc} -ne 0 ]]; then

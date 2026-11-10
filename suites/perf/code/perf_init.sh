@@ -41,39 +41,9 @@ proj_depot_path="//depot${proj_path}/..."
 config="${proj_path}/rev01/dev"
 
 #######################################
-# Libraries for this testtype
+# Libraries for this testtype (+ -common, PERF_BASE_LIBS)
 #######################################
-perf_libs() {
-    local tt="$1" l="$2"
-    case "${tt}" in
-        checkHier|replace|deleteAllMarker)
-            echo "${l}" ;;
-        renameRefLib)
-            echo "${l} ${l}_ORIGIN ${l}_TARGET" ;;
-        changeLibRef)
-            echo "${l} ${l}_ORIGIN ${l}_TARGET ${l}_MIX" ;;
-        copyHierToEmpty)
-            echo "${l} ${l}_CHIP ${l}_COPY" ;;
-        copyHierToNonEmpty)
-            echo "${l} ${l}_CHIP" ;;
-        *)
-            error_exit "Unknown testtype: ${tt}" ;;
-    esac
-}
-
-IFS=' ' read -ra libs <<< "$(perf_libs "${testtype}" "${lib}")"
-
-if [[ -n "${PERF_COMMON_LIBS:-}" ]]; then
-    for _cl in ${PERF_COMMON_LIBS}; do
-        libs+=("${_cl}")
-    done
-fi
-
-# Libraries every perf workspace needs (e.g. DRAMLIB, which the HierCopy
-# templates skip); added once even if also given with -common
-for _bl in "${PERF_BASE_LIBS[@]}"; do
-    [[ " ${libs[*]} " == *" ${_bl} "* ]] || libs+=("${_bl}")
-done
+IFS=' ' read -ra libs <<< "$(perf_ws_libs "${testtype}" "${lib}")"
 
 # Export for gdp workspace mock (DRY_RUN=1)
 export MOCK_GDP_LIBS="${libs[*]}"
@@ -120,9 +90,9 @@ fi
 
 #######################################
 # Setup UNMANAGED workspace
-# - copy non-oa files from MANAGED
-# - mv oa from MANAGED to UNMANAGED
-# - xlp4 sync -f MANAGED to restore oa
+# - cds.lib from MANAGED's cds.libicm
+# - oa/<lib> copied from the shared pristine (perf_pristine.sh) in the
+#   background; MANAGED keeps the oa gdp built
 #######################################
 log "[INIT] Setting up UNMANAGED workspace: ${ws_name}"
 managed_ws="${script_dir}/WORKSPACES_MANAGED/${ws_name}"
@@ -140,34 +110,25 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
         sed -i "s|WORKSPACES_MANAGED|WORKSPACES_UNMANAGED|g" "${unmanaged_ws}/cds.lib"
     fi
 
-    # mv oa MANAGED → UNMANAGED
     if [[ -d "${managed_ws}/oa" ]]; then
-        log "[INIT] Moving oa: MANAGED → UNMANAGED"
-        run_cmd "mv \"${managed_ws}/oa\" \"${unmanaged_ws}/oa\""
-
-        # Grant write permission to user and group (synced files are r--r--r--)
-        log "[INIT] Granting ug+w on UNMANAGED oa"
-        run_cmd "chmod -R ug+w \"${unmanaged_ws}/oa\""
-
-        # UNMANAGED: patch cdsinfo.tag — DMTYPE p4 → DMTYPE none
-        log "[INIT] Patching cdsinfo.tag: DMTYPE p4 → DMTYPE none (UNMANAGED)"
-        while IFS= read -r -d '' tag; do
-            log "[INIT]   ${tag}"
-            sed -i 's/DMTYPE p4/DMTYPE none/g' "${tag}"
-        done < <(find "${unmanaged_ws}/oa" -name "cdsinfo.tag" -print0)
-
-        # Keep a pristine copy; perf_run_single.sh restores oa from it before
-        # every unmanaged run so each run starts from the same data.
-        # --reflink=never: a physical copy. A copy-on-write clone would share
-        # blocks with oa/, and Virtuoso's in-place writes to oa/ during a
-        # measured run would then pay the CoW allocation (coreutils >= 9.0
-        # clones by default, so this is stated explicitly)
-        log "[INIT] Saving pristine UNMANAGED oa: ${unmanaged_ws}/${PERF_PRISTINE_OA}"
-        run_cmd "cp -a --reflink=never \"${unmanaged_ws}/oa\" \"${unmanaged_ws}/${PERF_PRISTINE_OA}\""
-
-        # Restore MANAGED oa via force-sync
-        log "[INIT] Restoring MANAGED oa: xlp4 sync -f"
-        run_cmd "xlp4 -c \"${ws_name}\" -q sync -f"
+        # Copy oa/<lib> from the pristine in the background, one job per
+        # library, at most PERF_COPY_JOBS across all inits (slot locks).
+        # perf_run_single.sh restores the same way before every run; it waits
+        # on <lib>.lock for a copy still in progress, so a workspace can be
+        # run as soon as its own libraries are done. Not waited for here.
+        mkdir -p "${unmanaged_ws}/${PERF_OA_READY}"
+        printf "%s\n" "${libs[@]}" > "${unmanaged_ws}/${PERF_OA_READY}/.libs"
+        log "[INIT] Copying oa from the pristine in the background: ${libs[*]} (log: ${unmanaged_ws}/${PERF_OA_READY}/copy.log)"
+        for l in "${libs[@]}"; do
+            (
+                for (( _s = 0; ; _s = (_s + 1) % PERF_COPY_JOBS )); do
+                    exec 7>"${script_dir}/WORKSPACES_UNMANAGED/.copy_slot.${_s}"
+                    flock -n 7 && break
+                    (( _s + 1 < PERF_COPY_JOBS )) || sleep 5
+                done
+                perf_copy_lib "${unmanaged_ws}" "${l}" missing
+            ) >> "${unmanaged_ws}/${PERF_OA_READY}/copy.log" 2>&1 < /dev/null &
+        done
 
         # Record the changelist the workspace holds now, before any test ran:
         # perf_run_single.sh rolls the depot back to it before every MANAGED
@@ -194,7 +155,7 @@ if [[ "${DRY_RUN}" -lt 2 ]]; then
         log "[INIT] No oa dir in managed_ws (skipped at dry-run level)"
     fi
 else
-    log "[DRY-RUN:2] Would setup UNMANAGED workspace and re-sync MANAGED oa"
+    log "[DRY-RUN:2] Would setup UNMANAGED workspace and copy its oa from the pristine"
 fi
 
 #######################################

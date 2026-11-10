@@ -87,7 +87,9 @@ fi
 #            but would also delete the untracked workspace files the run needs
 #            (replay .au, cds.lib, .cdsenv/cdsLibMgr.il links), so it is not
 #            used until it has been scoped and checked on a real ICM workspace.
-# UNMANAGED: restore oa from the pristine copy saved by perf_init.sh
+# UNMANAGED: restore each oa/<lib> from the shared pristine (waits for the
+#            background copy perf_init.sh started), or from .oa_pristine
+#            in a workspace made before the shared pristine existed
 #######################################
 _clobber_file=""
 _cleanup_clobber() {
@@ -202,18 +204,24 @@ rollback_managed_ws() {
 }
 
 reset_unmanaged_ws() {
-    local pristine="${unmanaged_ws}/${PERF_PRISTINE_OA}"
+    local pristine="${unmanaged_ws}/${PERF_PRISTINE_OA}" libs_file="${unmanaged_ws}/${PERF_OA_READY}/.libs" l
     if [[ "${DRY_RUN:-0}" -ge 2 ]]; then
-        log "[DRY-RUN:2] Would restore ${unmanaged_ws}/oa from ${PERF_PRISTINE_OA}"
-        return 0
-    fi
-    if [[ ! -d "${pristine}" ]]; then
-        warn "[RESET] No pristine copy (${pristine}); workspace predates it, running without reset"
+        log "[DRY-RUN:2] Would restore ${unmanaged_ws}/oa from the pristine"
         return 0
     fi
     command -v rsync >/dev/null || error_exit "rsync is required to restore ${unmanaged_ws}/oa"
-    log "[RESET] UNMANAGED: restore oa from ${PERF_PRISTINE_OA}"
-    run_cmd "rsync -a --delete \"${pristine}/\" \"${unmanaged_ws}/oa/\""
+    if [[ -f "${libs_file}" ]]; then
+        while IFS= read -r l; do
+            log "[RESET] UNMANAGED: restore oa/${l} from the pristine"
+            perf_copy_lib "${unmanaged_ws}" "${l}" \
+                || error_exit "[RESET] Restoring oa/${l} failed (${ws_name}); not measuring on unreset data"
+        done < "${libs_file}"
+    elif [[ -d "${pristine}" ]]; then
+        log "[RESET] UNMANAGED: restore oa from ${PERF_PRISTINE_OA}"
+        run_cmd "rsync -a --delete \"${pristine}/\" \"${unmanaged_ws}/oa/\""
+    else
+        warn "[RESET] No pristine copy for ${unmanaged_ws}; workspace predates it, running without reset"
+    fi
 }
 
 if [[ "${mode}" == "managed" ]]; then

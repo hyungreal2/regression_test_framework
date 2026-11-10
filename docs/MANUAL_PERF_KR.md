@@ -16,14 +16,16 @@ prod 배치 이름은 `2_perf_mp`이고, 저장소에서는 `suites/perf/`입니
 템플릿×라이브러리마다 워크스페이스 한 쌍을 만들어 두고(init), 여러 번 측정한 뒤(run), 필요 없어지면 지웁니다(teardown).
 
 ```
-init  (perf_init.sh, 한 번)   GDP 프로젝트 → MANAGED 워크스페이스 (WORKSPACES_MANAGED/<ws>)
-                               └→ oa/를 옮겨 UNMANAGED 구성 (WORKSPACES_UNMANAGED/<ws>), 원본 사본 .oa_pristine 저장
+init  (perf_pristine.sh, 한 번) 공용 원본 GDP 워크스페이스 (WORKSPACES_PRISTINE/<name>)에 필요한 라이브러리를
+                               중복 없이 추가 → build(처음) / rebuild(추가분) → cdsinfo.tag·ug+w 한 번 처리
+      (perf_init.sh, 조합마다) GDP 프로젝트 → MANAGED 워크스페이스 (WORKSPACES_MANAGED/<ws>)
+                               └→ UNMANAGED (WORKSPACES_UNMANAGED/<ws>): 공용 원본에서 oa/<lib>를 백그라운드 rsync
                                └→ MANAGED의 init 시점 CL을 .init_cl에 기록
 run   (perf_run_single.sh, 매번)
       replay 생성 → 초기화(측정 제외) → vse_run → 걸린 시간 기록
         MANAGED  : xlp4 revert + sync (+ 덮어쓰기 거부 파일만 sync -f)
                    → rollback: init 뒤 체크인된 변경을 undo해 새 CL로 submit (head = init 상태)
-        UNMANAGED: .oa_pristine에서 rsync로 oa 복원
+        UNMANAGED: 공용 원본에서 라이브러리별 rsync (백그라운드 복사가 끝나길 기다린 뒤 차이만)
 summary (perf_summary.sh)     시간 표, legacy 형식 summary.txt, 추세 데이터
 teardown (perf_teardown.sh)   p4 client, GDP 워크스페이스·프로젝트, depot, 로컬 디렉터리
 ```
@@ -54,7 +56,8 @@ cico와 같습니다([MANUAL_CICO_KR.md](MANUAL_CICO_KR.md) §2). 추가로 UNMA
 | `-no-run` | init만 | |
 | `-auto-init` | 워크스페이스가 없으면 묻지 않고 init | |
 | `-no-xvfb` | Xvfb 가상 디스플레이를 띄우지 않고 현재 `DISPLAY`로 Virtuoso 실행 (GUI를 직접 볼 때) | Xvfb :98 사용 |
-| `-t` | teardown (`-lib`/`-test` 적용). 실행과 함께 주면 측정이 실패해도 마지막에 실행 | |
+| `-t` | teardown (`-lib`/`-test` 적용). 실행과 함께 주면 측정이 실패해도 마지막에 실행. 공용 원본은 남김 | |
+| `-pristine` | `-t`와 함께: 공용 원본(`WORKSPACES_PRISTINE/`)도 삭제. 다음 init(`-no-run`)이 다시 만듦 | 남김 |
 | `-gen-replay` | replay만 생성 | |
 
 ---
@@ -117,6 +120,9 @@ cico와 같습니다([MANUAL_CICO_KR.md](MANUAL_CICO_KR.md) §2). 추가로 UNMA
 | `.init_cl missing; deriving ...` | init CL 기록 전에 만든 워크스페이스. 라이브러리 생성 CL 중 가장 큰 값으로 대신하고 `.init_cl`에 저장 |
 | `Cannot determine the init changelist` | 위 대체도 실패. 정리 후 다시 init |
 | `No pristine copy ... running without reset` | 예전에 만든 UNMANAGED라 원본 사본이 없음. 정리 후 다시 init |
+| `No pristine copy of <lib>` / `No pristine workspace` | 공용 원본이 없음(`-t -pristine` 뒤 등). 같은 `-lib`/`-test`로 `-no-run` 하면 다시 만듦 |
+| `FROM_LIB/<lib> moved from change A to B` | 원본 라이브러리의 change 번호(`xlp4 changes -m1 ./...#have`)가 공용 원본을 받은 뒤 바뀜. `-no-run -t -pristine`으로 공용 원본을 지우고 다시 init |
+| `Cannot read the change number of FROM_LIB/<lib>` | 원본이 xlp4 workspace가 아니거나 조회 실패. 변경 검사 없이 진행 |
 | `No oa dir in MANAGED workspace after gdp build` | 라이브러리 생성 실패. GDP 로그 확인 |
 | `Timing file not found` | 모든 측정이 실패함. 앞선 오류를 확인 |
 | `gdp did not answer ... keeping ...` | gdp 응답 없음. 복구 후 `-no-run -t` 다시 |
